@@ -3,9 +3,8 @@
 // * https://kulshekhar.github.io/ts-jest/user/config/
 
 export default {
+  preset: 'ts-jest',
   testEnvironment: 'jsdom',
   roots: ['src'],
   collectCoverageFrom: ['src/**/{!(index|testUtils),}.{ts,tsx}'],
-  preset: 'ts-jest',
-  setupFilesAfterEnv: ['jest-extended/all'],
 };

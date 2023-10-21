@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-/// <reference types="jest-extended" />
 
 import {
   BehaviorSubject,
@@ -358,7 +357,8 @@ describe('compute()', () => {
 
     const onSumChanged = jest.fn();
     sum.value$.subscribe(onSumChanged);
-    expect(onSumChanged).toHaveBeenCalledOnceWith('ab');
+    expect(onSumChanged).toHaveBeenCalledTimes(1);
+    expect(onSumChanged).toHaveBeenLastCalledWith('ab');
 
     onSumChanged.mockClear();
 

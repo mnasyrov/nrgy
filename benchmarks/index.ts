@@ -7,7 +7,7 @@ const ITERATION_COUNT = 100;
 
 const bench = new Bench();
 
-bench.add('lagacy compute', () => {
+bench.add('legacy compute', () => {
   const entry = createStore(0);
 
   const a = compute((get) => get(entry));
@@ -50,28 +50,7 @@ bench.add('signal computed', () => {
 async function main() {
   await bench.run();
 
-  console.table(
-    bench.tasks.map(({ name, result }) => {
-      return {
-        'Task Name': name,
-        ...{
-          hz: Math.floor(result?.hz ?? 0),
-          mean: round(result?.mean),
-          variance: round(result?.variance),
-          min: round(result?.min),
-          max: round(result?.max),
-          p75: round(result?.p75),
-          p99: round(result?.p99),
-          p995: round(result?.p995),
-          p999: round(result?.p999),
-        },
-      };
-    }),
-  );
-}
-
-function round(value: number | undefined): number {
-  return value === undefined ? NaN : Math.round(value * 1e6) / 1e3;
+  console.table(bench.table());
 }
 
 main();
