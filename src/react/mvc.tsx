@@ -1,5 +1,3 @@
-import { declareModule, Token } from 'ditox';
-import { DependencyModule, useDependencyContainer } from 'ditox-react';
 import React, {
   FC,
   PropsWithChildren,
@@ -7,6 +5,10 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
+
+import { declareModule, Token } from 'ditox';
+import { DependencyModule, useDependencyContainer } from 'ditox-react';
+
 import {
   Controller,
   ControllerFactory,
@@ -14,7 +16,7 @@ import {
   Query,
   Store,
   ViewControllerFactory,
-} from '../core';
+} from '../rx-effects';
 
 type AnyObject = Record<string, any>;
 

@@ -1,3 +1,6 @@
+import { firstValueFrom } from 'rxjs';
+import { take, toArray } from 'rxjs/operators';
+
 import {
   Action,
   Controller,
@@ -8,9 +11,7 @@ import {
   Scope,
   StateMutation,
   Store,
-} from '../../src/core';
-import { firstValueFrom } from 'rxjs';
-import { take, toArray } from 'rxjs/operators';
+} from '../../src/rx-effects';
 
 // Example usage of RxEffects: a calculator which has actions: increment,
 // decrement, add, subtract and reset.

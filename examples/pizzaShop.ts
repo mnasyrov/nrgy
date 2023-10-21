@@ -1,3 +1,5 @@
+import { delay, filter, map, mapTo, of } from 'rxjs';
+
 import {
   Controller,
   createAction,
@@ -6,8 +8,7 @@ import {
   EffectState,
   Query,
   withStoreUpdates,
-} from '../src/core';
-import { delay, filter, map, mapTo, of } from 'rxjs';
+} from '../src/rx-effects';
 
 // The state
 type CartState = Readonly<{ orders: Array<string> }>;

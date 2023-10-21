@@ -1,5 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { declareStateUpdates } from '../core';
+
+import { declareStateUpdates } from '../rx-effects';
+
 import { useStore } from './useStore';
 
 describe('useStore()', () => {

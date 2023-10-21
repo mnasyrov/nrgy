@@ -7,6 +7,7 @@ import {
   timeout,
   timer,
 } from 'rxjs';
+
 import Mock = jest.Mock;
 
 export function waitForMicrotask(): Promise<void> {

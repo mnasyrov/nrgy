@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
-import { declareStateUpdates } from '../../src/core';
+
 import { useStore } from '../../src/react';
+import { declareStateUpdates } from '../../src/rx-effects';
 
 const COUNTER_STATE = 0;
 

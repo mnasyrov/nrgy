@@ -4,7 +4,8 @@ import {
   StoreOptions,
   StoreWithUpdates,
   withStoreUpdates,
-} from '../core';
+} from '../rx-effects';
+
 import { useController } from './useController';
 import { useQuery } from './useQuery';
 

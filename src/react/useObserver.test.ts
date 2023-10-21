@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { BehaviorSubject, PartialObserver, Subject } from 'rxjs';
+
 import { useObserver } from './useObserver';
 
 describe('useObserver()', () => {

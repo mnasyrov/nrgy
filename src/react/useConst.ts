@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
-
 import { useRef } from 'react';
 
 /**
@@ -16,7 +14,7 @@ export function useConst<T>(initialValue: (() => T) | T): T {
     constRef.current = {
       value:
         typeof initialValue === 'function'
-          ? (initialValue as Function)()
+          ? (initialValue as () => T)()
           : initialValue,
     };
   }

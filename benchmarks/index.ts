@@ -1,7 +1,8 @@
 import { Bench } from 'tinybench';
-import { compute, createStore } from '../src/core';
-import { computed, effect, signal } from '../src/core/signals';
-import { SIGNAL_RUNTIME } from '../src/core/signals/runtime';
+
+import { computed, effect, signal } from '../src/core';
+import { SIGNAL_RUNTIME } from '../src/core/runtime';
+import { compute, createStore } from '../src/rx-effects';
 
 const ITERATION_COUNT = 100;
 

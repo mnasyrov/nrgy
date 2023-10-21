@@ -1,13 +1,16 @@
+import React from 'react';
+
 import { renderHook } from '@testing-library/react';
 import { Container, token } from 'ditox';
 import { DependencyContainer, useDependency } from 'ditox-react';
-import React from 'react';
+
 import {
   declareController,
   declareViewController,
   InferredService,
   Query,
-} from '../core';
+} from '../rx-effects';
+
 import {
   createControllerContainer,
   useInjectableController,

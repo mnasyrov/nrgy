@@ -1,156 +1,49 @@
-import {
-  defer,
-  mergeMap,
-  Observable,
-  of,
-  OperatorFunction,
-  retry,
-  Subject,
-  Subscription,
-  tap,
-} from 'rxjs';
-import { Action } from './action';
-import { Controller } from './controller';
-import { createEffectController } from './effectController';
-import { EffectState } from './effectState';
-import { Query } from './query';
+import { SIGNAL_RUNTIME } from './runtime';
+import { Watch } from './watch';
 
 /**
- * Handler for an event. It can be asynchronous.
- *
- * @result a result, Promise or Observable
+ * An effect can, optionally, register a cleanup function. If registered, the cleanup is executed
+ * before the next effect run. The cleanup function makes it possible to "cancel" any work that the
+ * previous effect run might have started.
  */
-export type EffectHandler<Event, Result> = (
-  event: Event,
-) => Result | Promise<Result> | Observable<Result>;
+export type EffectCleanupFn = () => void;
 
-export type EffectEventProject<Event, Result> = (
-  event: Event,
-) => Observable<Result>;
+/**
+ * A callback passed to the effect function that makes it possible to register cleanup logic.
+ */
+export type EffectCleanupRegisterFn = (cleanupFn: EffectCleanupFn) => void;
 
-export type EffectPipeline<Event, Result> = (
-  eventProject: EffectEventProject<Event, Result>,
-) => OperatorFunction<Event, Result>;
-
-const DEFAULT_MERGE_MAP_PIPELINE: EffectPipeline<any, any> = (eventProject) =>
-  mergeMap(eventProject);
-
-export type EffectOptions<Event, Result> = Readonly<{
+/**
+ * A global reactive effect, which can be manually destroyed.
+ */
+export type EffectRef = Readonly<{
   /**
-   * Custom pipeline for processing effect's events.
-   *
-   * `mergeMap` pipeline is used by default.
+   * Shut down the effect, removing it from any upcoming scheduled executions.
    */
-  pipeline?: EffectPipeline<Event, Result>;
+  destroy(): void;
 }>;
 
 /**
- * Effect encapsulates a handler for Action or Observable.
- *
- * It provides the state of execution results, which can be used to construct
- * a graph of business logic.
- *
- * Effect collects all internal subscriptions, and provides `destroy()` methods
- * unsubscribe from them and deactivate the effect.
+ * Options passed to the `effect` function.
  */
-export type Effect<Event, Result = void, ErrorType = Error> = Controller<
-  EffectState<Event, Result, ErrorType> & {
-    handle: (
-      source: Action<Event> | Observable<Event> | Query<Event>,
-    ) => Subscription;
-  }
->;
-
-/**
- * Creates `Effect` from the provided handler.
- *
- * @example
- * ```ts
- * const sumEffect = createEffect<{a: number, b: number}, number>((event) => {
- *   return a + b;
- * });
- * ```
- */
-export function createEffect<Event = void, Result = void, ErrorType = Error>(
-  handler: EffectHandler<Event, Result>,
-  options?: EffectOptions<Event, Result>,
-): Effect<Event, Result, ErrorType> {
-  const pipeline: EffectPipeline<Event, Result> =
-    options?.pipeline ?? DEFAULT_MERGE_MAP_PIPELINE;
-
-  const event$: Subject<Event> = new Subject();
-  const controller = createEffectController<Event, Result, ErrorType>();
-
-  const subscriptions = new Subscription(() => {
-    event$.complete();
-    controller.destroy();
-  });
-
-  const eventProject: EffectEventProject<Event, Result> = (event: Event) => {
-    return defer(() => {
-      controller.start();
-
-      const result = handler(event);
-
-      return result instanceof Observable || result instanceof Promise
-        ? result
-        : of(result);
-    }).pipe(
-      tap({
-        next: (result) => {
-          controller.next({ event, result });
-        },
-        complete: () => {
-          controller.complete();
-        },
-        error: (error) => {
-          controller.error({ origin: 'handler', event, error });
-        },
-      }),
-    );
-  };
-
-  subscriptions.add(event$.pipe(pipeline(eventProject), retry()).subscribe());
-
-  return {
-    ...controller.state,
-
-    handle(
-      source: Observable<Event> | Action<Event> | Query<Event>,
-    ): Subscription {
-      const observable = getSourceObservable(source);
-
-      const subscription = observable.subscribe({
-        next: (event) => event$.next(event),
-        error: (error) => controller.error({ origin: 'source', error }),
-      });
-      subscriptions.add(subscription);
-
-      return subscription;
-    },
-
-    destroy: () => {
-      subscriptions.unsubscribe();
-    },
-  };
+export interface CreateEffectOptions {
+  sync?: boolean;
 }
 
-function getSourceObservable<T>(
-  source: Observable<T> | Action<T> | Query<T>,
-): Observable<T> {
-  const type = typeof source;
+export function effect(
+  effectFn: (onCleanup: EffectCleanupRegisterFn) => void,
+  options?: CreateEffectOptions,
+): EffectRef {
+  const scheduler = options?.sync
+    ? SIGNAL_RUNTIME.syncScheduler
+    : SIGNAL_RUNTIME.asyncScheduler;
 
-  if (type === 'function' && 'event$' in source) {
-    return source.event$;
-  }
+  const watch = new Watch(effectFn, scheduler.schedule);
 
-  if (type === 'object' && 'value$' in source) {
-    return source.value$;
-  }
+  // Effect starts dirty.
+  watch.notify();
 
-  if (source instanceof Observable) {
-    return source;
-  }
-
-  throw new TypeError('Unexpected source type');
+  return {
+    destroy: () => watch.destroy(),
+  };
 }

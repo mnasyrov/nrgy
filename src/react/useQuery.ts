@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Query } from '../core';
+
+import { Query } from '../rx-effects';
 
 /**
  * Returns a value which is provided by the query.

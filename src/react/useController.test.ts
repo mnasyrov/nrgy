@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react';
-import { Controller } from '../core';
+
+import { Controller } from '../rx-effects';
+
 import { useController } from './useController';
 
 describe('useController()', () => {

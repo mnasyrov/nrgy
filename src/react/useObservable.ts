@@ -1,4 +1,5 @@
 import { identity, Observable } from 'rxjs';
+
 import { useSelector } from './useSelector';
 
 /**
