@@ -1,30 +1,24 @@
-import {
-  createStore,
-  StateMutation,
-  StateUpdates,
-  StoreOptions,
-  StoreWithUpdates,
-  withStoreUpdates,
-} from './store';
+import { SignalOptions } from './signal';
+import { createStore, StateMutation, StateUpdates, Store } from './store';
 
-export type StoreDeclaration<
+export type DeclareStoreOptions<
   State,
   Updates extends StateUpdates<State> = StateUpdates<State>,
 > = Readonly<{
   initialState: State;
   updates: Updates;
-  options?: StoreOptions<State>;
+  options?: SignalOptions<State>;
 }>;
 
 type FactoryStateArg<State> =
   | (State extends (state: State) => State ? never : State)
   | StateMutation<State>;
 
-export type DeclaredStoreFactory<State, Updates extends StateUpdates<State>> = {
+export type StoreFactory<State, Updates extends StateUpdates<State>> = {
   (
     initialState?: FactoryStateArg<State>,
-    options?: StoreOptions<State>,
-  ): StoreWithUpdates<State, Updates>;
+    options?: SignalOptions<State>,
+  ): Store<State, Updates>;
 
   updates: Updates;
 };
@@ -99,17 +93,17 @@ export function declareStore<
   State,
   Updates extends StateUpdates<State> = StateUpdates<State>,
 >(
-  declaration: StoreDeclaration<State, Updates>,
-): DeclaredStoreFactory<State, Updates> {
+  storeOptions: DeclareStoreOptions<State, Updates>,
+): StoreFactory<State, Updates> {
   const {
     initialState: baseState,
     updates,
-    options: baseOptions,
-  } = declaration;
+    options: signalOptions,
+  } = storeOptions;
 
   function factory(
     initialState?: FactoryStateArg<State>,
-    options?: StoreOptions<State>,
+    options?: SignalOptions<State>,
   ) {
     const state =
       initialState === undefined
@@ -118,12 +112,12 @@ export function declareStore<
         ? (initialState as StateMutation<State>)(baseState)
         : initialState;
 
-    const store = createStore<State>(state, {
-      ...baseOptions,
+    const store = createStore(state, updates, {
+      ...signalOptions,
       ...options,
     });
 
-    return withStoreUpdates(store, updates);
+    return store;
   }
 
   return Object.assign(factory, { updates });

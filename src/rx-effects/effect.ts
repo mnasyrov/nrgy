@@ -10,8 +10,9 @@ import {
   tap,
 } from 'rxjs';
 
+import { Controller } from '../mvc/controller';
+
 import { Action } from './action';
-import { Controller } from './controller';
 import { createEffectController } from './effectController';
 import { EffectState } from './effectState';
 import { Query } from './query';

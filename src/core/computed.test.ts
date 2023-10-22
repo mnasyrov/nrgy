@@ -1,7 +1,7 @@
 import { BehaviorSubject, materialize, Subject } from 'rxjs';
 
 import { collectChanges, waitForMicrotask } from '../../test/testUtils';
-import { toObservable, toSignal } from '../rxjs';
+import { fromObservable, toObservable } from '../rxjs';
 
 import { defaultEquals, Signal } from './common';
 import { computed, ComputedImpl } from './computed';
@@ -314,7 +314,7 @@ describe('computed()', () => {
 
   it('should propagate "error" event from a source to observers', async () => {
     const bs = new BehaviorSubject<number>(1);
-    const source = toSignal(bs);
+    const source = fromObservable(bs);
 
     const query1 = computed(() => source() + 1);
     const query2 = computed(() => query1() * 2);
@@ -360,7 +360,7 @@ describe('computed()', () => {
   // TODO: Refine the test. Is it neeeded?
   it('should propagate "complete" event from a source to observers', async () => {
     const bs = new BehaviorSubject<number>(1);
-    const source = toSignal(bs);
+    const source = fromObservable(bs);
 
     const query1 = computed(() => source() + 1);
     const query2 = computed(() => query1() * 2);

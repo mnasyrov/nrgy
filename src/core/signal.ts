@@ -64,26 +64,22 @@ class WritableSignalImpl<T> implements ReactiveNode {
 
   private readonly name?: string;
   private readonly equal: ValueEqualityFn<T>;
-  private readonly onDestroy?: () => void;
+  private onDestroy?: () => void;
   private readonly consumerEffects = new Map<WeakRef<EffectNode>, number>();
 
   private isDestroyed = false;
 
-  constructor(
-    private value: T,
-    options?: SignalOptions<T>,
-  ) {
+  constructor(private value: T, options?: SignalOptions<T>) {
     this.name = options?.name;
     this.equal = options?.equal ?? defaultEquals;
     this.onDestroy = options?.onDestroy;
   }
 
   signal(): T {
-    if (this.isDestroyed) {
-      throw new Error('Signal is destroyed');
+    if (!this.isDestroyed) {
+      this.producerAccessed();
     }
 
-    this.producerAccessed();
     return this.value;
   }
 
@@ -95,6 +91,10 @@ class WritableSignalImpl<T> implements ReactiveNode {
    * a no-op.
    */
   set(newValue: T): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
     if (this.equal(this.value, newValue)) {
       return;
     }
@@ -137,9 +137,14 @@ class WritableSignalImpl<T> implements ReactiveNode {
   }
 
   destroy() {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.consumerEffects.clear();
     this.isDestroyed = true;
     this.onDestroy?.();
+    this.onDestroy = undefined;
   }
 
   /**

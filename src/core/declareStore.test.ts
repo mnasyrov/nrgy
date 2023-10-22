@@ -15,14 +15,14 @@ describe('declareStore() #1', () => {
     });
 
     const store = createStore();
-    expect(store.get()).toBe(0);
+    expect(store()).toBe(0);
     expect(store.name).toBe('counterStore');
 
     store.updates.increase();
-    expect(store.get()).toBe(1);
+    expect(store()).toBe(1);
 
     store.updates.decrease();
-    expect(store.get()).toBe(0);
+    expect(store()).toBe(0);
   });
 
   it('should return a factory which can override initial parameters', () => {
@@ -33,14 +33,14 @@ describe('declareStore() #1', () => {
     });
 
     const store = createStore(10, { name: 'myCounter' });
-    expect(store.get()).toBe(10);
+    expect(store()).toBe(10);
     expect(store.name).toBe('myCounter');
 
     store.updates.increase();
-    expect(store.get()).toBe(11);
+    expect(store()).toBe(11);
 
     store.updates.decrease();
-    expect(store.get()).toBe(10);
+    expect(store()).toBe(10);
   });
 
   it('should work with a discriminate type of a state', () => {
@@ -59,13 +59,13 @@ describe('declareStore() #1', () => {
     });
 
     const store = createStore();
-    expect(store.get()).toEqual({ status: 'success' });
+    expect(store()).toEqual({ status: 'success' });
 
     store.updates.setError('fail');
-    expect(store.get()).toEqual({ status: 'error', error: 'fail' });
+    expect(store()).toEqual({ status: 'error', error: 'fail' });
 
     store.updates.setSuccess();
-    expect(store.get()).toEqual({ status: 'success' });
+    expect(store()).toEqual({ status: 'success' });
   });
 });
 
@@ -128,11 +128,9 @@ describe('declareStore() #2', () => {
       value: 'new initial text',
     });
 
-    const { get } = simpleStore.query();
+    expect(simpleStore().count).toBe(12);
 
-    expect(get().count).toBe(12);
-
-    expect(get().value).toBe('new initial text');
+    expect(simpleStore().value).toBe('new initial text');
   });
 
   it('should initial state to be able to be a function', () => {
@@ -141,47 +139,42 @@ describe('declareStore() #2', () => {
       value: 'updated text',
     }));
 
-    const { get } = simpleStore.query();
+    expect(simpleStore().count).toBe(0);
 
-    expect(get().count).toBe(0);
-
-    expect(get().value).toBe('updated text');
+    expect(simpleStore().value).toBe('updated text');
   });
 
   it('should update the state', () => {
     const simpleStore = createSimpleStore();
-    const { get } = simpleStore.query();
-    expect(get().count).toBe(0);
+    expect(simpleStore().count).toBe(0);
 
     simpleStore.updates.set(10);
 
-    expect(get().count).toBe(10);
+    expect(simpleStore().count).toBe(10);
 
     simpleStore.updates.increment();
 
-    expect(get().count).toBe(11);
+    expect(simpleStore().count).toBe(11);
 
     simpleStore.updates.decrement();
     simpleStore.updates.decrement();
 
-    expect(get().count).toBe(9);
+    expect(simpleStore().count).toBe(9);
   });
 
   it('should execute query selector', () => {
     const simpleStore = createSimpleStore();
-    const { get } = simpleStore.query((state) => state.count);
 
     simpleStore.updates.set(1);
 
-    expect(get()).toBe(1);
+    expect(simpleStore().count).toBe(1);
   });
 
   it('should use a lot of arguments in updates', () => {
     const simpleStore = createSimpleStore();
-    const { get } = simpleStore.query();
 
     simpleStore.updates.sum(1, 11);
 
-    expect(get().count).toBe(12);
+    expect(simpleStore().count).toBe(12);
   });
 });

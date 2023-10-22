@@ -1,6 +1,7 @@
 import { identity, map, merge, Observable, Subject, Subscription } from 'rxjs';
 
-import { Controller } from './controller';
+import { Controller } from '../mvc/controller';
+
 import {
   EffectError,
   EffectNotification,

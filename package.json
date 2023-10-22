@@ -37,7 +37,7 @@
     "eslint-fix": "npm run eslint -- --fix",
     "tsc": "tsc --noEmit --jsx react",
     "test": "jest",
-    "build": "tsup --clean --dts --format cjs,esm src/rx-effects/index.ts src/react/index.ts",
+    "build": "tsup --clean --dts --format cjs,esm src/core/index.ts src/mvc/index.ts src/rx-effects/index.ts",
     "benchmarks": "tsx ./benchmarks",
     "pack": "npm run build && mkdir -p dist && npm pack --pack-destination ./dist",
     "preversion": "npm run lint && npm run test && npm run build && git add --all",
@@ -46,10 +46,11 @@
     "prepublishOnly": "test -d dist || (echo 'Error: dist is missing!' && exit 1)"
   },
   "optionalDependencies": {
-    "ditox": ">=2.2.0",
-    "ditox-react": ">=2.2.0",
+    "ditox": ">=2.2",
+    "ditox-react": ">=2.2",
     "react": ">=17 || >=18",
-    "rxjs": ">=7.0.0"
+    "rx-effects": ">=1.0",
+    "rxjs": ">=7.0"
   },
   "devDependencies": {
     "@testing-library/react": "14.0.0",
@@ -73,6 +74,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-test-renderer": "18.2.0",
+    "rx-effects": "1.1.1",
     "rxjs": "7.8.1",
     "tinybench": "2.5.1",
     "ts-jest": "29.1.1",

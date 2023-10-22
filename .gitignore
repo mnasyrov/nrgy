@@ -3,6 +3,7 @@
 /coverage
 /dist
 /packages/*/dist
+.eslintcache
 .DS_Store
 .turbo
 node_modules

@@ -8,6 +8,9 @@ import {
   timer,
 } from 'rxjs';
 
+import { isSignal, Signal } from '../src/core';
+import { toObservable } from '../src/rxjs';
+
 import Mock = jest.Mock;
 
 export function waitForMicrotask(): Promise<void> {
@@ -15,7 +18,17 @@ export function waitForMicrotask(): Promise<void> {
 }
 
 export function collectChanges<T>(
-  source$: Observable<T>,
+  source: Signal<T>,
+  action: () => void | Promise<void>,
+  interval?: number,
+): Promise<Array<T>>;
+export function collectChanges<T>(
+  source: Observable<T>,
+  action: () => void | Promise<void>,
+  interval?: number,
+): Promise<Array<T>>;
+export function collectChanges<T>(
+  source: Signal<T> | Observable<T>,
   action: () => void | Promise<void>,
   interval = 500,
 ): Promise<Array<T>> {
@@ -28,6 +41,8 @@ export function collectChanges<T>(
 
     bufferClose$.next();
   });
+
+  const source$ = isSignal(source) ? toObservable(source) : source;
 
   return firstValueFrom(
     source$.pipe(

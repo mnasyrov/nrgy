@@ -26,7 +26,7 @@ export type {
 } from './store';
 export {
   createStore,
-  createSignalUpdates,
+  createStoreUpdates,
   declareStateUpdates,
   pipeStateMutations,
 } from './store';

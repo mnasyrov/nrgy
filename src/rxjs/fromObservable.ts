@@ -1,9 +1,8 @@
 import { BehaviorSubject, Observable, Subscribable } from 'rxjs';
 
-import { Signal } from '../core/common';
+import { Mutable, Signal } from '../core/common';
 import { computed } from '../core/computed';
 import { signal, WritableSignal } from '../core/signal';
-import { Mutable } from '../rx-effects/utils';
 
 export type ObservableSignal<T> = Signal<T>;
 
@@ -29,7 +28,9 @@ export interface ToSignalOptions<T> {
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
  */
-export function toSignal<T>(source: BehaviorSubject<T>): ObservableSignal<T>;
+export function fromObservable<T>(
+  source: BehaviorSubject<T>,
+): ObservableSignal<T>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Signal`.
@@ -39,7 +40,7 @@ export function toSignal<T>(source: BehaviorSubject<T>): ObservableSignal<T>;
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
  */
-export function toSignal<T>(
+export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
 ): ObservableSignal<T | undefined>;
 
@@ -51,7 +52,7 @@ export function toSignal<T>(
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
  */
-export function toSignal<T>(
+export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   options?: ToSignalOptions<undefined>,
 ): ObservableSignal<T | undefined>;
@@ -64,7 +65,7 @@ export function toSignal<T>(
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
  */
-export function toSignal<T, U extends T | null | undefined>(
+export function fromObservable<T, U extends T | null | undefined>(
   source: Observable<T> | Subscribable<T>,
   options: ToSignalOptions<U> & { initialValue: U },
 ): ObservableSignal<T | U>;
@@ -77,11 +78,11 @@ export function toSignal<T, U extends T | null | undefined>(
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
  */
-export function toSignal<T>(
+export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   options: ToSignalOptions<undefined>,
 ): ObservableSignal<T>;
-export function toSignal<T, U = undefined>(
+export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   options?: ToSignalOptions<U>,
 ): ObservableSignal<T | U> {

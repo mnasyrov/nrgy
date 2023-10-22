@@ -1,11 +1,11 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 
-import { toSignal } from './toSignal';
+import { fromObservable } from './fromObservable';
 
 describe('toSignal()', () => {
   it('should reflect the last emitted value of an Observable', () => {
     const counter$ = new BehaviorSubject(0);
-    const counter = toSignal(counter$);
+    const counter = fromObservable(counter$);
 
     expect(counter()).toBe(0);
     counter$.next(1);
@@ -16,7 +16,7 @@ describe('toSignal()', () => {
 
   it('should notify when the last emitted value of an Observable changes', () => {
     const counter$ = new BehaviorSubject(1);
-    const counter = toSignal(counter$);
+    const counter = fromObservable(counter$);
 
     expect(counter()).toBe(1);
 
@@ -26,7 +26,7 @@ describe('toSignal()', () => {
 
   it('should propagate an error returned by the Observable', () => {
     const counter$ = new BehaviorSubject(1);
-    const counter = toSignal(counter$);
+    const counter = fromObservable(counter$);
 
     expect(counter()).toBe(1);
 
@@ -37,7 +37,7 @@ describe('toSignal()', () => {
   describe('with no initial value', () => {
     it('should return `undefined` if read before a value is emitted', () => {
       const counter$ = new Subject<number>();
-      const counter = toSignal(counter$);
+      const counter = fromObservable(counter$);
 
       expect(counter()).toBeUndefined();
       counter$.next(1);
@@ -46,7 +46,7 @@ describe('toSignal()', () => {
 
     it('should not throw if a value is emitted before called', () => {
       const counter$ = new Subject<number>();
-      const counter = toSignal(counter$);
+      const counter = fromObservable(counter$);
 
       counter$.next(1);
       expect(() => counter()).not.toThrow();

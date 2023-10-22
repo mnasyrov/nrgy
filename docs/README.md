@@ -255,7 +255,7 @@ type LoggerController = Controller<{
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:24](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L24)
+[packages/rx-effects/src/declareViewController.ts:24](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L24)
 
 ---
 
@@ -563,7 +563,7 @@ Details about performing the effect.
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:54](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L54)
+[packages/rx-effects/src/declareViewController.ts:54](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L54)
 
 ---
 
@@ -942,7 +942,7 @@ Store of a state with updating functions
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:49](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L49)
+[packages/rx-effects/src/declareViewController.ts:49](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L49)
 
 ## Variables
 
@@ -1088,7 +1088,7 @@ expect(messageUppercase.get()).toBe('HELLO WORLD!');
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:7](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L7)
+[packages/rx-effects/src/declareViewController.ts:7](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L7)
 
 ---
 
@@ -1272,7 +1272,7 @@ Creates StateUpdates for updating the store by provided state mutations
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:36](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L36)
+[packages/rx-effects/src/declareViewController.ts:36](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L36)
 
 ---
 
@@ -1459,7 +1459,7 @@ type UserStore = ReturnType<typeof createUserStore>;
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:62](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L62)
+[packages/rx-effects/src/declareViewController.ts:62](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L62)
 
 ▸ **declareViewController**<`Dependencies`, `Service`, `Params`\>(`tokens`, `factory`): [`ViewControllerFactory`](README.md#viewcontrollerfactory)<`Service`, `Params`\>
 
@@ -1484,7 +1484,7 @@ type UserStore = ReturnType<typeof createUserStore>;
 
 #### Defined in
 
-[packages/rx-effects/src/mvc.ts:69](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L69)
+[packages/rx-effects/src/declareViewController.ts:69](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/mvc.ts#L69)
 
 ---
 
@@ -1605,7 +1605,7 @@ Creates a deferred or transformed view of the store.
 
 #### Defined in
 
-[packages/rx-effects/src/pipeStore.ts:7](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/pipeStore.ts#L7)
+[packages/rx-effects/src/pipeSignal.ts:7](https://github.com/mnasyrov/rx-effects/blob/1454a59/packages/rx-effects/src/pipeStore.ts#L7)
 
 ---
 
