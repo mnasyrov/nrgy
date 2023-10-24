@@ -35,3 +35,35 @@ export function createLatch<T = void>(): Latch<T> {
 
   return result;
 }
+
+export type QueueEntry<T> = { item: T; next?: QueueEntry<T> };
+
+export class Queue<T> {
+  head: QueueEntry<T> | undefined;
+  tail: QueueEntry<T> | undefined;
+
+  push(item: T) {
+    const entry = { item };
+
+    if (this.tail) {
+      this.tail.next = entry;
+    } else {
+      this.head = entry;
+    }
+
+    this.tail = entry;
+  }
+
+  get(): T | undefined {
+    const entry = this.head;
+
+    if (entry) {
+      const next = (this.head = entry.next);
+      if (!next) this.tail = undefined;
+
+      return entry.item;
+    }
+
+    return undefined;
+  }
+}

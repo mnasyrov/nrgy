@@ -1,5 +1,7 @@
 import { dump } from '../test/dump';
 
+import { Queue } from './utils';
+
 export type TaskScheduler<T> = Readonly<{
   isEmpty(): boolean;
   schedule(entry: T): void;
@@ -10,6 +12,15 @@ export type Runnable = Readonly<{ run: () => void }>;
 export function defaultRunnableAction(task: Runnable): void {
   task.run();
 }
+
+const queueMicrotaskPolyfill = (task: () => void): unknown =>
+  Promise.resolve().then(task);
+
+// Polyfill is faster, the benchmark needs to be reviewed.
+// const queueMicrotask =
+//   'queueMicrotask' in global ? global.queueMicrotask : queueMicrotaskPolyfill;
+
+const queueMicrotask = queueMicrotaskPolyfill;
 
 export class MicrotaskScheduler<T> implements TaskScheduler<T> {
   private queue: T[] = [];
@@ -27,7 +38,7 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
 
     // if (prevSize === 0 && !this.isActive) {
     if (prevSize === 0) {
-      Promise.resolve().then(() => this.execute());
+      queueMicrotask(this.execute);
     }
   };
 
@@ -59,33 +70,27 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
 }
 
 export class SyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue: T[] = [];
+  private queue = new Queue<T>();
   private isActive = false;
 
   constructor(private readonly action: (entry: T) => void) {}
 
-  isEmpty = (): boolean => this.queue.length === 0;
+  isEmpty = (): boolean => !this.queue.head;
 
   schedule = (entry: T): void => {
     this.queue.push(entry);
-    this.execute();
+    if (!this.isActive) this.execute();
   };
 
   execute = (): void => {
-    if (this.isActive) {
-      return;
-    }
+    if (this.isActive) return;
 
     this.isActive = true;
 
     try {
-      while (this.queue.length > 0) {
-        const list = this.queue;
-        this.queue = [];
-
-        for (const entry of list) {
-          this.action(entry);
-        }
+      let entry;
+      while ((entry = this.queue.get())) {
+        this.action(entry);
       }
     } finally {
       this.isActive = false;
