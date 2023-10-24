@@ -1,4 +1,4 @@
-import { waitForMicrotask } from '../test/testUtils';
+import { flushMicrotasks } from '../test/testUtils';
 
 import { action } from './action';
 import { effect } from './effect';
@@ -11,7 +11,7 @@ describe('action', () => {
     effect(a, (value) => (result = value));
     a(1);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(1);
   });
 
@@ -22,7 +22,7 @@ describe('action', () => {
     effect(a, () => count++);
     a();
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(count).toBe(1);
   });
 });

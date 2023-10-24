@@ -1,10 +1,6 @@
 import { toObservable } from '../rxjs';
 import { dump } from '../test/dump';
-import {
-  collectChanges,
-  collectSignalChanges,
-  waitForMicrotask,
-} from '../test/testUtils';
+import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import { objectEquals } from './common';
 import { compute } from './compute';
@@ -93,7 +89,7 @@ describe('Store', () => {
     it('should not apply a mutation if the new state is the same', async () => {
       const store = signal<State>({ value: 1 });
 
-      const statePromise = collectChanges(toObservable(store), () => {
+      const statePromise = collectChanges(store, () => {
         store.update((state) => state);
       });
       store.destroy();
@@ -158,7 +154,7 @@ describe('Concurrent Store updates', () => {
     });
 
     dump('waitForMicrotask 1');
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(store().merged).toEqual('ab');
     expect(store().uppercase).toEqual('AB');
@@ -171,13 +167,13 @@ describe('Concurrent Store updates', () => {
     expect(store().uppercase).toEqual('AB');
 
     dump('waitForMicrotask 2');
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(store().merged).toEqual('cd');
     expect(store().uppercase).toEqual('CD');
 
     dump('waitForMicrotask 3');
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(history).toEqual([
       { v1: 'a', v2: 'b' },
@@ -196,7 +192,7 @@ describe('Concurrent Store updates', () => {
       foo: number;
     }>({ bar: 0, foo: 0 }, { equal: objectEquals });
 
-    const history = await collectSignalChanges(store, () => {
+    const history = await collectChanges(store, () => {
       store.update((state) => ({ ...state, foo: 1 }));
       store.update((state) => ({ ...state, foo: 2 }));
       store.update((state) => ({ ...state, bar: 42 }));
@@ -223,7 +219,7 @@ describe('Concurrent Store updates', () => {
     effect(store, ({ x }) => store.update((state) => ({ ...state, y: x })));
     effect(store, ({ y }) => store.update((state) => ({ ...state, z: y })));
 
-    const history = await collectSignalChanges(store, () => {
+    const history = await collectChanges(store, () => {
       store.update((state) => ({ ...state, x: 1 }));
       store.update((state) => ({ ...state, x: 2 }));
       store.update((state) => ({ ...state, x: 3 }));
@@ -244,7 +240,7 @@ describe('Concurrent Store updates', () => {
       }
     });
 
-    const changes = await collectChanges(toObservable(store), () => {
+    const changes = await collectChanges(store, () => {
       store.set(1);
       store.set(2);
       store.set(3);

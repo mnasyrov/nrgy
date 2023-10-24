@@ -1,4 +1,4 @@
-import { waitForMicrotask } from '../test/testUtils';
+import { flushMicrotasks } from '../test/testUtils';
 
 import { action } from './action';
 import { compute } from './compute';
@@ -12,16 +12,16 @@ describe('effect()', () => {
     let result = 0;
     const fx = effect(emitter, (value) => (result = value));
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(0);
 
     emitter(1);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(1);
 
     fx.destroy();
     emitter(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(1);
   });
 
@@ -35,16 +35,16 @@ describe('effect()', () => {
       (value) => (result = value),
     );
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(3);
 
     a.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(4);
 
     fx.destroy();
     a.set(3);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(4);
   });
 
@@ -55,16 +55,16 @@ describe('effect()', () => {
     let result = 0;
     const fx = effect(() => (result = a() + b()));
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(3);
 
     a.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(4);
 
     fx.destroy();
     a.set(3);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result).toBe(4);
   });
 
@@ -73,18 +73,18 @@ describe('effect()', () => {
 
     const results: number[] = [];
     effect(() => results.push(a()));
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     a.set(1);
     a.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(results).toEqual([0, 2]);
 
     a.set(3);
     a.set(4);
     expect(a()).toEqual(4);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(results).toEqual([0, 2, 4]);
   });
 });

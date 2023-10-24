@@ -1,13 +1,16 @@
-import { BehaviorSubject, materialize, Subject } from 'rxjs';
-
-import { fromObservable, toObservable } from '../rxjs';
-import { collectChanges, waitForMicrotask } from '../test/testUtils';
+import { toObservable } from '../rxjs';
+import {
+  collectChanges,
+  collectHistory,
+  flushMicrotasks,
+} from '../test/testUtils';
 
 import { defaultEquals, Signal } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, effectSync } from './effect';
 import { SIGNAL_RUNTIME } from './runtime';
 import { signal } from './signal';
+import { createSignalSubject } from './signalSubject';
 
 describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {
@@ -173,13 +176,13 @@ describe('compute()', () => {
     const results: number[] = [];
 
     const fx = effect(() => results.push(b()));
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     source.set(1);
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     source.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     fx.destroy();
 
@@ -191,10 +194,10 @@ describe('compute()', () => {
 
     const a = compute(() => source() * 10);
 
-    const changes = await collectChanges(toObservable(a), async () => {
+    const changes = await collectChanges(a, async () => {
       source.set(2);
 
-      await waitForMicrotask();
+      await flushMicrotasks();
 
       source.set(3);
     });
@@ -210,11 +213,11 @@ describe('compute()', () => {
 
     expect(b()).toEqual(2);
 
-    const changes = await collectChanges(toObservable(b), async () => {
+    const changes = await collectChanges(b, async () => {
       entry.set(1);
       expect(b()).toEqual(3);
 
-      await waitForMicrotask();
+      await flushMicrotasks();
 
       entry.set(2);
       expect(b()).toEqual(4);
@@ -234,7 +237,7 @@ describe('compute()', () => {
 
     expect(b()).toEqual({ a: 1, b: 0 });
 
-    const changes = await collectChanges(toObservable(b), () => {
+    const changes = await collectChanges(b, () => {
       s1.set(1);
       // expect(b()).toEqual({ a: 2, b: 0 });
       expect(b()).toEqual({ a: 1, b: 0 });
@@ -267,7 +270,7 @@ describe('compute()', () => {
 
     expect(d()).toEqual(5);
 
-    const changes = await collectChanges(toObservable(d), async () => {
+    const changes = await collectChanges(d, async () => {
       entry.set(1);
       expect(d()).toEqual(7);
 
@@ -298,124 +301,37 @@ describe('compute()', () => {
 
     expect(() => result()).toThrow(new Error('Detected cycle in computations'));
 
-    const subject = new Subject();
-    const changes = await collectChanges(subject.pipe(materialize()), () => {
-      toObservable(result).subscribe(subject);
-    });
-    expect(changes).toEqual([
+    const history = await collectHistory(result, () => {});
+    expect(history).toEqual([
       {
+        type: 'error',
         error: new Error('Detected cycle in computations'),
-        hasValue: false,
-        kind: 'E',
-        value: undefined,
       },
     ]);
   });
 
   it('should propagate "error" event from a source to observers', async () => {
-    const bs = new BehaviorSubject<number>(1);
-    const source = fromObservable(bs);
+    const source = createSignalSubject<number>(1);
 
     const query1 = compute(() => source() + 1);
     const query2 = compute(() => query1() * 2);
 
-    const subject1 = new Subject();
-    const subject2 = new Subject();
-    const changes = await collectChanges(
-      subject2.pipe(materialize()),
-      async () => {
-        toObservable(query1).subscribe(subject1);
-        toObservable(query2).subscribe(subject2);
+    const history1 = await collectHistory(query2, async () => {
+      await flushMicrotasks();
 
-        await waitForMicrotask();
-
-        bs.error('Test error 1');
-        bs.error('Test error 1 second try');
-      },
-    );
-    expect(changes).toEqual([
-      // OK, что пропускаем начальное значение, так как эффекты отложены до след. микротаски
-      { error: undefined, hasValue: true, kind: 'N', value: 4 },
-      { error: 'Test error 1', hasValue: false, kind: 'E', value: undefined },
-    ]);
-
-    const changes2 = await collectChanges(subject2.pipe(materialize()), () => {
-      bs.error('Test error 3');
+      source.error('Test error 1');
     });
-    expect(changes2).toEqual([
-      { error: 'Test error 1', hasValue: false, kind: 'E', value: undefined },
+    expect(history1).toEqual([
+      { type: 'value', value: 4 },
+      { type: 'error', error: 'Test error 1' },
     ]);
 
-    const subject3 = new Subject();
-    const changes3 = await collectChanges(subject3.pipe(materialize()), () => {
-      toObservable(query2).subscribe(subject3);
-
-      bs.error('Test error 4');
+    const history2 = await collectHistory(query2, () => {
+      source.error('Test error 2');
     });
-    expect(changes3).toEqual([
-      { error: 'Test error 1', hasValue: false, kind: 'E', value: undefined },
-    ]);
-  });
-
-  // TODO: Refine the test. Is it neeeded?
-  it('should propagate "complete" event from a source to observers', async () => {
-    const bs = new BehaviorSubject<number>(1);
-    const source = fromObservable(bs);
-
-    const query1 = compute(() => source() + 1);
-    const query2 = compute(() => query1() * 2);
-
-    const subject1 = new Subject();
-    const subject2 = new Subject();
-    const changes = await collectChanges(
-      subject2.pipe(materialize()),
-      async () => {
-        toObservable(query1).subscribe(subject1);
-        toObservable(query2).subscribe(subject2);
-
-        await waitForMicrotask();
-
-        bs.complete();
-        bs.complete();
-      },
-    );
-    expect(changes).toEqual([
-      { error: undefined, hasValue: true, kind: 'N', value: 4 },
-
-      // Completion of the Observable is meaningless to the signal. Signals don't have a concept of
-      // "complete".
-      // { error: undefined, hasValue: false, kind: 'C', value: undefined },
-    ]);
-
-    const changes2 = await collectChanges(
-      subject2.pipe(materialize()),
-      async () => {
-        bs.complete();
-        await waitForMicrotask();
-      },
-    );
-    expect(changes2).toEqual([
-      // Completion of the Observable is meaningless to the signal. Signals don't have a concept of
-      // "complete".
-      // { error: undefined, hasValue: false, kind: 'C', value: undefined },
-    ]);
-
-    const subject3 = new Subject();
-    const changes3 = await collectChanges(
-      subject3.pipe(materialize()),
-      async () => {
-        toObservable(query2).subscribe(subject3);
-
-        bs.complete();
-
-        await waitForMicrotask();
-      },
-    );
-    expect(changes3).toEqual([
-      // Completion of the Observable is meaningless to the signal. Signals don't have a concept of
-      // "complete".
-      // { error: undefined, hasValue: false, kind: 'C', value: undefined },
-      { error: undefined, hasValue: true, kind: 'N', value: 4 },
+    expect(history2).toEqual([
+      { type: 'error', error: 'Test error 1' },
+      { type: 'error', error: 'Test error 2' },
     ]);
   });
 
@@ -424,16 +340,11 @@ describe('compute()', () => {
       throw new Error('Some error');
     });
 
-    const subject = new Subject();
-    const changes = await collectChanges(subject.pipe(materialize()), () => {
-      toObservable(query1).subscribe(subject);
-    });
-    expect(changes).toEqual([
+    const history = await collectHistory(query1, () => {});
+    expect(history).toEqual([
       {
+        type: 'error',
         error: expect.any(Error),
-        hasValue: false,
-        kind: 'E',
-        value: undefined,
       },
     ]);
   });
@@ -456,14 +367,14 @@ describe('compute()', () => {
     const onSumChanged = jest.fn();
     toObservable(sum).subscribe(onSumChanged);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(onSumChanged).toHaveBeenCalledWith('ab');
     expect(onSumChanged).toHaveBeenCalledTimes(1);
 
     onSumChanged.mockClear();
 
-    const storeChanges = await collectChanges(toObservable(store), () => {
+    const storeChanges = await collectChanges(store, () => {
       toObservable(sum).subscribe((sum) =>
         store.update((state) => ({ ...state, sum })),
       );
@@ -489,14 +400,14 @@ describe('compute()', () => {
       store.update((state) => ({ ...state, result }));
     });
 
-    const changes = await collectChanges(toObservable(store), async () => {
+    const changes = await collectChanges(store, async () => {
       expect(nextResult()).toEqual({ value: 0 });
 
       store.update((state) => ({ ...state, a: 1 }));
 
       expect(nextResult()).toEqual({ value: 1 });
 
-      await waitForMicrotask();
+      await flushMicrotasks();
     });
 
     subscription?.unsubscribe();
@@ -522,12 +433,12 @@ describe('compute()', () => {
       store.update((state) => ({ ...state, result }));
     });
 
-    const changes = await collectChanges(toObservable(store), async () => {
-      await waitForMicrotask();
+    const changes = await collectChanges(store, async () => {
+      await flushMicrotasks();
 
       store.update((state) => ({ ...state, a: 1 }));
 
-      await waitForMicrotask();
+      await flushMicrotasks();
     });
 
     subscription?.unsubscribe();
@@ -550,7 +461,7 @@ describe('compute()', () => {
       store1.update((state) => ({ ...state, result }));
     });
 
-    await collectChanges(toObservable(store1), async () => {
+    await collectChanges(store1, async () => {
       store1.update((state) => ({ ...state, a: 1 }));
     });
 
@@ -575,12 +486,9 @@ describe('compute()', () => {
       store.update((state) => ({ ...state, result }));
     });
 
-    const changes = await collectChanges(toObservable(store), async () => {
-      await waitForMicrotask();
-
+    const changes = await collectChanges(store, async () => {
+      await flushMicrotasks();
       store.update((state) => ({ ...state, a: 1 }));
-
-      await waitForMicrotask();
     });
 
     subscription?.unsubscribe();
@@ -599,7 +507,7 @@ describe('compute()', () => {
       equal: (a, b) => a.key === b.key,
     });
 
-    const changes = await collectChanges(toObservable(query), () => {
+    const changes = await collectChanges(query, () => {
       source.set({ key: 1, val: 'a' });
       source.set({ key: 1, val: 'b' });
       source.set({ key: 2, val: 'c' });

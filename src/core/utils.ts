@@ -25,7 +25,7 @@ export type Latch<T> = {
   reject: (reason?: any) => void;
 };
 
-export function createLatch<T>(): Latch<T> {
+export function createLatch<T = void>(): Latch<T> {
   const result = {} as any;
 
   result.promise = new Promise<T>((resolve, reject) => {

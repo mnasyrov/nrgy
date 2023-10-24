@@ -134,11 +134,7 @@ class WritableSignalImpl<T> implements ReactiveNode {
 
   asReadonly(): Signal<T> {
     if (this.readonlySignal === undefined) {
-      this.readonlySignal = createSignalFromFunction(
-        this,
-        () => this.signal(),
-        { destroy: () => this.destroy() },
-      );
+      this.readonlySignal = createSignalFromFunction(this, () => this.signal());
     }
     return this.readonlySignal;
   }

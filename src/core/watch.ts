@@ -34,8 +34,9 @@ export class Watch implements EffectNode, Runnable {
   dirty = false;
   isDestroyed = false;
 
-  private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
   private schedule: undefined | ((watch: Watch) => void);
+  private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
+  private onError: undefined | ((error: unknown) => unknown);
   private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
@@ -46,11 +47,13 @@ export class Watch implements EffectNode, Runnable {
   };
 
   constructor(
-    action: (onCleanup: WatchCleanupRegisterFn) => void,
     schedule: (watch: Watch) => void,
+    action: (onCleanup: WatchCleanupRegisterFn) => void,
+    onError?: (error: unknown) => unknown,
   ) {
-    this.action = action;
     this.schedule = schedule;
+    this.action = action;
+    this.onError = onError;
   }
 
   notify = (): void => {
@@ -100,10 +103,14 @@ export class Watch implements EffectNode, Runnable {
       return;
     }
 
+    let errorRef: undefined | { error: unknown };
+
     try {
       this.cleanupFn();
       this.cleanupFn = NOOP_CLEANUP_FN;
       this.action?.(this.registerOnCleanup);
+    } catch (error) {
+      errorRef = { error };
     } finally {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
 
@@ -114,6 +121,10 @@ export class Watch implements EffectNode, Runnable {
 
       if (!prevEffect) {
         SIGNAL_RUNTIME.resetVisitedComputedNodes();
+      }
+
+      if (errorRef && this.onError) {
+        this.onError(errorRef.error);
       }
     }
   }

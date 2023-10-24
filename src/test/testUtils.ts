@@ -1,70 +1,33 @@
-import {
-  bufferWhen,
-  firstValueFrom,
-  Observable,
-  Subject,
-  timeout,
-  timer,
-} from 'rxjs';
-
-import { isSignal, Signal } from '../core';
+import { Signal } from '../core';
 import { createScope } from '../core/scope';
 import { createLatch } from '../core/utils';
-import { toObservable } from '../rxjs';
 
-export function waitForMicrotask(interval = 0): Promise<void> {
-  return firstValueFrom(timer(interval)).then(() => undefined);
+export function flushMicrotasks(interval = 0): Promise<void> {
+  const { promise, resolve } = createLatch();
+
+  setTimeout(resolve, interval);
+
+  return promise;
 }
 
-export function collectChanges<T>(
-  source: Signal<T>,
-  action: () => void | Promise<void>,
-  interval?: number,
-): Promise<Array<T>>;
+type HistoryEvent<T> =
+  | { type: 'value'; value: T }
+  | { type: 'error'; error: unknown };
 
-export function collectChanges<T>(
-  source: Observable<T>,
-  action: () => void | Promise<void>,
-  interval?: number,
-): Promise<Array<T>>;
-
-export function collectChanges<T>(
-  source: Signal<T> | Observable<T>,
-  action: () => void | Promise<void>,
-  interval = 500,
-): Promise<Array<T>> {
-  const bufferClose$ = new Subject<void>();
-
-  const source$ = isSignal(source) ? toObservable(source) : source;
-
-  const resultPromise = firstValueFrom(
-    source$.pipe(
-      timeout(interval),
-      bufferWhen(() => bufferClose$),
-    ),
-  );
-
-  setTimeout(async () => {
-    await action();
-
-    await waitForMicrotask();
-
-    bufferClose$.next();
-  });
-
-  return resultPromise;
-}
-
-export function collectSignalChanges<T>(
+export function collectHistory<T>(
   source: Signal<T>,
   action: () => void | Promise<void>,
   timeout = 500,
-): Promise<Array<T>> {
-  const { promise, resolve, reject } = createLatch<T[]>();
+): Promise<Array<HistoryEvent<T>>> {
+  const { promise, resolve, reject } = createLatch<HistoryEvent<T>[]>();
 
-  const results: T[] = [];
+  const history: HistoryEvent<T>[] = [];
   const scope = createScope();
-  scope.effect(source, (value) => results.push(value));
+  scope.effect(
+    source,
+    (value) => history.push({ type: 'value', value }),
+    (error) => history.push({ type: 'error', error }),
+  );
 
   const timeoutId = setTimeout(() => {
     reject(new Error('Timeout is occurred'));
@@ -73,9 +36,9 @@ export function collectSignalChanges<T>(
   setTimeout(async () => {
     try {
       await action();
-      await waitForMicrotask();
+      await flushMicrotasks();
 
-      resolve(results);
+      resolve(history);
     } catch (error) {
       reject(error);
     }
@@ -84,5 +47,19 @@ export function collectSignalChanges<T>(
   return promise.finally(() => {
     clearTimeout(timeoutId);
     scope.destroy();
+  });
+}
+
+export async function collectChanges<T>(
+  source: Signal<T>,
+  action: () => void | Promise<void>,
+  timeout = 500,
+): Promise<Array<T>> {
+  const history = await collectHistory(source, action, timeout);
+
+  return history.map((event) => {
+    if (event.type === 'error') throw event.error;
+
+    return event.value;
   });
 }

@@ -1,8 +1,8 @@
 import { BehaviorSubject, Observable, Subscribable } from 'rxjs';
 
-import { Mutable, Signal } from '../core/common';
-import { compute } from '../core/compute';
-import { signal, WritableSignal } from '../core/signal';
+import { Signal } from '../core';
+import { createScope } from '../core/scope';
+import { createSignalSubject } from '../core/signalSubject';
 
 export type ObservableSignal<T> = Signal<T> & {
   destroy(): void;
@@ -84,62 +84,29 @@ export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   options: ToSignalOptions<undefined>,
 ): ObservableSignal<T>;
+
 export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   options?: ToSignalOptions<U>,
 ): ObservableSignal<T | U> {
+  const scope = createScope();
+
   // Note: T is the Observable value type, and U is the initial value type. They don't have to be
   // the same - the returned signal gives values of type `T`.
   //
   // If an initial value was passed, use it. Otherwise, use `undefined` as the initial value.
-  const state: WritableSignal<State<T | U>> = signal<State<T | U>>({
-    kind: StateKind.Value,
-    value: options?.initialValue as U,
+  const signalSubject = createSignalSubject<T | U>(options?.initialValue as U, {
+    onDestroy: () => scope.destroy(),
   });
 
-  const sub = source.subscribe({
-    next: (value) => state.set({ kind: StateKind.Value, value }),
-    error: (error) => state.set({ kind: StateKind.Error, error }),
-    // Completion of the Observable is meaningless to the signal. Signals don't have a concept of
-    // "complete".
-  });
+  scope.add(
+    source.subscribe({
+      next: signalSubject.next,
+      error: signalSubject.error,
+      // Completion of the Observable is meaningless to the signal. Signals don't have a concept of
+      // "complete".
+    }),
+  );
 
-  // The actual returned signal is a `computed` of the `State` signal, which maps the various states
-  // to either values or errors.
-  const result: ObservableSignal<T | U> = compute(() => {
-    const current = state();
-    switch (current.kind) {
-      case StateKind.Value:
-        return current.value;
-      case StateKind.Error:
-        throw current.error;
-    }
-  }) as ObservableSignal<T | U>;
-
-  const mutable = result as Mutable<ObservableSignal<T | U>>;
-
-  // Unsubscribe when the current context is destroyed, if requested.
-  mutable.destroy = () => {
-    state.destroy();
-    sub.unsubscribe();
-  };
-
-  return result;
+  return signalSubject.asObservable();
 }
-
-const enum StateKind {
-  Value,
-  Error,
-}
-
-interface ValueState<T> {
-  kind: StateKind.Value;
-  value: T;
-}
-
-interface ErrorState {
-  kind: StateKind.Error;
-  error: unknown;
-}
-
-type State<T> = ValueState<T> | ErrorState;

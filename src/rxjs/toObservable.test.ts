@@ -3,7 +3,7 @@ import { take, toArray } from 'rxjs/operators';
 
 import { compute } from '../core/compute';
 import { signal } from '../core/signal';
-import { waitForMicrotask } from '../test/testUtils';
+import { flushMicrotasks } from '../test/testUtils';
 
 import { toObservable } from './toObservable';
 
@@ -15,16 +15,16 @@ describe('toObservable()', () => {
     );
 
     // Initial effect execution, emits 0.
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     counter.set(1);
     // Emits 1.
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     counter.set(2);
     counter.set(3);
     // Emits 3 (ignores 2 as it was batched by the effect).
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(await counterValues).toEqual([0, 1, 3]);
   });
@@ -50,11 +50,11 @@ describe('toObservable()', () => {
       error: (err) => (currentError = err),
     });
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(currentValue).toBe(1);
 
     source.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(currentError).toBe('fail');
 
     sub.unsubscribe();
@@ -72,7 +72,7 @@ describe('toObservable()', () => {
     // Simply creating the Observable shouldn't trigger a signal read.
     expect(counterRead).toBe(false);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(counterRead).toBe(false);
   });
 
@@ -91,13 +91,13 @@ describe('toObservable()', () => {
     const sub = counter$.subscribe();
     expect(readCount).toBe(0);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(readCount).toBe(1);
 
     // Sanity check of the read tracker - updating the counter should cause it to be read again
     // by the active effect.
     counter.set(1);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(readCount).toBe(2);
 
     // Tear down the only subscription.
@@ -105,7 +105,7 @@ describe('toObservable()', () => {
 
     // Now, setting the signal still triggers additional reads
     counter.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(readCount).toBe(2);
   });
 
@@ -124,13 +124,13 @@ describe('toObservable()', () => {
 
     expect(readCount).toBe(0);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(readCount).toBe(0);
 
     // Now, setting the signal shouldn't trigger any additional reads, as the Injector was destroyed
     // childInjector.destroy();
     counter.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(readCount).toBe(0);
   });
 
@@ -151,10 +151,10 @@ describe('toObservable()', () => {
       emits.update((v) => v + 1);
     });
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(emits()).toBe(1);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(emits()).toBe(1);
 
     expect(hits).toBe(1);

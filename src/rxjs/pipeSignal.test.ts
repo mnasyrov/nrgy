@@ -1,11 +1,9 @@
-import { materialize } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { signal } from '../core';
-import { collectChanges, waitForMicrotask } from '../test/testUtils';
+import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import { pipeSignal } from './pipeSignal';
-import { toObservable } from './toObservable';
 
 describe('pipeSignal()', () => {
   it('should creates a transformed view of the source store', async () => {
@@ -15,12 +13,12 @@ describe('pipeSignal()', () => {
       source,
       map((value) => value * 10),
     );
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(result()).toBe(10);
 
     source.set(2);
-    await waitForMicrotask();
+    await flushMicrotasks();
 
     expect(result()).toBe(20);
   });
@@ -33,27 +31,14 @@ describe('pipeSignal()', () => {
       map((value) => value * 10),
     );
 
-    const notifications$ = toObservable(result).pipe(materialize());
-
-    const notificationsPromise = collectChanges(notifications$, async () => {
+    const history = await collectChanges(result, async () => {
       source.destroy();
       source.set(2);
-      await waitForMicrotask();
+      await flushMicrotasks();
       expect(result()).toBe(10);
     });
 
-    expect(await notificationsPromise).toEqual([
-      {
-        hasValue: true,
-        kind: 'N',
-        value: 1,
-      },
-      {
-        hasValue: true,
-        kind: 'N',
-        value: 10,
-      },
-    ]);
+    expect(history).toEqual([1, 10]);
   });
 
   it('should creates a debounced view of the source store', async () => {
@@ -65,13 +50,13 @@ describe('pipeSignal()', () => {
 
     expect(result()).toBe(1);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result()).toBe(10);
 
     source.set(2);
     expect(result()).toBe(10);
 
-    await waitForMicrotask();
+    await flushMicrotasks();
     expect(result()).toBe(20);
   });
 });

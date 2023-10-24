@@ -28,29 +28,42 @@ export type EffectHandle = Readonly<{
 }>;
 
 type SideEffectFn = (onCleanup: EffectCleanupRegisterFn) => void;
+type ValueCallbackFn<T> = (value: T) => unknown;
+type ErrorCallbackFn = (error: unknown) => unknown;
 
 export interface EffectFn {
-  <T>(target: ActionEmitter<T>, callback: (value: T) => unknown): EffectHandle;
-  <T>(target: Signal<T>, callback: (value: T) => unknown): EffectHandle;
-  (target: SideEffectFn): EffectHandle;
+  <T>(target: ActionEmitter<T>, callback: ValueCallbackFn<T>): EffectHandle;
+  <T>(
+    target: Signal<T>,
+    callback: ValueCallbackFn<T>,
+    onError?: ErrorCallbackFn,
+  ): EffectHandle;
+  (target: SideEffectFn, onError?: ErrorCallbackFn): EffectHandle;
 }
 
 export const effect: EffectFn = <
   T,
   Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
   Callback extends Target extends ActionEmitter<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : Target extends Signal<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : never,
+  ErrorCallback extends Target extends ActionEmitter<T>
+    ? never
+    : Target extends Signal<T>
+    ? ErrorCallbackFn
+    : ErrorCallbackFn,
 >(
   target: Target,
   callback?: Callback,
+  errorCallback?: ErrorCallback,
 ) => {
-  return effectFactory<T, Target, Callback>(
+  return effectFactory<T, Target, Callback, ErrorCallback>(
     SIGNAL_RUNTIME.asyncScheduler,
     target,
     callback,
+    errorCallback,
   );
 };
 
@@ -58,18 +71,25 @@ export const effectSync: EffectFn = <
   T,
   Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
   Callback extends Target extends ActionEmitter<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : Target extends Signal<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : never,
+  ErrorCallback extends Target extends ActionEmitter<T>
+    ? never
+    : Target extends Signal<T>
+    ? ErrorCallbackFn
+    : ErrorCallbackFn,
 >(
   target: Target,
   callback?: Callback,
+  errorCallback?: ErrorCallback,
 ) => {
-  return effectFactory<T, Target, Callback>(
+  return effectFactory<T, Target, Callback, ErrorCallback>(
     SIGNAL_RUNTIME.syncScheduler,
     target,
     callback,
+    errorCallback,
   );
 };
 
@@ -77,14 +97,20 @@ function effectFactory<
   T,
   Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
   Callback extends Target extends ActionEmitter<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : Target extends Signal<T>
-    ? (value: T) => unknown
+    ? ValueCallbackFn<T>
     : never,
+  ErrorCallback extends Target extends ActionEmitter<T>
+    ? never
+    : Target extends Signal<T>
+    ? ErrorCallbackFn
+    : ErrorCallbackFn,
 >(
   scheduler: TaskScheduler<Runnable>,
   target: Target,
   callback?: Callback,
+  errorCallback?: ErrorCallback,
 ): EffectHandle {
   if (isAction<T>(target)) {
     if (!callback) throw new Error('callback is missed');
@@ -98,14 +124,22 @@ function effectFactory<
 
   if (isSignal<T>(target)) {
     if (!callback) throw new Error('callback is missed');
-    const watch = new Watch(() => callback(target()), scheduler.schedule);
+    const watch = new Watch(
+      scheduler.schedule,
+      () => callback(target()),
+      errorCallback,
+    );
     watch.notify();
     return { destroy: () => watch.destroy() };
   }
 
   // Computed function
 
-  const watch = new Watch(target as SideEffectFn, scheduler.schedule);
+  const watch = new Watch(
+    scheduler.schedule,
+    target as SideEffectFn,
+    errorCallback,
+  );
   // Effect starts dirty.
   watch.notify();
   return { destroy: () => watch.destroy() };
