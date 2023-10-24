@@ -112,9 +112,10 @@ export function declareStore<
         ? (initialState as StateMutation<State>)(baseState)
         : initialState;
 
-    const store = createStore(state, updates, {
+    const store = createStore(state, {
       ...signalOptions,
       ...options,
+      updates,
     });
 
     return store;

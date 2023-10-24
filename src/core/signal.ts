@@ -1,3 +1,5 @@
+import { dump } from '../test/dump';
+
 import {
   createSignalFromFunction,
   defaultEquals,
@@ -12,6 +14,8 @@ import { SIGNAL_RUNTIME } from './runtime';
  * A `Signal` with a value that can be mutated via a setter interface.
  */
 export interface WritableSignal<T> extends Signal<T> {
+  destroy(): void;
+
   /**
    * Directly set the signal to a new value, and notify any dependents.
    */
@@ -69,7 +73,10 @@ class WritableSignalImpl<T> implements ReactiveNode {
 
   private isDestroyed = false;
 
-  constructor(private value: T, options?: SignalOptions<T>) {
+  constructor(
+    private value: T,
+    options?: SignalOptions<T>,
+  ) {
     this.name = options?.name;
     this.equal = options?.equal ?? defaultEquals;
     this.onDestroy = options?.onDestroy;
@@ -147,6 +154,18 @@ class WritableSignalImpl<T> implements ReactiveNode {
     this.onDestroy = undefined;
   }
 
+  toJSON() {
+    return this.signal();
+  }
+
+  toString() {
+    return String(this.signal());
+  }
+
+  valueOf() {
+    return this.signal();
+  }
+
   /**
    * Notify all consumers of this producer that its value is changed.
    */
@@ -154,12 +173,20 @@ class WritableSignalImpl<T> implements ReactiveNode {
     for (const [effectRef, atEffectClock] of this.consumerEffects) {
       const effect = effectRef.deref();
 
-      if (!effect || effect.clock !== atEffectClock || effect.isDestroyed) {
+      if (
+        !effect ||
+        effect.isDestroyed ||
+        (!effect.dirty && effect.clock !== atEffectClock)
+      ) {
+        dump('producerChanged, consumerEffects.delete', {
+          atEffectClock,
+          effect,
+        });
         this.consumerEffects.delete(effectRef);
         continue;
       }
 
-      effect?.notify?.();
+      effect.notify();
     }
   }
 
@@ -196,6 +223,10 @@ export function signal<T>(
       update: signalNode.update.bind(signalNode),
       // mutate: signalNode.mutate.bind(signalNode),
       asReadonly: signalNode.asReadonly.bind(signalNode),
+
+      toJSON: signalNode.toJSON.bind(signalNode),
+      toString: signalNode.toString.bind(signalNode),
+      valueOf: signalNode.valueOf.bind(signalNode),
 
       destroy: signalNode.destroy.bind(signalNode),
     },

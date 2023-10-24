@@ -1,4 +1,5 @@
 {
+  "exclude": ["src-temp/effect-monitor", "src-temp/react", "examples"],
   "compilerOptions": {
     "noEmit": true,
     "target": "ES2019",

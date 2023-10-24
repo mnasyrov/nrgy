@@ -1,4 +1,7 @@
+import { action } from './action';
+import { effect, EffectFn, effectSync } from './effect';
 import { signal } from './signal';
+import { createStore, StateUpdates } from './store';
 
 export interface Unsubscribable {
   unsubscribe(): void;
@@ -23,7 +26,11 @@ export type Scope = Readonly<
     add: (teardown: ScopeTeardown) => void;
     handle: (teardown: ScopeTeardown) => void;
 
+    action: typeof action;
     signal: typeof signal;
+    store: typeof createStore;
+    effect: EffectFn;
+    effectSync: EffectFn;
   }
 >;
 
@@ -95,8 +102,34 @@ class ScopeImpl implements Scope {
     }
   }
 
+  action<T>(...args: Parameters<typeof action<T>>) {
+    const result = action<T>(...args);
+    this.add(result);
+    return result;
+  }
+
   signal<T>(...args: Parameters<typeof signal<T>>) {
     const result = signal(...args);
+    this.add(result);
+    return result;
+  }
+
+  store<State, Updates extends StateUpdates<State> = StateUpdates<State>>(
+    ...args: Parameters<typeof createStore<State, Updates>>
+  ) {
+    const result = createStore(...args);
+    this.add(result);
+    return result;
+  }
+
+  effect(...args: Parameters<EffectFn>) {
+    const result = effect(...args);
+    this.add(result);
+    return result;
+  }
+
+  effectSync(...args: Parameters<EffectFn>) {
+    const result = effectSync(...args);
     this.add(result);
     return result;
   }
@@ -110,9 +143,15 @@ export function createScope(): Scope {
 
   return {
     destroy: scope.destroy.bind(scope),
+
     create: scope.create.bind(scope),
     add: scope.handle.bind(scope),
     handle: scope.handle.bind(scope),
+
+    action: scope.action.bind(scope),
     signal: scope.signal.bind(scope),
+    store: scope.store.bind(scope),
+    effect: scope.effect.bind(scope),
+    effectSync: scope.effectSync.bind(scope),
   };
 }

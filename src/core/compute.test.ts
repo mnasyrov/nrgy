@@ -1,26 +1,26 @@
 import { BehaviorSubject, materialize, Subject } from 'rxjs';
 
-import { collectChanges, waitForMicrotask } from '../../test/testUtils';
 import { fromObservable, toObservable } from '../rxjs';
+import { collectChanges, waitForMicrotask } from '../test/testUtils';
 
 import { defaultEquals, Signal } from './common';
-import { computed, ComputedImpl } from './computed';
-import { effect } from './effect';
+import { compute, ComputedImpl } from './compute';
+import { effect, effectSync } from './effect';
 import { SIGNAL_RUNTIME } from './runtime';
 import { signal } from './signal';
 
-describe('computed()', () => {
+describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {
     const entry = signal(0); // 0
 
-    const a = computed(() => entry()); // [0] -> 0
-    const b = computed(() => a() + 1); // [0] -> 1
-    const c = computed(() => a() + 1); // [0] -> 1
-    const d = computed(() => b() + c()); // [1, 1] -> 2
-    const e = computed(() => d() + 1); // [2] -> 3
-    const f = computed(() => d() + e()); // [2, 3] -> 5
-    const g = computed(() => d() + e()); // [2, 3] -> 5
-    const h = computed(() => f() + g()); // [5, 5] -> 10
+    const a = compute(() => entry()); // [0] -> 0
+    const b = compute(() => a() + 1); // [0] -> 1
+    const c = compute(() => a() + 1); // [0] -> 1
+    const d = compute(() => b() + c()); // [1, 1] -> 2
+    const e = compute(() => d() + 1); // [2] -> 3
+    const f = compute(() => d() + e()); // [2, 3] -> 5
+    const g = compute(() => d() + e()); // [2, 3] -> 5
+    const h = compute(() => f() + g()); // [5, 5] -> 10
 
     const results: number[] = [];
 
@@ -39,18 +39,18 @@ describe('computed()', () => {
   it('should calculate the benchmark with synchronous effect', () => {
     const entry = signal(0); // 0
 
-    const a = computed(() => entry()); // [0] -> 0
-    const b = computed(() => a() + 1); // [0] -> 1
-    const c = computed(() => a() + 1); // [0] -> 1
-    const d = computed(() => b() + c()); // [1, 1] -> 2
-    const e = computed(() => d() + 1); // [2] -> 3
-    const f = computed(() => d() + e()); // [2, 3] -> 5
-    const g = computed(() => d() + e()); // [2, 3] -> 5
-    const h = computed(() => f() + g()); // [5, 5] -> 10
+    const a = compute(() => entry()); // [0] -> 0
+    const b = compute(() => a() + 1); // [0] -> 1
+    const c = compute(() => a() + 1); // [0] -> 1
+    const d = compute(() => b() + c()); // [1, 1] -> 2
+    const e = compute(() => d() + 1); // [2] -> 3
+    const f = compute(() => d() + e()); // [2, 3] -> 5
+    const g = compute(() => d() + e()); // [2, 3] -> 5
+    const h = compute(() => f() + g()); // [5, 5] -> 10
 
     const results: number[] = [];
 
-    effect(() => results.push(h()), { sync: true });
+    effectSync(() => results.push(h()));
 
     entry.set(1);
     entry.set(2);
@@ -64,7 +64,7 @@ describe('computed()', () => {
     const a = signal('a1');
     const b = signal('b1');
 
-    const output = computed(() => (isA() ? a() : b()) + `, i${i}`);
+    const output = compute(() => (isA() ? a() : b()) + `, i${i}`);
 
     const results: any[] = [];
     effect(() => results.push(output()));
@@ -97,8 +97,8 @@ describe('computed()', () => {
 
   it('should not compute external dependencies in a signal was not changed', async () => {
     let value = 1;
-    const subscribed = computed(() => value);
-    const notSubscribed = computed(() => value);
+    const subscribed = compute(() => value);
+    const notSubscribed = compute(() => value);
 
     expect(subscribed()).toBe(1);
     expect(notSubscribed()).toBe(1);
@@ -134,14 +134,14 @@ describe('computed()', () => {
 
   it('should have typings to return another type', () => {
     const source = signal<number>(1);
-    const query: Signal<string> = computed(() => source() + '!');
+    const query: Signal<string> = compute(() => source() + '!');
     expect(query()).toBe('1!');
   });
 
   it('should compute "entry -> a" chain', async () => {
     const source = signal(1);
 
-    const a = computed(() => source() * 10);
+    const a = compute(() => source() * 10);
     expect(a()).toEqual(10);
 
     source.set(2);
@@ -153,11 +153,11 @@ describe('computed()', () => {
 
   it('should work with a simple sync effect', () => {
     const source = signal(0);
-    const a = computed(() => source() + 1);
-    const b = computed(() => a() + 1);
+    const a = compute(() => source() + 1);
+    const b = compute(() => a() + 1);
 
     const results: number[] = [];
-    const fx = effect(() => results.push(b()), { sync: true });
+    const fx = effectSync(() => results.push(b()));
     source.set(1);
     source.set(2);
     fx.destroy();
@@ -167,8 +167,8 @@ describe('computed()', () => {
 
   it('should work with a simple async effect', async () => {
     const source = signal(0);
-    const a = computed(() => source() + 1);
-    const b = computed(() => a() + 1);
+    const a = compute(() => source() + 1);
+    const b = compute(() => a() + 1);
 
     const results: number[] = [];
 
@@ -189,7 +189,7 @@ describe('computed()', () => {
   it('should compute "entry -> a -> observer" chain', async () => {
     const source = signal(1);
 
-    const a = computed(() => source() * 10);
+    const a = compute(() => source() * 10);
 
     const changes = await collectChanges(toObservable(a), async () => {
       source.set(2);
@@ -205,8 +205,8 @@ describe('computed()', () => {
   it('should compute "entry -> a -> b -> observer" chain', async () => {
     const entry = signal(0);
 
-    const a = computed(() => entry() + 1);
-    const b = computed(() => a() + 1);
+    const a = compute(() => entry() + 1);
+    const b = compute(() => a() + 1);
 
     expect(b()).toEqual(2);
 
@@ -227,8 +227,8 @@ describe('computed()', () => {
     const s1 = signal(0);
     const s2 = signal(0);
 
-    const a = computed(() => s1() + 1);
-    const b = computed(() => ({ a: a(), b: s2() }), {
+    const a = compute(() => s1() + 1);
+    const b = compute(() => ({ a: a(), b: s2() }), {
       equal: (prev, next) => prev.b === next.b,
     });
 
@@ -260,10 +260,10 @@ describe('computed()', () => {
   it('should compute "entry -> a -> b/c -> d -> observer" chain', async () => {
     const entry = signal(0);
 
-    const a = computed(() => entry() + 1);
-    const b = computed(() => a() + 1);
-    const c = computed(() => a() + 1);
-    const d = computed(() => b() + c() + 1);
+    const a = compute(() => entry() + 1);
+    const b = compute(() => a() + 1);
+    const c = compute(() => a() + 1);
+    const d = compute(() => b() + c() + 1);
 
     expect(d()).toEqual(5);
 
@@ -283,18 +283,18 @@ describe('computed()', () => {
   it('should throw an error on a cycle', async () => {
     const entry = signal(0);
 
-    const a = computed(() => entry() + 1);
+    const a = compute(() => entry() + 1);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const b = computed(() => a() + c() + 1);
+    const b = compute(() => a() + c() + 1);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line no-var
-    var c = computed(() => b() + 1);
+    var c = compute(() => b() + 1);
 
-    const result = computed(() => c());
+    const result = compute(() => c());
 
     expect(() => result()).toThrow(new Error('Detected cycle in computations'));
 
@@ -316,8 +316,8 @@ describe('computed()', () => {
     const bs = new BehaviorSubject<number>(1);
     const source = fromObservable(bs);
 
-    const query1 = computed(() => source() + 1);
-    const query2 = computed(() => query1() * 2);
+    const query1 = compute(() => source() + 1);
+    const query2 = compute(() => query1() * 2);
 
     const subject1 = new Subject();
     const subject2 = new Subject();
@@ -362,8 +362,8 @@ describe('computed()', () => {
     const bs = new BehaviorSubject<number>(1);
     const source = fromObservable(bs);
 
-    const query1 = computed(() => source() + 1);
-    const query2 = computed(() => query1() * 2);
+    const query1 = compute(() => source() + 1);
+    const query2 = compute(() => query1() * 2);
 
     const subject1 = new Subject();
     const subject2 = new Subject();
@@ -420,7 +420,7 @@ describe('computed()', () => {
   });
 
   it('should throw an error on subscription to an incorrect dependency', async () => {
-    const query1 = computed(() => {
+    const query1 = compute(() => {
       throw new Error('Some error');
     });
 
@@ -448,10 +448,10 @@ describe('computed()', () => {
       // { equal: (a, b) => a.v1 === b.v1 && a.v2 === b.v2 && a.sum === b.sum },
     );
 
-    const v1 = computed(() => store().v1);
-    const v2 = computed(() => store().v2);
+    const v1 = compute(() => store().v1);
+    const v2 = compute(() => store().v2);
 
-    const sum = computed(() => v1() + v2());
+    const sum = compute(() => v1() + v2());
 
     const onSumChanged = jest.fn();
     toObservable(sum).subscribe(onSumChanged);
@@ -479,7 +479,7 @@ describe('computed()', () => {
   it('should handle recursion during store updates: Value selector', async () => {
     const store = signal({ a: 0, result: { value: 0 } });
 
-    const nextResult = computed(() => ({ value: store().a }), {
+    const nextResult = compute(() => ({ value: store().a }), {
       equal: (a, b) => a.value === b.value,
     });
 
@@ -508,11 +508,11 @@ describe('computed()', () => {
     ]);
   });
 
-  it('should handle recursion during store updates: Intermediate computed', async () => {
+  it('should handle recursion during store updates: Intermediate compute', async () => {
     const store = signal({ a: 0, result: { value: 0 } });
 
-    const a = computed(() => store().a);
-    const nextResult = computed(() => ({ value: a() }), {
+    const a = compute(() => store().a);
+    const nextResult = compute(() => ({ value: a() }), {
       equal: (a, b) => a.value === b.value,
     });
 
@@ -542,7 +542,7 @@ describe('computed()', () => {
   it('should correctly clean tracked effects', async () => {
     const store1 = signal({ a: 0, result: { value: 0 } });
 
-    const nextResult1 = computed(() => ({ value: store1().a }), {
+    const nextResult1 = compute(() => ({ value: store1().a }), {
       equal: (a, b) => a.value === b.value,
     });
 
@@ -564,8 +564,8 @@ describe('computed()', () => {
 
     const store = signal({ a: 0, result: { value: 0 } });
 
-    const a = computed(() => store().a);
-    const nextResult = computed(() => ({ value: a() }), {
+    const a = compute(() => store().a);
+    const nextResult = compute(() => ({ value: a() }), {
       equal: (a, b) => a.value === b.value,
     });
 
@@ -595,7 +595,7 @@ describe('computed()', () => {
   it('should use a custom comparator', async () => {
     const source = signal({ key: 1, val: 'a' });
 
-    const query = computed(() => source(), {
+    const query = compute(() => source(), {
       equal: (a, b) => a.key === b.key,
     });
 
@@ -614,7 +614,7 @@ describe('computed()', () => {
   it('should use a getter without selector', async () => {
     const source = signal({ key: 1, val: 'a' });
 
-    const query = computed(() => source());
+    const query = compute(() => source());
     expect(query()).toEqual({ key: 1, val: 'a' });
   });
 
@@ -623,7 +623,7 @@ describe('computed()', () => {
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
-    const result = computed(() => {
+    const result = compute(() => {
       readCount++;
       return { value: counter() };
     });

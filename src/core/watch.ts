@@ -1,7 +1,9 @@
+import { dump } from '../test/dump';
+
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
 import { Runnable } from './schedulers';
-import { nextSafeInteger } from './utils';
+import { isArrayEqual, nextSafeInteger } from './utils';
 
 /**
  * A cleanup function that can be optionally registered from the watch logic. If registered, the
@@ -14,8 +16,9 @@ export type WatchCleanupFn = () => void;
  */
 export type WatchCleanupRegisterFn = (cleanupFn: WatchCleanupFn) => void;
 
-const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
 let WATCH_ID = 0;
+
+const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
 /**
  * Watches a reactive expression and allows it to be scheduled to re-run
  * when any dependencies notify of a change.
@@ -24,11 +27,11 @@ let WATCH_ID = 0;
  * scheduling operation to coordinate calling `Watch.run()`.
  */
 export class Watch implements EffectNode, Runnable {
-  readonly id: number = (WATCH_ID = nextSafeInteger(WATCH_ID));
+  readonly id = (WATCH_ID = nextSafeInteger(WATCH_ID));
   readonly ref: WeakRef<EffectNode> = new WeakRef(this);
   clock = 0;
 
-  private dirty = false;
+  dirty = false;
   isDestroyed = false;
 
   private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
@@ -36,6 +39,7 @@ export class Watch implements EffectNode, Runnable {
   private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
+  private seenComputedNodeVersions: undefined | number[];
 
   private registerOnCleanup = (cleanupFn: WatchCleanupFn) => {
     this.cleanupFn = cleanupFn;
@@ -83,7 +87,13 @@ export class Watch implements EffectNode, Runnable {
     const prevEffect = SIGNAL_RUNTIME.setCurrentEffect(this);
 
     const isChanged =
-      !this.seenComputedNodes || isComputedNodesChanged(this.seenComputedNodes);
+      !this.seenComputedNodes ||
+      isComputedNodesChanged(
+        this.seenComputedNodes,
+        this.seenComputedNodeVersions,
+      );
+
+    dump('watch ' + this.id, { isChanged });
 
     if (!isChanged) {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
@@ -98,6 +108,9 @@ export class Watch implements EffectNode, Runnable {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
 
       this.seenComputedNodes = SIGNAL_RUNTIME.getVisitedComputedNodes();
+      this.seenComputedNodeVersions = this.seenComputedNodes.map(
+        (node) => node.version,
+      );
 
       if (!prevEffect) {
         SIGNAL_RUNTIME.resetVisitedComputedNodes();
@@ -119,7 +132,10 @@ export class Watch implements EffectNode, Runnable {
   }
 }
 
-function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
+function isComputedNodesChanged(
+  nodes: ComputedNode<any>[],
+  lastVersions?: number[],
+): boolean {
   if (nodes.length === 0) {
     return true;
   }
@@ -128,6 +144,11 @@ function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
     if (node.isChanged()) {
       return true;
     }
+  }
+
+  if (lastVersions) {
+    const currentVersions = nodes.map((node) => node.version);
+    return !isArrayEqual(lastVersions, currentVersions);
   }
 
   return false;

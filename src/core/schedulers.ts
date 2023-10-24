@@ -1,3 +1,5 @@
+import { dump } from '../test/dump';
+
 export type TaskScheduler<T> = Readonly<{
   isEmpty(): boolean;
   schedule(entry: T): void;
@@ -21,12 +23,17 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
     const prevSize = this.queue.length;
     this.queue.push(entry);
 
+    dump('scheduled', { entry, queue: this.queue });
+
+    // if (prevSize === 0 && !this.isActive) {
     if (prevSize === 0) {
       Promise.resolve().then(() => this.execute());
     }
   };
 
   execute = (): void => {
+    dump('begin execute', { isActive: this.isActive, queue: this.queue });
+
     if (this.isActive) {
       return;
     }
@@ -34,16 +41,19 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
     this.isActive = true;
 
     try {
-      while (this.queue.length > 0) {
+      // while (this.queue.length > 0) {
+      if (this.queue.length > 0) {
         const list = this.queue;
         this.queue = [];
 
         for (const entry of list) {
+          dump('execute', entry);
           this.action(entry);
         }
       }
     } finally {
       this.isActive = false;
+      dump('finish execute', { isActive: this.isActive, queue: this.queue });
     }
   };
 }

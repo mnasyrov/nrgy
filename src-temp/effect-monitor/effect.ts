@@ -1,21 +1,8 @@
-import {
-  defer,
-  mergeMap,
-  Observable,
-  of,
-  OperatorFunction,
-  retry,
-  Subject,
-  Subscription,
-  tap,
-} from 'rxjs';
+import { Action, ActionEmitter } from '../../src/core/action';
+import { Controller } from '../../src/mvc';
 
-import { Controller } from '../mvc/controller';
-
-import { Action } from './action';
 import { createEffectController } from './effectController';
 import { EffectState } from './effectState';
-import { Query } from './query';
 
 /**
  * Handler for an event. It can be asynchronous.
@@ -37,15 +24,6 @@ export type EffectPipeline<Event, Result> = (
 const DEFAULT_MERGE_MAP_PIPELINE: EffectPipeline<any, any> = (eventProject) =>
   mergeMap(eventProject);
 
-export type EffectOptions<Event, Result> = Readonly<{
-  /**
-   * Custom pipeline for processing effect's events.
-   *
-   * `mergeMap` pipeline is used by default.
-   */
-  pipeline?: EffectPipeline<Event, Result>;
-}>;
-
 /**
  * Effect encapsulates a handler for Action or Observable.
  *
@@ -58,7 +36,7 @@ export type EffectOptions<Event, Result> = Readonly<{
 export type Effect<Event, Result = void, ErrorType = Error> = Controller<
   EffectState<Event, Result, ErrorType> & {
     handle: (
-      source: Action<Event> | Observable<Event> | Query<Event>,
+      source: ActionEmitter<Event> | Observable<Event> | Query<Event>,
     ) => Subscription;
   }
 >;
@@ -75,7 +53,6 @@ export type Effect<Event, Result = void, ErrorType = Error> = Controller<
  */
 export function createEffect<Event = void, Result = void, ErrorType = Error>(
   handler: EffectHandler<Event, Result>,
-  options?: EffectOptions<Event, Result>,
 ): Effect<Event, Result, ErrorType> {
   const pipeline: EffectPipeline<Event, Result> =
     options?.pipeline ?? DEFAULT_MERGE_MAP_PIPELINE;
@@ -118,7 +95,7 @@ export function createEffect<Event = void, Result = void, ErrorType = Error>(
     ...controller.state,
 
     handle(
-      source: Observable<Event> | Action<Event> | Query<Event>,
+      source: Observable<Event> | ActionEmitter<Event> | Query<Event>,
     ): Subscription {
       const observable = getSourceObservable(source);
 

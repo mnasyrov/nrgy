@@ -93,24 +93,32 @@ export type Store<
   Updates extends StateUpdates<State>,
 > = WritableSignal<State> & { readonly updates: StoreUpdates<State, Updates> };
 
+export type StoreOptions<
+  State,
+  Updates extends StateUpdates<State> = StateUpdates<State>,
+> = SignalOptions<State> & {
+  updates: Updates;
+};
+
 /**
  * Creates the state store.
  *
  * @param initialState Initial state
- * @param updates State updaters
- * @param options Parameters for the store
+ * @param options Options for the store
  */
 export function createStore<
   State,
   Updates extends StateUpdates<State> = StateUpdates<State>,
 >(
   initialState: State,
-  updates: Updates,
-  options?: SignalOptions<State>,
+  options: StoreOptions<State, Updates>,
 ): Store<State, Updates> {
   const store = signal<State>(initialState, options) as any;
 
-  store.updates = createStoreUpdates<State, Updates>(store.update, updates);
+  store.updates = createStoreUpdates<State, Updates>(
+    store.update,
+    options.updates,
+  );
 
   return store;
 }

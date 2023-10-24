@@ -1,9 +1,9 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { waitForMicrotask } from '../../test/testUtils';
-import { computed } from '../core/computed';
+import { compute } from '../core/compute';
 import { signal } from '../core/signal';
+import { waitForMicrotask } from '../test/testUtils';
 
 import { toObservable } from './toObservable';
 
@@ -31,7 +31,7 @@ describe('toObservable()', () => {
 
   it('should propagate errors from the signal', async () => {
     const source = signal(1);
-    const counter = computed(() => {
+    const counter = compute(() => {
       const value = source();
       if (value === 2) {
         throw 'fail';
@@ -62,7 +62,7 @@ describe('toObservable()', () => {
 
   it('monitors the signal even if the Observable is never subscribed', async () => {
     let counterRead = false;
-    const counter = computed(() => {
+    const counter = compute(() => {
       counterRead = true;
       return 0;
     });
@@ -81,7 +81,7 @@ describe('toObservable()', () => {
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
-    const trackedCounter = computed(() => {
+    const trackedCounter = compute(() => {
       readCount++;
       return counter();
     });
@@ -114,7 +114,7 @@ describe('toObservable()', () => {
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
-    const trackedCounter = computed(() => {
+    const trackedCounter = compute(() => {
       readCount++;
       return counter();
     });

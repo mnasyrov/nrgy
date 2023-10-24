@@ -1,7 +1,8 @@
-import { debounceTime, filter, firstValueFrom, materialize, timer } from 'rxjs';
-import { bufferWhen, map } from 'rxjs/operators';
+import { materialize } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { signal } from '../core';
+import { collectChanges, waitForMicrotask } from '../test/testUtils';
 
 import { pipeSignal } from './pipeSignal';
 import { toObservable } from './toObservable';
@@ -14,11 +15,12 @@ describe('pipeSignal()', () => {
       source,
       map((value) => value * 10),
     );
+    await waitForMicrotask();
 
     expect(result()).toBe(10);
 
     source.set(2);
-    await 0;
+    await waitForMicrotask();
 
     expect(result()).toBe(20);
   });
@@ -33,17 +35,19 @@ describe('pipeSignal()', () => {
 
     const notifications$ = toObservable(result).pipe(materialize());
 
-    const notificationsPromise = firstValueFrom(
-      notifications$.pipe(
-        bufferWhen(() => notifications$.pipe(filter((e) => e.kind === 'C'))),
-      ),
-    );
-
-    source.destroy();
-    source.set(2);
-    expect(result()).toBe(10);
+    const notificationsPromise = collectChanges(notifications$, async () => {
+      source.destroy();
+      source.set(2);
+      await waitForMicrotask();
+      expect(result()).toBe(10);
+    });
 
     expect(await notificationsPromise).toEqual([
+      {
+        hasValue: true,
+        kind: 'N',
+        value: 1,
+      },
       {
         hasValue: true,
         kind: 'N',
@@ -56,21 +60,18 @@ describe('pipeSignal()', () => {
     const source = signal(1);
 
     const result = pipeSignal(source, (state$) =>
-      state$.pipe(
-        debounceTime(10),
-        map((value) => value * 10),
-      ),
+      state$.pipe(map((value) => value * 10)),
     );
 
     expect(result()).toBe(1);
 
-    await firstValueFrom(timer(20));
+    await waitForMicrotask();
     expect(result()).toBe(10);
 
     source.set(2);
     expect(result()).toBe(10);
 
-    await firstValueFrom(timer(20));
+    await waitForMicrotask();
     expect(result()).toBe(20);
   });
 });

@@ -33,7 +33,7 @@
     "prepare": "husky install",
     "clean": "rm -rf build coverage dist",
     "lint": "npm run eslint && npm run tsc",
-    "eslint": "eslint --cache --max-warnings 0 \"{src,test*}/**\"",
+    "eslint": "eslint --cache --max-warnings 0 \"src/**\"",
     "eslint-fix": "npm run eslint -- --fix",
     "tsc": "tsc --noEmit --jsx react",
     "test": "jest",
@@ -84,9 +84,9 @@
   },
   "attributions": [
     {
-      "rocket.svg": [
-        "Creative Tail, CC BY 4.0 <https://creativecommons.org/licenses/by/4.0>, via Wikimedia Commons",
-        "https://commons.wikimedia.org/wiki/File:Creative-Tail-rocket.svg"
+      "energy.svg": [
+        "UXWing, https://uxwing.com/license",
+        "https://uxwing.com/wp-content/themes/uxwing/download/computers-mobile-hardware/energy-icon.svg"
       ]
     }
   ],

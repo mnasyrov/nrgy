@@ -1,7 +1,6 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
-import { Signal } from '../core/common';
-import { effect } from '../core/effect';
+import { effect, effectSync, Signal } from '../core';
 import { SIGNAL_RUNTIME } from '../core/runtime';
 
 export type ToObservableOptions = {
@@ -19,21 +18,19 @@ export function toObservable<T>(
   options?: ToObservableOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
+    const effectFn = options?.sync ? effectSync : effect;
     const scheduler = options?.sync
       ? SIGNAL_RUNTIME.syncScheduler
       : SIGNAL_RUNTIME.asyncScheduler;
 
-    const watcher = effect(
-      () => {
-        try {
-          const value = source();
-          scheduler.schedule({ run: () => subscriber.next(value) });
-        } catch (error) {
-          scheduler.schedule({ run: () => subscriber.error(error) });
-        }
-      },
-      { sync: options?.sync },
-    );
+    const watcher = effectFn(() => {
+      try {
+        const value = source();
+        scheduler.schedule({ run: () => subscriber.next(value) });
+      } catch (error) {
+        scheduler.schedule({ run: () => subscriber.error(error) });
+      }
+    });
 
     return () => watcher.destroy();
   });

@@ -21,17 +21,26 @@ export type Signal<T> = (() => T) &
   Readonly<{
     [SIGNAL_SYMBOL]: unknown;
 
-    destroy(): void;
+    toJSON(): T;
+
+    toString(): string;
+
+    valueOf(): T;
   }>;
 
 /**
  * Checks if the given `value` is a reactive `Signal`.
  */
-export function isSignal(value: unknown): value is Signal<unknown> {
+export function isSignal<T>(value: unknown): value is Signal<T> {
   return (
     typeof value === 'function' &&
-    (value as Signal<unknown>)[SIGNAL_SYMBOL] !== undefined
+    SIGNAL_SYMBOL in value &&
+    value[SIGNAL_SYMBOL] !== undefined
   );
+}
+
+export function getSignalNode<T>(value: Signal<T>): ReactiveNode {
+  return value[SIGNAL_SYMBOL] as ReactiveNode;
 }
 
 /**
@@ -121,9 +130,9 @@ export type ComputedNode<T> = ReactiveNode &
 
 export type EffectNode = ReactiveNode &
   Readonly<{
-    id: number;
     ref: WeakRef<EffectNode>;
     isDestroyed: boolean;
+    dirty: boolean;
 
     /**
      * Monotonically increasing counter representing a version of this `Consumer`'s
@@ -132,4 +141,20 @@ export type EffectNode = ReactiveNode &
     clock: number;
 
     notify: () => void;
+  }>;
+
+export type ActionNode<T> = ReactiveNode &
+  Readonly<{
+    isDestroyed: boolean;
+
+    emit: (value: T) => void;
+    subscribe: (effectRef: WeakRef<ActionEffectNode<T>>) => void;
+  }>;
+
+export type ActionEffectNode<T> = ReactiveNode &
+  Readonly<{
+    ref: WeakRef<ActionEffectNode<T>>;
+    isDestroyed: boolean;
+
+    notify: (value: T) => void;
   }>;

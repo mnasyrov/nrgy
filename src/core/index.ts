@@ -3,16 +3,15 @@ export { isSignal, defaultEquals } from './common';
 
 export { flushAsyncEffects } from './runtime';
 
-export type { Computation, CreateComputedOptions } from './computed';
-export { computed } from './computed';
+export type { Computation, ComputeOptions } from './compute';
+export { compute } from './compute';
 
 export type {
-  CreateEffectOptions,
-  EffectRef,
+  EffectHandle,
   EffectCleanupFn,
   EffectCleanupRegisterFn,
 } from './effect';
-export { effect } from './effect';
+export { effect, effectSync } from './effect';
 
 export type { SignalOptions, WritableSignal } from './signal';
 export { signal } from './signal';

@@ -11,16 +11,16 @@ import { nextSafeInteger } from './utils';
 
 export type Computation<T> = () => T;
 
-export type CreateComputedOptions<T> = {
+export type ComputeOptions<T> = {
   equal?: ValueEqualityFn<T>;
 };
 
 /**
  * Create a computed `Signal` which derives a reactive value from an expression.
  */
-export function computed<T>(
+export function compute<T>(
   computation: Computation<T>,
-  options?: CreateComputedOptions<T>,
+  options?: ComputeOptions<T>,
 ): Signal<T> {
   const node = new ComputedImpl(computation, options?.equal ?? defaultEquals);
 

@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { createStore, Query } from '../rx-effects';
+import { createStore, Query } from '../../src/rx-effects';
 
 import { monitorSubscriptionCount } from './test/testUtils';
 import { useQuery } from './useQuery';

@@ -16,7 +16,6 @@ describe('declareStore() #1', () => {
 
     const store = createStore();
     expect(store()).toBe(0);
-    expect(store.name).toBe('counterStore');
 
     store.updates.increase();
     expect(store()).toBe(1);
@@ -32,9 +31,7 @@ describe('declareStore() #1', () => {
       updates: COUNTER_UPDATES,
     });
 
-    const store = createStore(10, { name: 'myCounter' });
-    expect(store()).toBe(10);
-    expect(store.name).toBe('myCounter');
+    const store = createStore(10);
 
     store.updates.increase();
     expect(store()).toBe(11);

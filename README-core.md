@@ -1,6 +1,6 @@
 # RxEffects
 
-<img alt="rocket" src="https://raw.githubusercontent.com/mnasyrov/rx-effects/main/rocket.svg" width="120" />
+<img alt="energy" src="https://raw.githubusercontent.com/mnasyrov/nrgy/main/energy.svg" width="120" />
 
 Reactive state and effect management with RxJS.
 

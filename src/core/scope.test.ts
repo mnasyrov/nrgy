@@ -1,4 +1,3 @@
-import { effect } from './effect';
 import { createScope } from './scope';
 import { signal } from './signal';
 
@@ -24,9 +23,8 @@ describe('Scope', () => {
 
       const source = signal<number>(1);
       const results: number[] = [];
-      const handler = jest.fn(() => results.push(source() * 3));
 
-      scope.handle(effect(handler));
+      scope.effectSync(() => results.push(source() * 3));
       source.set(2);
       scope.destroy();
       source.set(3);

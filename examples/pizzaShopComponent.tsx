@@ -1,5 +1,7 @@
 import React, { FC, useEffect } from 'react';
-import { useConst, useObservable, useQuery } from '../src/react';
+
+import { useConst, useObservable, useQuery } from '../src-temp/react';
+
 import { createPizzaShopController } from './pizzaShop';
 
 export const PizzaShopComponent: FC = () => {

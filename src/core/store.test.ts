@@ -1,11 +1,15 @@
-import { firstValueFrom } from 'rxjs';
-import { toArray } from 'rxjs/operators';
-
-import { collectChanges } from '../../test/testUtils';
 import { toObservable } from '../rxjs';
+import { dump } from '../test/dump';
+import {
+  collectChanges,
+  collectSignalChanges,
+  waitForMicrotask,
+} from '../test/testUtils';
 
 import { objectEquals } from './common';
-import { computed } from './computed';
+import { compute } from './compute';
+import { effect } from './effect';
+import { SIGNAL_RUNTIME } from './runtime';
 import { signal } from './signal';
 import {
   createStore,
@@ -28,7 +32,7 @@ describe('pipeStateMutations()', () => {
 
     const value = signal({ value: 0 });
     value.update(composedMutation);
-    expect(value()).toBe(22);
+    expect(value()).toStrictEqual({ value: 22 });
   });
 });
 
@@ -42,8 +46,8 @@ describe('Store', () => {
 
   describe('createStore()', () => {
     it('should create a store with the provided initial state', () => {
-      const store = createStore<State>({ value: 1 }, {});
-      expect(store()).toBe(1);
+      const store = signal<State>({ value: 1 });
+      expect(store()).toEqual({ value: 1 });
     });
 
     it('should use a custom comparator', async () => {
@@ -89,8 +93,9 @@ describe('Store', () => {
     it('should not apply a mutation if the new state is the same', async () => {
       const store = signal<State>({ value: 1 });
 
-      const statePromise = firstValueFrom(toObservable(store).pipe(toArray()));
-      store.update((state) => state);
+      const statePromise = collectChanges(toObservable(store), () => {
+        store.update((state) => state);
+      });
       store.destroy();
 
       expect(await statePromise).toEqual([{ value: 1 }]);
@@ -107,12 +112,12 @@ describe('Store', () => {
         store.set(3);
       });
 
-      expect(changes).toEqual([1]);
+      expect(changes).toEqual([1, 2]);
     });
 
     it('should call `onDestroy` callback', async () => {
       const onDestroy = jest.fn();
-      const store = createStore<number>(1, { onDestroy });
+      const store = signal<number>(1, { onDestroy });
 
       store.destroy();
       expect(onDestroy).toHaveBeenCalledTimes(1);
@@ -129,38 +134,50 @@ describe('Concurrent Store updates', () => {
       uppercase?: string;
     }>({ v1: 'a', v2: 'b' });
 
-    const v1 = computed(() => store().v1);
-    const v2 = computed(() => store().v2);
+    const v1 = compute(() => store().v1);
+    const v2 = compute(() => store().v2);
 
-    const merged = computed(() => v1() + v2());
+    const merged = compute(() => v1() + v2());
 
-    const uppercase = computed(() => merged().toUpperCase());
+    const uppercase = compute(() => merged().toUpperCase());
 
-    const history = await collectChanges(toObservable(store), async () => {
-      toObservable(merged).subscribe((merged) =>
-        store.update((state) => ({ ...state, merged })),
-      );
-
-      toObservable(uppercase).subscribe((uppercase) =>
-        store.update((state) => ({ ...state, uppercase })),
-      );
-
-      await 0;
-
-      expect(store().merged).toEqual('ab');
-      expect(store().uppercase).toEqual('AB');
-
-      store.update((state) => ({ ...state, v1: 'c' }));
-      store.update((state) => ({ ...state, v2: 'd' }));
-
-      expect(store().merged).toEqual('ab');
-      expect(store().uppercase).toEqual('AB');
-
-      await 0;
-
-      expect(store().merged).toEqual('cd');
-      expect(store().uppercase).toEqual('CD');
+    const history: any[] = [];
+    effect(store, (value) => {
+      dump('history push', value);
+      history.push(value);
     });
+
+    effect(merged, (merged) => {
+      dump('store.update, merged', merged);
+      store.update((state) => ({ ...state, merged }));
+    });
+
+    effect(uppercase, (uppercase) => {
+      dump('store.update, uppercase', uppercase);
+      store.update((state) => ({ ...state, uppercase }));
+    });
+
+    dump('waitForMicrotask 1');
+    await waitForMicrotask();
+
+    expect(store().merged).toEqual('ab');
+    expect(store().uppercase).toEqual('AB');
+
+    dump('update to cd');
+    store.update((state) => ({ ...state, v1: 'c' }));
+    store.update((state) => ({ ...state, v2: 'd' }));
+
+    expect(store().merged).toEqual('ab');
+    expect(store().uppercase).toEqual('AB');
+
+    dump('waitForMicrotask 2');
+    await waitForMicrotask();
+
+    expect(store().merged).toEqual('cd');
+    expect(store().uppercase).toEqual('CD');
+
+    dump('waitForMicrotask 3');
+    await waitForMicrotask();
 
     expect(history).toEqual([
       { v1: 'a', v2: 'b' },
@@ -171,12 +188,15 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should trigger a listener in case a state was changed', async () => {
+    // FIXME
+    SIGNAL_RUNTIME.reset();
+
     const store = signal<{
       bar: number;
       foo: number;
     }>({ bar: 0, foo: 0 }, { equal: objectEquals });
 
-    const history = await collectChanges(toObservable(store), () => {
+    const history = await collectSignalChanges(store, () => {
       store.update((state) => ({ ...state, foo: 1 }));
       store.update((state) => ({ ...state, foo: 2 }));
       store.update((state) => ({ ...state, bar: 42 }));
@@ -191,20 +211,19 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should preserve order of pending updates during applying the current update', async () => {
+    // FIXME
+    SIGNAL_RUNTIME.reset();
+
     const store = signal<{
       x: number;
       y: number;
       z: number;
     }>({ x: 0, y: 0, z: 0 }, { equal: objectEquals });
 
-    toObservable(store).subscribe(({ x }) =>
-      store.update((state) => ({ ...state, y: x })),
-    );
-    toObservable(store).subscribe(({ y }) =>
-      store.update((state) => ({ ...state, z: y })),
-    );
+    effect(store, ({ x }) => store.update((state) => ({ ...state, y: x })));
+    effect(store, ({ y }) => store.update((state) => ({ ...state, z: y })));
 
-    const history = await collectChanges(toObservable(store), () => {
+    const history = await collectSignalChanges(store, () => {
       store.update((state) => ({ ...state, x: 1 }));
       store.update((state) => ({ ...state, x: 2 }));
       store.update((state) => ({ ...state, x: 3 }));
@@ -212,8 +231,6 @@ describe('Concurrent Store updates', () => {
 
     expect(history).toEqual([
       { x: 0, y: 0, z: 0 },
-      { x: 3, y: 0, z: 0 },
-      { x: 3, y: 3, z: 0 },
       { x: 3, y: 3, z: 3 },
     ]);
   });
@@ -257,8 +274,10 @@ describe('createSignalUpdates()', () => {
 describe('createStore()', () => {
   it('should use return a proxy for the store which is enhanced by update actions', () => {
     const store = createStore(1, {
-      add: (value: number) => (state) => state + value,
-      multiply: (value: number) => (state) => state * value,
+      updates: {
+        add: (value: number) => (state) => state + value,
+        multiply: (value: number) => (state) => state * value,
+      },
     });
 
     store.updates.add(2);
@@ -269,12 +288,12 @@ describe('createStore()', () => {
   });
 
   it('should use a declared state mutations', () => {
-    const stateUpdates: StateUpdates<number> = {
+    const updates: StateUpdates<number> = {
       add: (value: number) => (state) => state + value,
       multiply: (value: number) => (state) => state * value,
     };
 
-    const store = createStore(1, stateUpdates);
+    const store = createStore(1, { updates });
 
     store.updates.add(2);
     expect(store()).toBe(3);

@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-import { useStore } from '../../src/react';
 import { declareStateUpdates } from '../../src/rx-effects';
+import { useStore } from '../../src-temp/react';
 
 const COUNTER_STATE = 0;
 

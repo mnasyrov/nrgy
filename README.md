@@ -1,10 +1,8 @@
-# nrgy
+# Energy
 
-`[ˈenəʤɪ]`
+<img alt="energy" src="energy.svg" width="120" />
 
-<img alt="rocket" src="rocket.svg" width="120" />
-
-Reactive state and effect management with RxJS.
+Reactive state and effect management.
 
 [![npm](https://img.shields.io/npm/v/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 [![downloads](https://img.shields.io/npm/dt/nrgy.svg)](https://www.npmjs.com/package/nrgy)
