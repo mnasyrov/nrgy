@@ -3,7 +3,7 @@ import { dump } from '../test/dump';
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
 import { Runnable } from './schedulers';
-import { isArrayEqual, nextSafeInteger } from './utils';
+import { nextSafeInteger } from './utils';
 
 /**
  * A cleanup function that can be optionally registered from the watch logic. If registered, the
@@ -40,7 +40,6 @@ export class Watch implements EffectNode, Runnable {
   private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
-  private seenComputedNodeVersions: undefined | number[];
 
   private registerOnCleanup = (cleanupFn: WatchCleanupFn) => {
     this.cleanupFn = cleanupFn;
@@ -92,11 +91,7 @@ export class Watch implements EffectNode, Runnable {
     const prevEffect = SIGNAL_RUNTIME.setCurrentEffect(this);
 
     const isChanged =
-      !this.seenComputedNodes ||
-      isComputedNodesChanged(
-        this.seenComputedNodes,
-        this.seenComputedNodeVersions,
-      );
+      !this.seenComputedNodes || isComputedNodesChanged(this.seenComputedNodes);
 
     dump('watch ' + this.id, { isChanged });
 
@@ -123,9 +118,6 @@ export class Watch implements EffectNode, Runnable {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
 
       this.seenComputedNodes = SIGNAL_RUNTIME.getVisitedComputedNodes();
-      this.seenComputedNodeVersions = this.seenComputedNodes.map(
-        (node) => node.version,
-      );
 
       if (!prevEffect) {
         dump('SIGNAL_RUNTIME.resetVisitedComputedNodes();');
@@ -152,10 +144,7 @@ export class Watch implements EffectNode, Runnable {
   }
 }
 
-function isComputedNodesChanged(
-  nodes: ComputedNode<any>[],
-  lastVersions?: number[],
-): boolean {
+function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
   if (nodes.length === 0) {
     return true;
   }
@@ -164,11 +153,6 @@ function isComputedNodesChanged(
     if (node.isChanged()) {
       return true;
     }
-  }
-
-  if (lastVersions) {
-    const currentVersions = nodes.map((node) => node.version);
-    return !isArrayEqual(lastVersions, currentVersions);
   }
 
   return false;
