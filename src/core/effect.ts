@@ -122,25 +122,18 @@ function effectFactory<
     return { destroy: () => actionWatch.destroy() };
   }
 
+  let sideEffectFn: SideEffectFn;
   if (isSignal<T>(target)) {
     if (!callback) throw new Error('callback is missed');
-    const watch = new Watch(
-      scheduler.schedule,
-      () => callback(target()),
-      errorCallback,
-    );
-    watch.notify();
-    return { destroy: () => watch.destroy() };
+    sideEffectFn = function () {
+      callback(target());
+    };
+  } else {
+    sideEffectFn = target as SideEffectFn;
   }
 
-  // Computed function
-
-  const watch = new Watch(
-    scheduler.schedule,
-    target as SideEffectFn,
-    errorCallback,
-  );
+  const signalWatch = new Watch(scheduler, sideEffectFn, errorCallback);
   // Effect starts dirty.
-  watch.notify();
-  return { destroy: () => watch.destroy() };
+  signalWatch.notify();
+  return { destroy: () => signalWatch.destroy() };
 }

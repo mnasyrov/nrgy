@@ -2,7 +2,7 @@ import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
-import { Runnable } from './schedulers';
+import { Runnable, TaskScheduler } from './schedulers';
 
 /**
  * A cleanup function that can be optionally registered from the watch logic. If registered, the
@@ -30,7 +30,7 @@ export class Watch implements EffectNode, Runnable {
   dirty = false;
   isDestroyed = false;
 
-  private schedule: undefined | ((watch: Watch) => void);
+  private scheduler?: TaskScheduler<Runnable>;
   private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
   private onError: undefined | ((error: unknown) => unknown);
   private cleanupFn = NOOP_CLEANUP_FN;
@@ -42,11 +42,11 @@ export class Watch implements EffectNode, Runnable {
   };
 
   constructor(
-    schedule: (watch: Watch) => void,
+    scheduler: TaskScheduler<Runnable>,
     action: (onCleanup: WatchCleanupRegisterFn) => void,
     onError?: (error: unknown) => unknown,
   ) {
-    this.schedule = schedule;
+    this.scheduler = scheduler;
     this.action = action;
     this.onError = onError;
   }
@@ -61,7 +61,7 @@ export class Watch implements EffectNode, Runnable {
     this.dirty = true;
 
     if (needsSchedule) {
-      this.schedule?.(this);
+      this.scheduler?.schedule(this);
     }
   };
 
@@ -123,7 +123,8 @@ export class Watch implements EffectNode, Runnable {
   destroy(): void {
     this.isDestroyed = true;
     this.action = undefined;
-    this.schedule = undefined;
+    this.onError = undefined;
+    this.scheduler = undefined;
     this.seenComputedNodes = undefined;
 
     try {

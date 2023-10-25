@@ -20,17 +20,22 @@ export function defaultRunnableAction(task: Runnable): void {
 export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
   private queue = createQueue<T>();
   private isActive = false;
+  private readonly task: () => void;
 
-  constructor(private readonly action: (entry: T) => void) {}
+  constructor(private readonly action: (entry: T) => void) {
+    this.task = this.execute.bind(this);
+  }
 
-  isEmpty = (): boolean => this.queue.isEmpty();
+  isEmpty(): boolean {
+    return this.queue.isEmpty();
+  }
 
-  schedule = (entry: T): void => {
+  schedule(entry: T): void {
     this.queue.add(entry);
-    if (!this.isActive) queueTask(this.execute);
-  };
+    if (!this.isActive) queueTask(this.task);
+  }
 
-  execute = (): void => {
+  execute(): void {
     if (this.isActive) return;
 
     this.isActive = true;
@@ -43,7 +48,7 @@ export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
     } finally {
       this.isActive = false;
     }
-  };
+  }
 }
 
 export class SyncTaskScheduler<T> implements TaskScheduler<T> {
@@ -52,14 +57,16 @@ export class SyncTaskScheduler<T> implements TaskScheduler<T> {
 
   constructor(private readonly action: (entry: T) => void) {}
 
-  isEmpty = (): boolean => this.queue.isEmpty();
+  isEmpty(): boolean {
+    return this.queue.isEmpty();
+  }
 
-  schedule = (entry: T): void => {
+  schedule(entry: T): void {
     this.queue.add(entry);
     if (!this.isActive) this.execute();
-  };
+  }
 
-  execute = (): void => {
+  execute(): void {
     if (this.isActive) return;
 
     this.isActive = true;
@@ -72,5 +79,5 @@ export class SyncTaskScheduler<T> implements TaskScheduler<T> {
     } finally {
       this.isActive = false;
     }
-  };
+  }
 }
