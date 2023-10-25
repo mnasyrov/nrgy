@@ -1,7 +1,7 @@
 import { ComputedNode, EffectNode } from './common';
 import {
+  AsyncTaskScheduler,
   defaultRunnableAction,
-  MicrotaskScheduler,
   Runnable,
   SyncTaskScheduler,
 } from './schedulers';
@@ -12,7 +12,7 @@ export class SignalRuntime {
   private trackedEffects: EffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
-  readonly asyncScheduler = new MicrotaskScheduler<Runnable>(
+  readonly asyncScheduler = new AsyncTaskScheduler<Runnable>(
     defaultRunnableAction,
   );
 

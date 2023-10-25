@@ -13,16 +13,13 @@ export function defaultRunnableAction(task: Runnable): void {
   task.run();
 }
 
-const queueMicrotaskPolyfill = (task: () => void): unknown =>
-  Promise.resolve().then(task);
+const queueTask = (task: () => void): unknown => Promise.resolve().then(task);
 
-// Polyfill is faster, the benchmark needs to be reviewed.
-// const queueMicrotask =
-//   'queueMicrotask' in global ? global.queueMicrotask : queueMicrotaskPolyfill;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const queueMicrotask =
+  'queueMicrotask' in global ? global.queueMicrotask : queueTask;
 
-const queueMicrotask = queueMicrotaskPolyfill;
-
-export class MicrotaskScheduler<T> implements TaskScheduler<T> {
+export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
   private queue: T[] = [];
   private isActive = false;
 
@@ -31,14 +28,12 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
   isEmpty = (): boolean => this.queue.length === 0;
 
   schedule = (entry: T): void => {
-    const prevSize = this.queue.length;
     this.queue.push(entry);
 
     dump('scheduled', { entry, queue: this.queue });
 
-    // if (prevSize === 0 && !this.isActive) {
-    if (prevSize === 0) {
-      queueMicrotask(this.execute);
+    if (!this.isActive) {
+      queueTask(this.execute);
     }
   };
 
@@ -52,8 +47,7 @@ export class MicrotaskScheduler<T> implements TaskScheduler<T> {
     this.isActive = true;
 
     try {
-      // while (this.queue.length > 0) {
-      if (this.queue.length > 0) {
+      while (this.queue.length > 0) {
         const list = this.queue;
         this.queue = [];
 
