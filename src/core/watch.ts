@@ -87,6 +87,8 @@ export class Watch implements EffectNode, Runnable {
       return;
     }
 
+    dump('RUN watch ' + this.id);
+
     const prevEffect = SIGNAL_RUNTIME.setCurrentEffect(this);
 
     const isChanged =
@@ -100,6 +102,12 @@ export class Watch implements EffectNode, Runnable {
 
     if (!isChanged) {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
+
+      if (!prevEffect) {
+        dump('SIGNAL_RUNTIME.resetVisitedComputedNodes();');
+        SIGNAL_RUNTIME.resetVisitedComputedNodes();
+      }
+
       return;
     }
 
@@ -120,6 +128,7 @@ export class Watch implements EffectNode, Runnable {
       );
 
       if (!prevEffect) {
+        dump('SIGNAL_RUNTIME.resetVisitedComputedNodes();');
         SIGNAL_RUNTIME.resetVisitedComputedNodes();
       }
 

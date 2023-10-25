@@ -5,7 +5,6 @@ import { collectChanges, flushMicrotasks } from '../test/testUtils';
 import { objectEquals } from './common';
 import { compute } from './compute';
 import { effect } from './effect';
-import { SIGNAL_RUNTIME } from './runtime';
 import { signal } from './signal';
 import {
   createStore,
@@ -184,9 +183,6 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should trigger a listener in case a state was changed', async () => {
-    // FIXME
-    SIGNAL_RUNTIME.reset();
-
     const store = signal<{
       bar: number;
       foo: number;
@@ -207,9 +203,6 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should preserve order of pending updates during applying the current update', async () => {
-    // FIXME
-    SIGNAL_RUNTIME.reset();
-
     const store = signal<{
       x: number;
       y: number;
