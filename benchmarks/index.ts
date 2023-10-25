@@ -1,12 +1,11 @@
 import { Bench } from 'tinybench';
 
-import { compute, effect, runEffects, signal } from '../src/core';
+import { compute, effect, effectSync, signal } from '../src/core';
+import { createLatch } from '../src/utils/latch';
 
-const ITERATION_COUNT = 100;
+const ITERATION_COUNT = 200;
 
-const bench = new Bench();
-
-bench.add('compute', () => {
+function createTestGraph() {
   const entry = signal(0);
 
   const a = compute(() => entry());
@@ -18,12 +17,47 @@ bench.add('compute', () => {
   const g = compute(() => d() + e());
   const h = compute(() => f() + g());
 
-  effect(() => h());
+  return { entry, h };
+}
 
-  for (let i = 0; i < ITERATION_COUNT; i++) {
-    entry.set(i);
-    runEffects();
-  }
+const bench = new Bench();
+
+bench.add('compute sync', () => {
+  const { entry, h } = createTestGraph();
+  const latch = createLatch();
+
+  let i = 0;
+
+  effectSync(() => {
+    h();
+
+    if (i < ITERATION_COUNT) {
+      entry.set(++i);
+    } else {
+      latch.resolve();
+    }
+  });
+
+  return latch.promise;
+});
+
+bench.add('compute async', () => {
+  const { entry, h } = createTestGraph();
+  const latch = createLatch();
+
+  let i = 0;
+
+  effect(() => {
+    h();
+
+    if (i < ITERATION_COUNT) {
+      entry.set(++i);
+    } else {
+      latch.resolve();
+    }
+  });
+
+  return latch.promise;
 });
 
 async function main() {
