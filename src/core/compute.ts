@@ -1,3 +1,5 @@
+import { nextSafeInteger } from '../utils/nextSafeInteger';
+
 import {
   ComputedNode,
   createSignalFromFunction,
@@ -7,7 +9,6 @@ import {
   ValueEqualityFn,
 } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
-import { nextSafeInteger } from './utils';
 
 export type Computation<T> = () => T;
 

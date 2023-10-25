@@ -1,3 +1,5 @@
+import { nextSafeInteger } from '../utils/nextSafeInteger';
+
 import { ComputedNode, EffectNode } from './common';
 import {
   AsyncTaskScheduler,
@@ -5,7 +7,6 @@ import {
   Runnable,
   SyncTaskScheduler,
 } from './schedulers';
-import { nextSafeInteger } from './utils';
 
 export class SignalRuntime {
   private currentEffect: EffectNode | undefined = undefined;

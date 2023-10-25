@@ -1,4 +1,4 @@
-import { nextSafeInteger } from './utils';
+import { nextSafeInteger } from './nextSafeInteger';
 
 describe('nextSafeInteger()', () => {
   it('should return an increased value', () => {

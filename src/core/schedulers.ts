@@ -1,4 +1,10 @@
-import { Queue } from './utils';
+import { createQueue } from '../utils/queue';
+
+export const queueTask = (task: () => void): unknown =>
+  Promise.resolve().then(task);
+
+export const queueMicrotask =
+  'queueMicrotask' in global ? global.queueMicrotask : queueTask;
 
 export type TaskScheduler<T> = Readonly<{
   isEmpty(): boolean;
@@ -11,22 +17,16 @@ export function defaultRunnableAction(task: Runnable): void {
   task.run();
 }
 
-const queueTask = (task: () => void): unknown => Promise.resolve().then(task);
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const queueMicrotask =
-  'queueMicrotask' in global ? global.queueMicrotask : queueTask;
-
 export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue = new Queue<T>();
+  private queue = createQueue<T>();
   private isActive = false;
 
   constructor(private readonly action: (entry: T) => void) {}
 
-  isEmpty = (): boolean => !this.queue.head;
+  isEmpty = (): boolean => this.queue.isEmpty();
 
   schedule = (entry: T): void => {
-    this.queue.push(entry);
+    this.queue.add(entry);
     if (!this.isActive) queueTask(this.execute);
   };
 
@@ -47,15 +47,15 @@ export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
 }
 
 export class SyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue = new Queue<T>();
+  private queue = createQueue<T>();
   private isActive = false;
 
   constructor(private readonly action: (entry: T) => void) {}
 
-  isEmpty = (): boolean => !this.queue.head;
+  isEmpty = (): boolean => this.queue.isEmpty();
 
   schedule = (entry: T): void => {
-    this.queue.push(entry);
+    this.queue.add(entry);
     if (!this.isActive) this.execute();
   };
 
