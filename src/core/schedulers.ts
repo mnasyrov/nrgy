@@ -20,41 +20,30 @@ const queueMicrotask =
   'queueMicrotask' in global ? global.queueMicrotask : queueTask;
 
 export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue: T[] = [];
+  private queue = new Queue<T>();
   private isActive = false;
 
   constructor(private readonly action: (entry: T) => void) {}
 
-  isEmpty = (): boolean => this.queue.length === 0;
+  isEmpty = (): boolean => !this.queue.head;
 
   schedule = (entry: T): void => {
     this.queue.push(entry);
-
-    dump('scheduled', { entry, queue: this.queue });
-
-    if (!this.isActive) {
-      queueTask(this.execute);
-    }
+    if (!this.isActive) queueTask(this.execute);
   };
 
   execute = (): void => {
     dump('begin execute', { isActive: this.isActive, queue: this.queue });
 
-    if (this.isActive) {
-      return;
-    }
+    if (this.isActive) return;
 
     this.isActive = true;
 
     try {
-      while (this.queue.length > 0) {
-        const list = this.queue;
-        this.queue = [];
-
-        for (const entry of list) {
-          dump('execute', entry);
-          this.action(entry);
-        }
+      let entry;
+      while ((entry = this.queue.get())) {
+        dump('execute', entry);
+        this.action(entry);
       }
     } finally {
       this.isActive = false;
