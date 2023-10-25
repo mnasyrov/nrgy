@@ -1,5 +1,4 @@
 import { toObservable } from '../rxjs';
-import { dump } from '../test/dump';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import { objectEquals } from './common';
@@ -138,40 +137,33 @@ describe('Concurrent Store updates', () => {
 
     const history: any[] = [];
     effect(store, (value) => {
-      dump('history push', value);
       history.push(value);
     });
 
     effect(merged, (merged) => {
-      dump('store.update, merged', merged);
       store.update((state) => ({ ...state, merged }));
     });
 
     effect(uppercase, (uppercase) => {
-      dump('store.update, uppercase', uppercase);
       store.update((state) => ({ ...state, uppercase }));
     });
 
-    dump('waitForMicrotask 1');
     await flushMicrotasks();
 
     expect(store().merged).toEqual('ab');
     expect(store().uppercase).toEqual('AB');
 
-    dump('update to cd');
     store.update((state) => ({ ...state, v1: 'c' }));
     store.update((state) => ({ ...state, v2: 'd' }));
 
     expect(store().merged).toEqual('ab');
     expect(store().uppercase).toEqual('AB');
 
-    dump('waitForMicrotask 2');
     await flushMicrotasks();
 
     expect(store().merged).toEqual('cd');
     expect(store().uppercase).toEqual('CD');
 
-    dump('waitForMicrotask 3');
     await flushMicrotasks();
 
     expect(history).toEqual([

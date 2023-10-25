@@ -1,5 +1,3 @@
-import { dump } from '../test/dump';
-
 import {
   createSignalFromFunction,
   defaultEquals,
@@ -174,10 +172,6 @@ class WritableSignalImpl<T> implements ReactiveNode {
         effect.isDestroyed ||
         (!effect.dirty && effect.clock !== atEffectClock)
       ) {
-        dump('producerChanged, consumerEffects.delete', {
-          atEffectClock,
-          effect,
-        });
         this.consumerEffects.delete(effectRef);
         continue;
       }

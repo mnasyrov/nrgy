@@ -1,5 +1,3 @@
-import { dump } from '../test/dump';
-
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
 import { Runnable } from './schedulers';
@@ -16,8 +14,6 @@ export type WatchCleanupFn = () => void;
  */
 export type WatchCleanupRegisterFn = (cleanupFn: WatchCleanupFn) => void;
 
-let WATCH_ID = 0;
-
 const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
 /**
  * Watches a reactive expression and allows it to be scheduled to re-run
@@ -27,7 +23,6 @@ const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
  * scheduling operation to coordinate calling `Watch.run()`.
  */
 export class Watch implements EffectNode, Runnable {
-  readonly id = (WATCH_ID = nextSafeInteger(WATCH_ID));
   readonly ref: WeakRef<EffectNode> = new WeakRef(this);
   clock = 0;
 
@@ -86,20 +81,15 @@ export class Watch implements EffectNode, Runnable {
       return;
     }
 
-    dump('RUN watch ' + this.id);
-
     const prevEffect = SIGNAL_RUNTIME.setCurrentEffect(this);
 
     const isChanged =
       !this.seenComputedNodes || isComputedNodesChanged(this.seenComputedNodes);
 
-    dump('watch ' + this.id, { isChanged });
-
     if (!isChanged) {
       SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
 
       if (!prevEffect) {
-        dump('SIGNAL_RUNTIME.resetVisitedComputedNodes();');
         SIGNAL_RUNTIME.resetVisitedComputedNodes();
       }
 
@@ -120,7 +110,6 @@ export class Watch implements EffectNode, Runnable {
       this.seenComputedNodes = SIGNAL_RUNTIME.getVisitedComputedNodes();
 
       if (!prevEffect) {
-        dump('SIGNAL_RUNTIME.resetVisitedComputedNodes();');
         SIGNAL_RUNTIME.resetVisitedComputedNodes();
       }
 

@@ -1,5 +1,3 @@
-import { dump } from '../test/dump';
-
 import { Queue } from './utils';
 
 export type TaskScheduler<T> = Readonly<{
@@ -33,8 +31,6 @@ export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
   };
 
   execute = (): void => {
-    dump('begin execute', { isActive: this.isActive, queue: this.queue });
-
     if (this.isActive) return;
 
     this.isActive = true;
@@ -42,12 +38,10 @@ export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
     try {
       let entry;
       while ((entry = this.queue.get())) {
-        dump('execute', entry);
         this.action(entry);
       }
     } finally {
       this.isActive = false;
-      dump('finish execute', { isActive: this.isActive, queue: this.queue });
     }
   };
 }
