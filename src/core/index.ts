@@ -1,7 +1,7 @@
 export type { Signal, ValueEqualityFn } from './common';
 export { isSignal, defaultEquals } from './common';
 
-export { flushAsyncEffects } from './runtime';
+export { runEffects } from './runtime';
 
 export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';

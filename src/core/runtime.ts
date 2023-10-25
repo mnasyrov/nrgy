@@ -73,6 +73,6 @@ export class SignalRuntime {
 
 export const SIGNAL_RUNTIME = new SignalRuntime();
 
-export function flushAsyncEffects(): void {
+export function runEffects(): void {
   SIGNAL_RUNTIME.asyncScheduler.execute();
 }
