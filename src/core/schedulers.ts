@@ -1,7 +1,7 @@
 import { createQueue } from '../utils/queue';
 
-export const queueTask = (task: () => void): unknown =>
-  Promise.resolve().then(task);
+export const queueTask = (callback: () => void) =>
+  Promise.resolve().then(callback);
 
 export const queueMicrotask =
   'queueMicrotask' in global ? global.queueMicrotask : queueTask;
@@ -11,73 +11,71 @@ export type TaskScheduler<T> = Readonly<{
   schedule(entry: T): void;
   execute(): void;
 }>;
+
 export type Runnable = Readonly<{ run: () => void }>;
 
 export function defaultRunnableAction(task: Runnable): void {
   task.run();
 }
 
-export class AsyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue = createQueue<T>();
-  private isActive = false;
-  private readonly task: () => void;
+export function createAsyncTaskScheduler<T>(
+  action: (entry: T) => void,
+): TaskScheduler<T> {
+  const queue = createQueue<T>();
+  let isActive = false;
 
-  constructor(private readonly action: (entry: T) => void) {
-    this.task = this.execute.bind(this);
-  }
+  const execute = () => {
+    if (isActive) return;
 
-  isEmpty(): boolean {
-    return this.queue.isEmpty();
-  }
-
-  schedule(entry: T): void {
-    this.queue.add(entry);
-    if (!this.isActive) queueTask(this.task);
-  }
-
-  execute(): void {
-    if (this.isActive) return;
-
-    this.isActive = true;
+    isActive = true;
 
     try {
       let entry;
-      while ((entry = this.queue.get())) {
-        this.action(entry);
+      while ((entry = queue.get())) {
+        action(entry);
       }
     } finally {
-      this.isActive = false;
+      isActive = false;
     }
-  }
+  };
+
+  return {
+    isEmpty: () => queue.isEmpty(),
+    schedule: (entry: T) => {
+      queue.add(entry);
+      if (!isActive) queueTask(execute);
+    },
+    execute,
+  };
 }
 
-export class SyncTaskScheduler<T> implements TaskScheduler<T> {
-  private queue = createQueue<T>();
-  private isActive = false;
+export function createSyncTaskScheduler<T>(
+  action: (entry: T) => void,
+): TaskScheduler<T> {
+  const queue = createQueue<T>();
+  let isActive = false;
 
-  constructor(private readonly action: (entry: T) => void) {}
+  const execute = () => {
+    if (isActive) return;
 
-  isEmpty(): boolean {
-    return this.queue.isEmpty();
-  }
-
-  schedule(entry: T): void {
-    this.queue.add(entry);
-    if (!this.isActive) this.execute();
-  }
-
-  execute(): void {
-    if (this.isActive) return;
-
-    this.isActive = true;
+    isActive = true;
 
     try {
       let entry;
-      while ((entry = this.queue.get())) {
-        this.action(entry);
+      while ((entry = queue.get())) {
+        action(entry);
       }
     } finally {
-      this.isActive = false;
+      isActive = false;
     }
-  }
+  };
+
+  return {
+    isEmpty: () => queue.isEmpty(),
+    schedule: (entry: T) => {
+      queue.add(entry);
+      if (!isActive) execute();
+    },
+    execute,
+  };
 }

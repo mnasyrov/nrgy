@@ -2,10 +2,10 @@ import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import { ComputedNode, EffectNode } from './common';
 import {
-  AsyncTaskScheduler,
+  createAsyncTaskScheduler,
+  createSyncTaskScheduler,
   defaultRunnableAction,
   Runnable,
-  SyncTaskScheduler,
 } from './schedulers';
 
 export class SignalRuntime {
@@ -13,11 +13,11 @@ export class SignalRuntime {
   private trackedEffects: EffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
-  readonly asyncScheduler = new AsyncTaskScheduler<Runnable>(
+  readonly asyncScheduler = createAsyncTaskScheduler<Runnable>(
     defaultRunnableAction,
   );
 
-  readonly syncScheduler = new SyncTaskScheduler<Runnable>(
+  readonly syncScheduler = createSyncTaskScheduler<Runnable>(
     defaultRunnableAction,
   );
 
