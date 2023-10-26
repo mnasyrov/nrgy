@@ -24,9 +24,17 @@
       "require": "./dist/core/index.cjs",
       "default": "./dist/core/index.js"
     },
-    "./react": {
-      "require": "./dist/react/index.cjs",
-      "default": "./dist/react/index.js"
+    "./mvc": {
+      "require": "./dist/mvc/index.cjs",
+      "default": "./dist/mvc/index.js"
+    },
+    "./rx-effects": {
+      "require": "./dist/rx-effects/index.cjs",
+      "default": "./dist/rx-effects/index.js"
+    },
+    "./rxjs": {
+      "require": "./dist/rxjs/index.cjs",
+      "default": "./dist/rxjs/index.js"
     }
   },
   "scripts": {
@@ -37,7 +45,7 @@
     "eslint-fix": "npm run eslint -- --fix",
     "tsc": "tsc --noEmit --jsx react",
     "test": "jest",
-    "build": "tsup --clean --dts --format cjs,esm src/core/index.ts src/mvc/index.ts src/rx-effects/index.ts",
+    "build": "tsup",
     "benchmarks": "tsx ./benchmarks",
     "pack": "npm run build && mkdir -p dist && npm pack --pack-destination ./dist",
     "preversion": "npm run lint && npm run test && npm run build && git add --all",
