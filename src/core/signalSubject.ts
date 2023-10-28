@@ -61,6 +61,7 @@ export function createSignalSubject<T>(
   Object.assign(result, {
     next: (value: T) => state.set({ type: StateType.value, value }),
     error: (error: unknown) => state.set({ type: StateType.error, error }),
+
     destroy: () => state.destroy(),
 
     // TODO

@@ -1,5 +1,3 @@
-import { signal } from '../core/signal';
-
 import { createController } from './controller';
 
 describe('createController()', () => {
@@ -7,7 +5,7 @@ describe('createController()', () => {
     const onDestroy = jest.fn();
 
     const controller = createController((scope) => {
-      const store = scope.create(() => signal(1));
+      const store = scope.signal(1);
 
       return {
         counter: store.asReadonly(),
@@ -34,7 +32,7 @@ describe('createController()', () => {
     const onDestroy = jest.fn();
 
     const controller = createController((scope) => {
-      scope.add(() => onDestroy());
+      scope.onDestroy(() => onDestroy());
 
       return {};
     });
@@ -48,7 +46,7 @@ describe('createController()', () => {
     const onScopeDestroy = jest.fn();
 
     const controller = createController((scope) => {
-      scope.add(() => onScopeDestroy());
+      scope.onDestroy(() => onScopeDestroy());
 
       return {
         destroy() {

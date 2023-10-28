@@ -1,5 +1,3 @@
-import { createStore, StateUpdates } from '../store/store';
-
 import { action } from './action';
 import { effect, EffectFn, effectSync } from './effect';
 import { signal } from './signal';
@@ -12,7 +10,7 @@ export interface Destroyable {
   destroy(): void;
 }
 
-export type ScopeTeardown = Unsubscribable | Destroyable | (() => void);
+export type ScopeTeardown = Unsubscribable | Destroyable | (() => unknown);
 
 /**
  * A controller-like boundary for effects and business logic.
@@ -22,14 +20,19 @@ export type ScopeTeardown = Unsubscribable | Destroyable | (() => void);
  */
 export type Scope = Readonly<
   Destroyable & {
-    create: <T extends Unsubscribable | Destroyable>(factory: () => T) => T;
+    onDestroy: (teardown: ScopeTeardown) => void;
 
-    add: (teardown: ScopeTeardown) => void;
-    handle: (teardown: ScopeTeardown) => void;
+    create: <
+      T extends Unsubscribable | Destroyable,
+      Factory extends (...args: any[]) => T,
+    >(
+      factory: Factory,
+      ...args: Parameters<Factory>
+    ) => T;
+    add: <T extends Unsubscribable | Destroyable>(resource: T) => T;
 
     action: typeof action;
     signal: typeof signal;
-    store: typeof createStore;
     effect: EffectFn;
     effectSync: EffectFn;
   }
@@ -57,18 +60,21 @@ export type SharedScope = Omit<Scope, 'destroy'>;
 class ScopeImpl implements Scope {
   private subscriptions: ScopeTeardown[] = [];
 
-  create<T extends Unsubscribable | Destroyable>(factory: () => T): T {
-    const value = factory();
-    this.handle(value);
-    return value;
-  }
-
-  add(teardown: ScopeTeardown): void {
+  onDestroy(teardown: ScopeTeardown): void {
     this.subscriptions.push(teardown);
   }
 
-  handle(teardown: ScopeTeardown): void {
-    this.subscriptions.push(teardown);
+  create<
+    T extends Unsubscribable | Destroyable,
+    Factory extends (...args: any[]) => T,
+  >(factory: Factory, ...args: Parameters<Factory>): T {
+    const value = factory(...args);
+    return this.add(value);
+  }
+
+  add<T extends Unsubscribable | Destroyable>(resource: T): T {
+    this.subscriptions.push(resource);
+    return resource;
   }
 
   destroy(): void {
@@ -115,14 +121,6 @@ class ScopeImpl implements Scope {
     return result;
   }
 
-  store<State, Updates extends StateUpdates<State> = StateUpdates<State>>(
-    ...args: Parameters<typeof createStore<State, Updates>>
-  ) {
-    const result = createStore(...args);
-    this.add(result);
-    return result;
-  }
-
   effect(...args: Parameters<EffectFn>) {
     const result = effect(...args);
     this.add(result);
@@ -144,14 +142,13 @@ export function createScope(): Scope {
 
   return {
     destroy: scope.destroy.bind(scope),
+    onDestroy: scope.onDestroy.bind(scope),
 
     create: scope.create.bind(scope),
-    add: scope.handle.bind(scope),
-    handle: scope.handle.bind(scope),
+    add: scope.add.bind(scope),
 
     action: scope.action.bind(scope),
     signal: scope.signal.bind(scope),
-    store: scope.store.bind(scope),
     effect: scope.effect.bind(scope),
     effectSync: scope.effectSync.bind(scope),
   };

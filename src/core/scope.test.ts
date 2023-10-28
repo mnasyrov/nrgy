@@ -8,8 +8,8 @@ describe('Scope', () => {
       const teardown1 = jest.fn();
       const teardown2 = jest.fn();
 
-      scope.handle(teardown1);
-      scope.handle(teardown2);
+      scope.onDestroy(teardown1);
+      scope.onDestroy(teardown2);
       scope.destroy();
 
       expect(teardown1).toHaveBeenCalledTimes(1);
@@ -37,7 +37,7 @@ describe('Scope', () => {
     it('should be able to unsubscribe the created signal', async () => {
       const scope = createScope();
 
-      const value = scope.create(() => signal(1));
+      const value = scope.add(signal(1));
 
       expect(value()).toBe(1);
 
