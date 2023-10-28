@@ -4,7 +4,7 @@ import { ActionEmitter, getActionNode, isAction } from './action';
 import { ActionWatch } from './actionWatch';
 import { isSignal, Signal } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
-import { Watch } from './watch';
+import { createWatch } from './watch';
 
 /**
  * An effect can, optionally, register a cleanup function. If registered, the cleanup is executed
@@ -133,7 +133,7 @@ function effectFactory<
     sideEffectFn = target as SideEffectFn;
   }
 
-  const signalWatch = new Watch(scheduler, sideEffectFn, errorCallback);
+  const signalWatch = createWatch(scheduler, sideEffectFn, errorCallback);
   // Effect starts dirty.
   signalWatch.notify();
   return { destroy: () => signalWatch.destroy() };

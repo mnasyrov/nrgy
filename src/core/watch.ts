@@ -16,6 +16,23 @@ export type WatchCleanupFn = () => void;
 export type WatchCleanupRegisterFn = (cleanupFn: WatchCleanupFn) => void;
 
 const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
+
+export function createWatch(
+  scheduler: TaskScheduler,
+  action: (onCleanup: WatchCleanupRegisterFn) => void,
+  onError?: (error: unknown) => unknown,
+): EffectNode {
+  const node = new Watch(scheduler, action, onError);
+
+  Object.assign<Watch, Pick<Watch, 'notify' | 'run' | 'destroy'>>(node, {
+    notify: node.notify.bind(node),
+    run: node.run.bind(node),
+    destroy: node.destroy.bind(node),
+  });
+
+  return node;
+}
+
 /**
  * Watches a reactive expression and allows it to be scheduled to re-run
  * when any dependencies notify of a change.
@@ -51,7 +68,7 @@ export class Watch implements EffectNode {
     this.onError = onError;
   }
 
-  notify = (): void => {
+  notify(): void {
     if (this.isDestroyed) {
       return;
     }
@@ -63,7 +80,7 @@ export class Watch implements EffectNode {
     if (needsSchedule) {
       this.scheduler?.schedule(this.run);
     }
-  };
+  }
 
   /**
    * Execute the reactive expression in the context of this `Watch` consumer.
@@ -71,7 +88,7 @@ export class Watch implements EffectNode {
    * Should be called by the user scheduling algorithm when the provided
    * `schedule` hook is called by `Watch`.
    */
-  run = (): void => {
+  run(): void {
     if (!this.dirty) {
       return;
     }
@@ -118,7 +135,7 @@ export class Watch implements EffectNode {
         this.onError(errorRef.error);
       }
     }
-  };
+  }
 
   destroy(): void {
     this.isDestroyed = true;
