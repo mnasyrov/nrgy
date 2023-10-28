@@ -17,16 +17,9 @@ const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
  *
  * Ordinary values can be turned into `Signal`s with the `signal` function.
  */
-export type Signal<T> = (() => T) &
-  Readonly<{
-    [SIGNAL_SYMBOL]: unknown;
-
-    toJSON(): T;
-
-    toString(): string;
-
-    valueOf(): T;
-  }>;
+export type Signal<T> = (() => T) & {
+  readonly [SIGNAL_SYMBOL]: unknown;
+};
 
 /**
  * Checks if the given `value` is a reactive `Signal`.

@@ -151,18 +151,6 @@ class WritableSignalImpl<T> implements ReactiveNode {
     this.onDestroy = undefined;
   }
 
-  toJSON() {
-    return this.signal();
-  }
-
-  toString() {
-    return String(this.signal());
-  }
-
-  valueOf() {
-    return this.signal();
-  }
-
   /**
    * Notify all consumers of this producer that its value is changed.
    */
@@ -216,10 +204,6 @@ export function signal<T>(
       update: signalNode.update.bind(signalNode),
       // mutate: signalNode.mutate.bind(signalNode),
       asReadonly: signalNode.asReadonly.bind(signalNode),
-
-      toJSON: signalNode.toJSON.bind(signalNode),
-      toString: signalNode.toString.bind(signalNode),
-      valueOf: signalNode.valueOf.bind(signalNode),
 
       destroy: signalNode.destroy.bind(signalNode),
     },
