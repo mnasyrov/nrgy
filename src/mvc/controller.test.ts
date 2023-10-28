@@ -1,4 +1,4 @@
-import { signal } from '../core';
+import { signal } from '../core/signal';
 
 import { createController } from './controller';
 

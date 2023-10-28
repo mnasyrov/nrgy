@@ -1,4 +1,4 @@
-import { Signal } from '../core';
+import { Signal } from '../core/common';
 import { createScope } from '../core/scope';
 import { createLatch } from '../utils/latch';
 

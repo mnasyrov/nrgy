@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { declareStateUpdates } from '../../src/rx-effects';
+import { declareStateUpdates } from '../../src/rx-effects/_public';
 
 import { useStore } from './useStore';
 

@@ -11,7 +11,7 @@ import {
   Scope,
   StateMutation,
   Store,
-} from '../../src/rx-effects';
+} from '../../src/rx-effects/_public';
 
 // Example usage of RxEffects: a calculator which has actions: increment,
 // decrement, add, subtract and reset.

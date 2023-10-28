@@ -1,6 +1,7 @@
 import { MonoTypeOperatorFunction, Subscription } from 'rxjs';
 
-import { signal, Signal } from '../core';
+import { Signal } from '../core/common';
+import { signal } from '../core/signal';
 
 import { toObservable } from './toObservable';
 

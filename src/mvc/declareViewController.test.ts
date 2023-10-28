@@ -1,6 +1,7 @@
 import { createContainer, token } from 'ditox';
 
-import { signal, Signal } from '../core';
+import { Signal } from '../core/common';
+import { signal } from '../core/signal';
 
 import { declareViewController } from './declareViewController';
 import { InferredService } from './utilityTypes';

@@ -1,5 +1,15 @@
+import { Query } from 'rx-effects';
+import {
+  defer,
+  mergeMap,
+  Observable,
+  OperatorFunction,
+  Subject,
+  Unsubscribable,
+} from 'rxjs';
+
 import { Action, ActionEmitter } from '../../src/core/action';
-import { Controller } from '../../src/mvc';
+import { Controller } from '../../src/mvc/controller';
 
 import { createEffectController } from './effectController';
 import { EffectState } from './effectState';
@@ -37,7 +47,7 @@ export type Effect<Event, Result = void, ErrorType = Error> = Controller<
   EffectState<Event, Result, ErrorType> & {
     handle: (
       source: ActionEmitter<Event> | Observable<Event> | Query<Event>,
-    ) => Subscription;
+    ) => Unsubscribable;
   }
 >;
 

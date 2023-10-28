@@ -1,4 +1,4 @@
-import { signal, SignalOptions, WritableSignal } from './signal';
+import { signal, SignalOptions, WritableSignal } from '../core/signal';
 
 /**
  * A function to update a state.

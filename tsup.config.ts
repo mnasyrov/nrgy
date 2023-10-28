@@ -3,12 +3,13 @@ import { defineConfig } from 'tsup';
 import pkg from './package.json';
 
 export default defineConfig({
-  entry: [
-    'src/core/index.ts',
-    'src/mvc/index.ts',
-    'src/rx-effects/index.ts',
-    'src/rxjs/index.ts',
-  ],
+  entry: {
+    core: 'src/core/_public.ts',
+    mvc: 'src/mvc/_public.ts',
+    'rx-effects': 'src/rx-effects/_public.ts',
+    rxjs: 'src/rxjs/_public.ts',
+    store: 'src/store/_public.ts',
+  },
   clean: true,
   dts: true,
   format: ['cjs', 'esm'],

@@ -1,6 +1,7 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
-import { effect, effectSync, Signal } from '../core';
+import { Signal } from '../core/common';
+import { effect, effectSync } from '../core/effect';
 import { SIGNAL_RUNTIME } from '../core/runtime';
 
 export type ToObservableOptions = {

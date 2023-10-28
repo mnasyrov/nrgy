@@ -1,7 +1,7 @@
-import { compute } from '../../src/core';
 import { action } from '../../src/core/action';
+import { compute } from '../../src/core/compute';
 import { createScope } from '../../src/core/scope';
-import { Controller } from '../../src/mvc';
+import { Controller } from '../../src/mvc/controller';
 
 import {
   EffectError,

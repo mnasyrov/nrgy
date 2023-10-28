@@ -1,4 +1,5 @@
-import { SignalOptions } from './signal';
+import { SignalOptions } from '../core/signal';
+
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
 export type DeclareStoreOptions<
@@ -20,7 +21,7 @@ export type StoreFactory<State, Updates extends StateUpdates<State>> = {
     options?: SignalOptions<State>,
   ): Store<State, Updates>;
 
-  updates: Updates;
+  readonly updates: Updates;
 };
 
 /**
@@ -98,12 +99,12 @@ export function declareStore<
   const {
     initialState: baseState,
     updates,
-    options: signalOptions,
+    options: baseOptions,
   } = storeOptions;
 
   function factory(
     initialState?: FactoryStateArg<State>,
-    options?: SignalOptions<State>,
+    signalOptions?: SignalOptions<State>,
   ) {
     const state =
       initialState === undefined
@@ -113,8 +114,8 @@ export function declareStore<
         : initialState;
 
     const store = createStore(state, {
+      ...baseOptions,
       ...signalOptions,
-      ...options,
       updates,
     });
 

@@ -16,7 +16,7 @@ import {
   Query,
   Store,
   ViewControllerFactory,
-} from '../../src/rx-effects';
+} from '../../src/rx-effects/_public';
 
 type AnyObject = Record<string, any>;
 

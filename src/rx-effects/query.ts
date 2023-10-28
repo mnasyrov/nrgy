@@ -1,8 +1,9 @@
 import { Query } from 'rx-effects';
 import { Subscription } from 'rxjs';
 
-import { signal, Signal } from '../core';
-import { toObservable } from '../rxjs';
+import { Signal } from '../core/common';
+import { signal } from '../core/signal';
+import { toObservable } from '../rxjs/_public';
 
 export function toQuery<T>(source: Signal<T>): Query<T> {
   return {

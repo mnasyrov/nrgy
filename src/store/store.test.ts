@@ -1,10 +1,10 @@
-import { toObservable } from '../rxjs';
+import { objectEquals } from '../core/common';
+import { compute } from '../core/compute';
+import { effect } from '../core/effect';
+import { signal } from '../core/signal';
+import { toObservable } from '../rxjs/_public';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
-import { objectEquals } from './common';
-import { compute } from './compute';
-import { effect } from './effect';
-import { signal } from './signal';
 import {
   createStore,
   createStoreUpdates,

@@ -9,7 +9,7 @@ import {
   declareViewController,
   InferredService,
   Query,
-} from '../../src/rx-effects';
+} from '../../src/rx-effects/_public';
 
 import {
   createControllerContainer,

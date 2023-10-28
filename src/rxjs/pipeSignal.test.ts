@@ -1,6 +1,6 @@
 import { map } from 'rxjs/operators';
 
-import { signal } from '../core';
+import { signal } from '../core/signal';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import { pipeSignal } from './pipeSignal';

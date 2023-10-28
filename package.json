@@ -8,9 +8,9 @@
   "bugs": "https://github.com/mnasyrov/nrgy/issues",
   "repository": "github:mnasyrov/nrgy",
   "type": "module",
-  "main": "dist/core/index.cjs",
-  "module": "dist/core/index.js",
-  "types": "dist/core/index.d.ts",
+  "main": "dist/core.cjs",
+  "module": "dist/core.js",
+  "types": "dist/core.d.ts",
   "files": [
     "dist",
     "docs",
@@ -21,20 +21,24 @@
   ],
   "exports": {
     ".": {
-      "require": "./dist/core/index.cjs",
-      "default": "./dist/core/index.js"
+      "require": "./dist/core.cjs",
+      "default": "./dist/core.js"
     },
     "./mvc": {
-      "require": "./dist/mvc/index.cjs",
-      "default": "./dist/mvc/index.js"
+      "require": "./dist/mvc.cjs",
+      "default": "./dist/mvc.js"
     },
     "./rx-effects": {
-      "require": "./dist/rx-effects/index.cjs",
-      "default": "./dist/rx-effects/index.js"
+      "require": "./dist/rx-effects.cjs",
+      "default": "./dist/rx-effects.js"
     },
     "./rxjs": {
-      "require": "./dist/rxjs/index.cjs",
-      "default": "./dist/rxjs/index.js"
+      "require": "./dist/rxjs.cjs",
+      "default": "./dist/rxjs.js"
+    },
+    "./store": {
+      "require": "./dist/store.cjs",
+      "default": "./dist/store.js"
     }
   },
   "scripts": {
@@ -46,7 +50,7 @@
     "tsc": "tsc --noEmit --jsx react",
     "test": "jest",
     "build": "tsup",
-    "benchmarks": "npm run build && tsx ./benchmarks",
+    "benchmarks": "npm run build -- --silent && tsx ./benchmarks",
     "pack": "npm run build && mkdir -p dist && npm pack --pack-destination ./dist",
     "preversion": "npm run lint && npm run test && npm run build && git add --all",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",

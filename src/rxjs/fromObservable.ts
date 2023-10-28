@@ -1,12 +1,7 @@
 import { BehaviorSubject, Observable, Subscribable } from 'rxjs';
 
-import { Signal } from '../core';
 import { createScope } from '../core/scope';
-import { createSignalSubject } from '../core/signalSubject';
-
-export type ObservableSignal<T> = Signal<T> & {
-  destroy(): void;
-};
+import { createSignalSubject, SignalObservable } from '../core/signalSubject';
 
 /**
  * Options for `toSignal`.
@@ -32,7 +27,7 @@ export interface ToSignalOptions<T> {
  */
 export function fromObservable<T>(
   source: BehaviorSubject<T>,
-): ObservableSignal<T>;
+): SignalObservable<T>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Signal`.
@@ -44,7 +39,7 @@ export function fromObservable<T>(
  */
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
-): ObservableSignal<T | undefined>;
+): SignalObservable<T | undefined>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Signal`.
@@ -57,7 +52,7 @@ export function fromObservable<T>(
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   options?: ToSignalOptions<undefined>,
-): ObservableSignal<T | undefined>;
+): SignalObservable<T | undefined>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Signal`.
@@ -70,7 +65,7 @@ export function fromObservable<T>(
 export function fromObservable<T, U extends T | null | undefined>(
   source: Observable<T> | Subscribable<T>,
   options: ToSignalOptions<U> & { initialValue: U },
-): ObservableSignal<T | U>;
+): SignalObservable<T | U>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Signal`.
@@ -83,12 +78,12 @@ export function fromObservable<T, U extends T | null | undefined>(
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   options: ToSignalOptions<undefined>,
-): ObservableSignal<T>;
+): SignalObservable<T>;
 
 export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   options?: ToSignalOptions<U>,
-): ObservableSignal<T | U> {
+): SignalObservable<T | U> {
   const scope = createScope();
 
   // Note: T is the Observable value type, and U is the initial value type. They don't have to be

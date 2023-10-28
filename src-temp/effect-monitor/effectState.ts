@@ -1,5 +1,5 @@
-import { Signal } from '../../src/core';
 import { Action } from '../../src/core/action';
+import { Signal } from '../../src/core/common';
 
 export type EffectResult<Event, Value> = Readonly<{
   event: Event;

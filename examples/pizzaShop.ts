@@ -8,7 +8,7 @@ import {
   EffectState,
   Query,
   withStoreUpdates,
-} from '../src/rx-effects';
+} from '../src/rx-effects/_public';
 
 // The state
 type CartState = Readonly<{ orders: Array<string> }>;
