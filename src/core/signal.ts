@@ -25,11 +25,11 @@ export interface WritableSignal<T> extends Signal<T> {
    */
   update(updateFn: (value: T) => T): void;
 
-  // /**
-  //  * Update the current value by mutating it in-place, and
-  //  * notify any dependents.
-  //  */
-  // mutate(mutatorFn: (value: T) => void): void;
+  /**
+   * Update the current value by mutating it in-place, and
+   * notify any dependents.
+   */
+  mutate(mutatorFn: (value: T) => void): void;
 
   /**
    * Returns a readonly version of this signal. Readonly angular can be accessed to read their value
@@ -108,7 +108,6 @@ class WritableSignalImpl<T> implements ReactiveNode {
     }
 
     this.value = newValue;
-    SIGNAL_RUNTIME.updateSignalClock();
 
     this.producerChanged();
   }
@@ -123,15 +122,19 @@ class WritableSignalImpl<T> implements ReactiveNode {
     this.set(updater(this.value));
   }
 
-  // /**
-  //  * Calls `mutator` on the current value and assumes that it has been mutated.
-  //  */
-  // mutate(mutator: (value: T) => void): void {
-  //   // Mutate bypasses equality checks as it's by definition changing the value.
-  //   mutator(this.value);
-  //   this.valueVersion++;
-  //   this.producerMayHaveChanged();
-  // }
+  /**
+   * Calls `mutator` on the current value and assumes that it has been mutated.
+   */
+  mutate(mutator: (value: T) => void): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    // Mutate bypasses equality checks as it's by definition changing the value.
+    mutator(this.value);
+
+    this.producerChanged();
+  }
 
   asReadonly(): Signal<T> {
     if (this.readonlySignal === undefined) {
@@ -155,6 +158,8 @@ class WritableSignalImpl<T> implements ReactiveNode {
    * Notify all consumers of this producer that its value is changed.
    */
   protected producerChanged(): void {
+    SIGNAL_RUNTIME.updateSignalClock();
+
     for (const [effectRef, atEffectClock] of this.consumerEffects) {
       const effect = effectRef.deref();
 
@@ -202,7 +207,7 @@ export function signal<T>(
     {
       set: signalNode.set.bind(signalNode),
       update: signalNode.update.bind(signalNode),
-      // mutate: signalNode.mutate.bind(signalNode),
+      mutate: signalNode.mutate.bind(signalNode),
       asReadonly: signalNode.asReadonly.bind(signalNode),
 
       destroy: signalNode.destroy.bind(signalNode),
