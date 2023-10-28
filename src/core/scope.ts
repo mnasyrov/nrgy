@@ -22,13 +22,6 @@ export type Scope = Readonly<
   Destroyable & {
     onDestroy: (teardown: ScopeTeardown) => void;
 
-    create: <
-      T extends Unsubscribable | Destroyable,
-      Factory extends (...args: any[]) => T,
-    >(
-      factory: Factory,
-      ...args: Parameters<Factory>
-    ) => T;
     add: <T extends Unsubscribable | Destroyable>(resource: T) => T;
 
     action: typeof action;
@@ -144,7 +137,6 @@ export function createScope(): Scope {
     destroy: scope.destroy.bind(scope),
     onDestroy: scope.onDestroy.bind(scope),
 
-    create: scope.create.bind(scope),
     add: scope.add.bind(scope),
 
     action: scope.action.bind(scope),
