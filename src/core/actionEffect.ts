@@ -2,7 +2,7 @@ import { TaskScheduler } from '../utils/schedulers';
 
 import { ActionEffectNode } from './common';
 
-export class ActionWatch<T> implements ActionEffectNode<any> {
+export class ActionEffect<T> implements ActionEffectNode<any> {
   readonly ref: WeakRef<ActionEffectNode<T>> = new WeakRef(this);
 
   isDestroyed = false;
@@ -15,13 +15,13 @@ export class ActionWatch<T> implements ActionEffectNode<any> {
     this.callback = callback;
   }
 
-  notify = (value: T): void => {
+  notify(value: T): void {
     if (this.isDestroyed) {
       return;
     }
 
     this.scheduler?.schedule(() => this.callback?.(value));
-  };
+  }
 
   destroy(): void {
     this.isDestroyed = true;

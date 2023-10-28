@@ -1,10 +1,10 @@
 import { TaskScheduler } from '../utils/schedulers';
 
 import { ActionEmitter, getActionNode, isAction } from './action';
-import { ActionWatch } from './actionWatch';
+import { ActionEffect } from './actionEffect';
 import { isSignal, Signal } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
-import { createWatch } from './watch';
+import { createSignalEffect } from './signalEffect';
 
 /**
  * An effect can, optionally, register a cleanup function. If registered, the cleanup is executed
@@ -21,7 +21,7 @@ export type EffectCleanupRegisterFn = (cleanupFn: EffectCleanupFn) => void;
 /**
  * A global reactive effect, which can be manually destroyed.
  */
-export type EffectHandle = Readonly<{
+export type EffectSubscription = Readonly<{
   /**
    * Shut down the effect, removing it from any upcoming scheduled executions.
    */
@@ -33,13 +33,16 @@ type ValueCallbackFn<T> = (value: T) => unknown;
 type ErrorCallbackFn = (error: unknown) => unknown;
 
 export interface EffectFn {
-  <T>(target: ActionEmitter<T>, callback: ValueCallbackFn<T>): EffectHandle;
+  <T>(
+    target: ActionEmitter<T>,
+    callback: ValueCallbackFn<T>,
+  ): EffectSubscription;
   <T>(
     target: Signal<T>,
     callback: ValueCallbackFn<T>,
     onError?: ErrorCallbackFn,
-  ): EffectHandle;
-  (target: SideEffectFn, onError?: ErrorCallbackFn): EffectHandle;
+  ): EffectSubscription;
+  (target: SideEffectFn, onError?: ErrorCallbackFn): EffectSubscription;
 }
 
 export const effect: EffectFn = <
@@ -112,12 +115,12 @@ function effectFactory<
   target: Target,
   callback?: Callback,
   errorCallback?: ErrorCallback,
-): EffectHandle {
+): EffectSubscription {
   if (isAction<T>(target)) {
     if (!callback) throw new Error('callback is missed');
     const node = getActionNode<T>(target);
 
-    const actionWatch = new ActionWatch<T>(scheduler, callback);
+    const actionWatch = new ActionEffect<T>(scheduler, callback);
     node.subscribe(actionWatch.ref);
 
     return { destroy: () => actionWatch.destroy() };
@@ -133,7 +136,11 @@ function effectFactory<
     sideEffectFn = target as SideEffectFn;
   }
 
-  const signalWatch = createWatch(scheduler, sideEffectFn, errorCallback);
+  const signalWatch = createSignalEffect(
+    scheduler,
+    sideEffectFn,
+    errorCallback,
+  );
   // Effect starts dirty.
   signalWatch.notify();
   return { destroy: () => signalWatch.destroy() };

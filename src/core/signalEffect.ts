@@ -1,7 +1,7 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 import { TaskScheduler } from '../utils/schedulers';
 
-import { ComputedNode, EffectNode } from './common';
+import { ComputedNode, SignalEffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
 
 /**
@@ -17,14 +17,17 @@ export type WatchCleanupRegisterFn = (cleanupFn: WatchCleanupFn) => void;
 
 const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
 
-export function createWatch(
+export function createSignalEffect(
   scheduler: TaskScheduler,
   action: (onCleanup: WatchCleanupRegisterFn) => void,
   onError?: (error: unknown) => unknown,
-): EffectNode {
-  const node = new Watch(scheduler, action, onError);
+): SignalEffectNode {
+  const node = new EffectNodeImpl(scheduler, action, onError);
 
-  Object.assign<Watch, Pick<Watch, 'notify' | 'run' | 'destroy'>>(node, {
+  Object.assign<
+    EffectNodeImpl,
+    Pick<EffectNodeImpl, 'notify' | 'run' | 'destroy'>
+  >(node, {
     notify: node.notify.bind(node),
     run: node.run.bind(node),
     destroy: node.destroy.bind(node),
@@ -40,8 +43,8 @@ export function createWatch(
  * `Watch` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `Watch.run()`.
  */
-export class Watch implements EffectNode {
-  readonly ref: WeakRef<EffectNode> = new WeakRef(this);
+class EffectNodeImpl implements SignalEffectNode {
+  readonly ref: WeakRef<SignalEffectNode> = new WeakRef(this);
   clock = 0;
 
   dirty = false;

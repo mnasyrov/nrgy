@@ -4,8 +4,8 @@ import {
   ComputedNode,
   createSignalFromFunction,
   defaultEquals,
-  EffectNode,
   Signal,
+  SignalEffectNode,
   ValueEqualityFn,
 } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
@@ -73,7 +73,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
-  private lastEffectRef: WeakRef<EffectNode> | undefined;
+  private lastEffectRef: WeakRef<SignalEffectNode> | undefined;
 
   constructor(
     private computation: Computation<T>,

@@ -4,11 +4,11 @@ import {
   createSyncTaskScheduler,
 } from '../utils/schedulers';
 
-import { ComputedNode, EffectNode } from './common';
+import { ComputedNode, SignalEffectNode } from './common';
 
 export class SignalRuntime {
-  private currentEffect: EffectNode | undefined = undefined;
-  private trackedEffects: EffectNode[] = [];
+  private currentEffect: SignalEffectNode | undefined = undefined;
+  private trackedEffects: SignalEffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
   readonly asyncScheduler = createMicrotaskScheduler();
@@ -29,15 +29,17 @@ export class SignalRuntime {
     this.clock = nextSafeInteger(this.clock);
   }
 
-  getCurrentEffect(): EffectNode | undefined {
+  getCurrentEffect(): SignalEffectNode | undefined {
     return this.currentEffect;
   }
 
-  getTrackedEffects(): EffectNode[] {
+  getTrackedEffects(): SignalEffectNode[] {
     return this.trackedEffects;
   }
 
-  setCurrentEffect(effect: EffectNode | undefined): EffectNode | undefined {
+  setCurrentEffect(
+    effect: SignalEffectNode | undefined,
+  ): SignalEffectNode | undefined {
     const prev = this.currentEffect;
     this.currentEffect = effect;
 

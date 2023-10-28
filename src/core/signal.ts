@@ -1,9 +1,9 @@
 import {
   createSignalFromFunction,
   defaultEquals,
-  EffectNode,
   ReactiveNode,
   Signal,
+  SignalEffectNode,
   ValueEqualityFn,
 } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
@@ -67,7 +67,10 @@ class WritableSignalImpl<T> implements ReactiveNode {
   private readonly name?: string;
   private readonly equal: ValueEqualityFn<T>;
   private onDestroy?: () => void;
-  private readonly consumerEffects = new Map<WeakRef<EffectNode>, number>();
+  private readonly consumerEffects = new Map<
+    WeakRef<SignalEffectNode>,
+    number
+  >();
 
   private isDestroyed = false;
 

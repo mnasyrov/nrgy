@@ -128,9 +128,9 @@ export type ComputedNode<T> = ReactiveNode &
     isChanged: () => boolean;
   }>;
 
-export type EffectNode = ReactiveNode &
+export type SignalEffectNode = ReactiveNode &
   Readonly<{
-    ref: WeakRef<EffectNode>;
+    ref: WeakRef<SignalEffectNode>;
     isDestroyed: boolean;
     dirty: boolean;
 

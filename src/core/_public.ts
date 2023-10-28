@@ -9,7 +9,7 @@ export { compute } from './compute';
 
 export type {
   EffectFn,
-  EffectHandle,
+  EffectSubscription,
   EffectCleanupFn,
   EffectCleanupRegisterFn,
 } from './effect';
