@@ -17,14 +17,6 @@ export class SignalRuntime {
   /** @readonly */
   clock = 0;
 
-  /** @deprecated */
-  reset(): void {
-    this.currentEffect = undefined;
-    this.trackedEffects = [];
-    this.visitedComputedNodes = [];
-    this.clock = 0;
-  }
-
   updateSignalClock(): void {
     this.clock = nextSafeInteger(this.clock);
   }

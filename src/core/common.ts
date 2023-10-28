@@ -1,11 +1,9 @@
 export type AnyObject = Record<string, any>;
 
-export type Mutable<T> = { -readonly [P in keyof T]: T[P] };
-
 /**
  * Symbol used to tell `Signal`s apart from other functions.
  *
- * This can be used to auto-unwrap angular in various cases, or to auto-wrap non-signal values.
+ * This can be used to auto-unwrap signal in various cases, or to auto-wrap non-signal values.
  */
 const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
 

@@ -8,18 +8,20 @@ import { SIGNAL_RUNTIME } from './runtime';
  * A cleanup function that can be optionally registered from the watch logic. If registered, the
  * cleanup logic runs before the next watch execution.
  */
-export type WatchCleanupFn = () => void;
+export type SignalEffectCleanupFn = () => void;
 
 /**
  * A callback passed to the watch function that makes it possible to register cleanup logic.
  */
-export type WatchCleanupRegisterFn = (cleanupFn: WatchCleanupFn) => void;
+export type SignalEffectCleanupRegisterFn = (
+  cleanupFn: SignalEffectCleanupFn,
+) => void;
 
-const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
+const NOOP_CLEANUP_FN: SignalEffectCleanupFn = () => undefined;
 
 export function createSignalEffect(
   scheduler: TaskScheduler,
-  action: (onCleanup: WatchCleanupRegisterFn) => void,
+  action: (onCleanup: SignalEffectCleanupRegisterFn) => void,
   onError?: (error: unknown) => unknown,
 ): SignalEffectNode {
   const node = new EffectNodeImpl(scheduler, action, onError);
@@ -51,19 +53,21 @@ class EffectNodeImpl implements SignalEffectNode {
   isDestroyed = false;
 
   private scheduler?: TaskScheduler;
-  private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
+  private action:
+    | undefined
+    | ((onCleanup: SignalEffectCleanupRegisterFn) => void);
   private onError: undefined | ((error: unknown) => unknown);
   private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  private registerOnCleanup = (cleanupFn: WatchCleanupFn) => {
+  private registerOnCleanup = (cleanupFn: SignalEffectCleanupFn) => {
     this.cleanupFn = cleanupFn;
   };
 
   constructor(
     scheduler: TaskScheduler,
-    action: (onCleanup: WatchCleanupRegisterFn) => void,
+    action: (onCleanup: SignalEffectCleanupRegisterFn) => void,
     onError?: (error: unknown) => unknown,
   ) {
     this.scheduler = scheduler;
