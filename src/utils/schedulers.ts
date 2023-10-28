@@ -16,18 +16,16 @@ export const queueMicrotaskPolyfill: QueueMicrotaskFn = (
 export const queueMicrotask: QueueMicrotaskFn =
   'queueMicrotask' in global ? global.queueMicrotask : queueMicrotaskPolyfill;
 
-export type TaskScheduler<T> = Readonly<{
+export type TaskScheduler = Readonly<{
   isEmpty(): boolean;
-  schedule(entry: T): void;
+  schedule(action: () => void): void;
   execute(): void;
 }>;
 
-export type Runnable = Readonly<{ run: () => void }>;
-
-export function createMicrotaskScheduler<T extends Runnable = Runnable>(
+export function createMicrotaskScheduler(
   onError?: (error: unknown) => void,
-): TaskScheduler<T> {
-  const queue = createQueue<T>();
+): TaskScheduler {
+  const queue = createQueue<() => void>();
   let isActive = false;
 
   const execute = () => {
@@ -35,10 +33,10 @@ export function createMicrotaskScheduler<T extends Runnable = Runnable>(
 
     isActive = true;
 
-    let entry;
-    while ((entry = queue.get())) {
+    let action;
+    while ((action = queue.get())) {
       try {
-        entry.run();
+        action();
       } catch (error) {
         (onError ?? reportError)?.(error);
       }
@@ -49,7 +47,7 @@ export function createMicrotaskScheduler<T extends Runnable = Runnable>(
 
   return {
     isEmpty: () => queue.isEmpty(),
-    schedule: (entry: T) => {
+    schedule: (entry) => {
       const prevEmpty = queue.isEmpty();
       queue.add(entry);
 
@@ -61,10 +59,10 @@ export function createMicrotaskScheduler<T extends Runnable = Runnable>(
   };
 }
 
-export function createSyncTaskScheduler<T extends Runnable = Runnable>(
+export function createSyncTaskScheduler(
   onError?: (error: unknown) => void,
-): TaskScheduler<T> {
-  const queue = createQueue<T>();
+): TaskScheduler {
+  const queue = createQueue<() => void>();
   let isActive = false;
 
   const execute = () => {
@@ -72,10 +70,10 @@ export function createSyncTaskScheduler<T extends Runnable = Runnable>(
 
     isActive = true;
 
-    let entry;
-    while ((entry = queue.get())) {
+    let action;
+    while ((action = queue.get())) {
       try {
-        entry.run();
+        action();
       } catch (error) {
         (onError ?? reportError)?.(error);
       }
@@ -85,7 +83,7 @@ export function createSyncTaskScheduler<T extends Runnable = Runnable>(
 
   return {
     isEmpty: () => queue.isEmpty(),
-    schedule: (entry: T) => {
+    schedule: (entry) => {
       queue.add(entry);
       if (!isActive) execute();
     },

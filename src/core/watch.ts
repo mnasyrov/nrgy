@@ -1,5 +1,5 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
-import { Runnable, TaskScheduler } from '../utils/schedulers';
+import { TaskScheduler } from '../utils/schedulers';
 
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
@@ -23,14 +23,14 @@ const NOOP_CLEANUP_FN: WatchCleanupFn = () => undefined;
  * `Watch` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `Watch.run()`.
  */
-export class Watch implements EffectNode, Runnable {
+export class Watch implements EffectNode {
   readonly ref: WeakRef<EffectNode> = new WeakRef(this);
   clock = 0;
 
   dirty = false;
   isDestroyed = false;
 
-  private scheduler?: TaskScheduler<Runnable>;
+  private scheduler?: TaskScheduler;
   private action: undefined | ((onCleanup: WatchCleanupRegisterFn) => void);
   private onError: undefined | ((error: unknown) => unknown);
   private cleanupFn = NOOP_CLEANUP_FN;
@@ -42,7 +42,7 @@ export class Watch implements EffectNode, Runnable {
   };
 
   constructor(
-    scheduler: TaskScheduler<Runnable>,
+    scheduler: TaskScheduler,
     action: (onCleanup: WatchCleanupRegisterFn) => void,
     onError?: (error: unknown) => unknown,
   ) {
@@ -61,7 +61,7 @@ export class Watch implements EffectNode, Runnable {
     this.dirty = true;
 
     if (needsSchedule) {
-      this.scheduler?.schedule(this);
+      this.scheduler?.schedule(this.run);
     }
   };
 
@@ -71,7 +71,7 @@ export class Watch implements EffectNode, Runnable {
    * Should be called by the user scheduling algorithm when the provided
    * `schedule` hook is called by `Watch`.
    */
-  run(): void {
+  run = (): void => {
     if (!this.dirty) {
       return;
     }
@@ -118,7 +118,7 @@ export class Watch implements EffectNode, Runnable {
         this.onError(errorRef.error);
       }
     }
-  }
+  };
 
   destroy(): void {
     this.isDestroyed = true;

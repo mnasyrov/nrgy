@@ -26,9 +26,9 @@ export function toObservable<T>(
     const watcher = effectFn(() => {
       try {
         const value = source();
-        scheduler.schedule({ run: () => subscriber.next(value) });
+        scheduler.schedule(() => subscriber.next(value));
       } catch (error) {
-        scheduler.schedule({ run: () => subscriber.error(error) });
+        scheduler.schedule(() => subscriber.error(error));
       }
     });
 

@@ -1,4 +1,4 @@
-import { Runnable, TaskScheduler } from '../utils/schedulers';
+import { TaskScheduler } from '../utils/schedulers';
 
 import { ActionEffectNode } from './common';
 
@@ -7,13 +7,10 @@ export class ActionWatch<T> implements ActionEffectNode<any> {
 
   isDestroyed = false;
 
-  private scheduler?: TaskScheduler<Runnable>;
+  private scheduler?: TaskScheduler;
   private callback?: (value: T) => unknown;
 
-  constructor(
-    scheduler: TaskScheduler<Runnable>,
-    callback: (value: T) => unknown,
-  ) {
+  constructor(scheduler: TaskScheduler, callback: (value: T) => unknown) {
     this.scheduler = scheduler;
     this.callback = callback;
   }
@@ -23,9 +20,7 @@ export class ActionWatch<T> implements ActionEffectNode<any> {
       return;
     }
 
-    this.scheduler?.schedule({
-      run: () => this.callback?.(value),
-    });
+    this.scheduler?.schedule(() => this.callback?.(value));
   };
 
   destroy(): void {

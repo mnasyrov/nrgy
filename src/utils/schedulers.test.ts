@@ -41,12 +41,12 @@ describe('MicrotaskScheduler', () => {
   describe('runnableAction argument', () => {
     it('should be used to for execution of tasks', async () => {
       const scheduler = createMicrotaskScheduler();
-      const task = { run: jest.fn() };
+      const task = jest.fn();
 
       scheduler.schedule(task);
       await flushMicrotasks();
 
-      expect(task.run).toBeCalledTimes(1);
+      expect(task).toBeCalledTimes(1);
     });
   });
 
@@ -55,7 +55,7 @@ describe('MicrotaskScheduler', () => {
       const scheduler = createMicrotaskScheduler();
       expect(scheduler.isEmpty()).toBe(true);
 
-      scheduler.schedule({ run: jest.fn() });
+      scheduler.schedule(jest.fn());
       expect(scheduler.isEmpty()).toBe(false);
 
       await flushMicrotasks();
@@ -66,19 +66,19 @@ describe('MicrotaskScheduler', () => {
 
   describe('schedule()', () => {
     it('should schedule microtasks', async () => {
-      const task1 = { run: jest.fn() };
-      const task2 = { run: jest.fn() };
-      const task3 = { run: jest.fn() };
+      const task1 = jest.fn();
+      const task2 = jest.fn();
+      const task3 = jest.fn();
       const tasks = [task1, task2, task3];
 
       const scheduler = createMicrotaskScheduler();
 
       tasks.forEach(scheduler.schedule);
-      tasks.forEach((task) => expect(task.run).toBeCalledTimes(0));
+      tasks.forEach((task) => expect(task).toBeCalledTimes(0));
 
       await flushMicrotasks();
 
-      tasks.forEach((task) => expect(task.run).toBeCalledTimes(1));
+      tasks.forEach((task) => expect(task).toBeCalledTimes(1));
     });
   });
 
@@ -86,8 +86,8 @@ describe('MicrotaskScheduler', () => {
     it('should execute the queue', async () => {
       const scheduler = createMicrotaskScheduler();
 
-      scheduler.schedule({ run: jest.fn() });
-      scheduler.schedule({ run: jest.fn() });
+      scheduler.schedule(jest.fn());
+      scheduler.schedule(jest.fn());
       expect(scheduler.isEmpty()).toBe(false);
 
       scheduler.execute();
@@ -99,19 +99,15 @@ describe('MicrotaskScheduler', () => {
       const scheduler = createMicrotaskScheduler(onError);
       const results: number[] = [];
 
-      const task1 = { run: () => results.push(1) };
-      const task2 = {
-        run: () => {
-          throw 'error 1';
-        },
+      const task1 = () => results.push(1);
+      const task2 = () => {
+        throw 'error 1';
       };
-      const task3 = { run: () => results.push(2) };
-      const task4 = {
-        run: () => {
-          throw 'error 2';
-        },
+      const task3 = () => results.push(2);
+      const task4 = () => {
+        throw 'error 2';
       };
-      const task5 = { run: () => results.push(3) };
+      const task5 = () => results.push(3);
 
       [task1, task2, task3, task4, task5].forEach(scheduler.schedule);
 
@@ -130,11 +126,11 @@ describe('SyncTaskScheduler', () => {
   describe('runnableAction argument', () => {
     it('should be used to for execution of tasks', async () => {
       const scheduler = createSyncTaskScheduler();
-      const task = { run: jest.fn() };
+      const task = jest.fn();
 
       scheduler.schedule(task);
 
-      expect(task.run).toBeCalledTimes(1);
+      expect(task).toBeCalledTimes(1);
     });
   });
 
@@ -144,15 +140,13 @@ describe('SyncTaskScheduler', () => {
       expect(scheduler.isEmpty()).toBe(true);
 
       // Task is executed during scheduling
-      scheduler.schedule({ run: jest.fn() });
+      scheduler.schedule(jest.fn());
       expect(scheduler.isEmpty()).toBe(true);
 
       // Check isEmpty() during execution of a task
-      scheduler.schedule({
-        run: () => {
-          scheduler.schedule({ run: jest.fn() });
-          expect(scheduler.isEmpty()).toBe(false);
-        },
+      scheduler.schedule(() => {
+        scheduler.schedule(jest.fn());
+        expect(scheduler.isEmpty()).toBe(false);
       });
 
       // Finally it should be empty
@@ -162,14 +156,14 @@ describe('SyncTaskScheduler', () => {
 
   describe('schedule()', () => {
     it('should schedule tasks', async () => {
-      const run = jest.fn();
+      const task = jest.fn();
 
       const scheduler = createSyncTaskScheduler();
-      scheduler.schedule({ run });
-      scheduler.schedule({ run });
-      scheduler.schedule({ run });
+      scheduler.schedule(task);
+      scheduler.schedule(task);
+      scheduler.schedule(task);
 
-      expect(run).toBeCalledTimes(3);
+      expect(task).toBeCalledTimes(3);
     });
   });
 
@@ -177,8 +171,8 @@ describe('SyncTaskScheduler', () => {
     it('should execute the queue', async () => {
       const scheduler = createSyncTaskScheduler();
 
-      scheduler.schedule({ run: jest.fn() });
-      scheduler.schedule({ run: jest.fn() });
+      scheduler.schedule(jest.fn());
+      scheduler.schedule(jest.fn());
       expect(scheduler.isEmpty()).toBe(true);
     });
 
@@ -187,19 +181,15 @@ describe('SyncTaskScheduler', () => {
       const scheduler = createSyncTaskScheduler(onError);
       const results: number[] = [];
 
-      const task1 = { run: () => results.push(1) };
-      const task2 = {
-        run: () => {
-          throw 'error 1';
-        },
+      const task1 = () => results.push(1);
+      const task2 = () => {
+        throw 'error 1';
       };
-      const task3 = { run: () => results.push(2) };
-      const task4 = {
-        run: () => {
-          throw 'error 2';
-        },
+      const task3 = () => results.push(2);
+      const task4 = () => {
+        throw 'error 2';
       };
-      const task5 = { run: () => results.push(3) };
+      const task5 = () => results.push(3);
 
       [task1, task2, task3, task4, task5].forEach(scheduler.schedule);
 

@@ -1,4 +1,4 @@
-import { Runnable, TaskScheduler } from '../utils/schedulers';
+import { TaskScheduler } from '../utils/schedulers';
 
 import { ActionEmitter, getActionNode, isAction } from './action';
 import { ActionWatch } from './actionWatch';
@@ -108,7 +108,7 @@ function effectFactory<
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
-  scheduler: TaskScheduler<Runnable>,
+  scheduler: TaskScheduler,
   target: Target,
   callback?: Callback,
   errorCallback?: ErrorCallback,
