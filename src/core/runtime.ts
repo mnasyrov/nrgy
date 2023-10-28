@@ -1,25 +1,18 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
+import {
+  createMicrotaskScheduler,
+  createSyncTaskScheduler,
+} from '../utils/schedulers';
 
 import { ComputedNode, EffectNode } from './common';
-import {
-  createAsyncTaskScheduler,
-  createSyncTaskScheduler,
-  defaultRunnableAction,
-  Runnable,
-} from './schedulers';
 
 export class SignalRuntime {
   private currentEffect: EffectNode | undefined = undefined;
   private trackedEffects: EffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
-  readonly asyncScheduler = createAsyncTaskScheduler<Runnable>(
-    defaultRunnableAction,
-  );
-
-  readonly syncScheduler = createSyncTaskScheduler<Runnable>(
-    defaultRunnableAction,
-  );
+  readonly asyncScheduler = createMicrotaskScheduler();
+  readonly syncScheduler = createSyncTaskScheduler();
 
   /** @readonly */
   clock = 0;

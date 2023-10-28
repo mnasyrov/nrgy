@@ -1,8 +1,8 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
+import { Runnable, TaskScheduler } from '../utils/schedulers';
 
 import { ComputedNode, EffectNode } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
-import { Runnable, TaskScheduler } from './schedulers';
 
 /**
  * A cleanup function that can be optionally registered from the watch logic. If registered, the

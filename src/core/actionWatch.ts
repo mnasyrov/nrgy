@@ -1,5 +1,6 @@
+import { Runnable, TaskScheduler } from '../utils/schedulers';
+
 import { ActionEffectNode } from './common';
-import { Runnable, TaskScheduler } from './schedulers';
 
 export class ActionWatch<T> implements ActionEffectNode<any> {
   readonly ref: WeakRef<ActionEffectNode<T>> = new WeakRef(this);

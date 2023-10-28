@@ -3,11 +3,7 @@ import { createScope } from '../core/scope';
 import { createLatch } from '../utils/latch';
 
 export function flushMicrotasks(interval = 0): Promise<void> {
-  const { promise, resolve } = createLatch();
-
-  setTimeout(resolve, interval);
-
-  return promise;
+  return new Promise((resolve) => setTimeout(resolve, interval));
 }
 
 type HistoryEvent<T> =

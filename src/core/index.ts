@@ -7,6 +7,7 @@ export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';
 
 export type {
+  EffectFn,
   EffectHandle,
   EffectCleanupFn,
   EffectCleanupRegisterFn,
