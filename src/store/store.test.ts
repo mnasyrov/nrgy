@@ -2,7 +2,7 @@ import { objectEquals } from '../core/common';
 import { compute } from '../core/compute';
 import { effect } from '../core/effect';
 import { signal } from '../core/signal';
-import { toObservable } from '../rxjs/_public';
+import { observe } from '../rxjs/_public';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import {
@@ -219,7 +219,7 @@ describe('Concurrent Store updates', () => {
   it('should reschedule continuous setting a state by subscribers', async () => {
     const store = signal<number>(0);
 
-    toObservable(store).subscribe((x) => {
+    observe(store).subscribe((x) => {
       if (x < 100) {
         store.set(x * 10);
       }

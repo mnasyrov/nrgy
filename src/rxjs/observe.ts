@@ -4,7 +4,7 @@ import { Signal } from '../core/common';
 import { effect, syncEffect } from '../core/effect';
 import { SIGNAL_RUNTIME } from '../core/runtime';
 
-export type ToObservableOptions = {
+export type ObserveOptions = {
   sync?: boolean;
   onlyChanges?: boolean;
 };
@@ -14,9 +14,9 @@ export type ToObservableOptions = {
  *
  * The signal's value will be propagated into the `Observable`'s subscribers using an `effect`.
  */
-export function toObservable<T>(
+export function observe<T>(
   source: Signal<T>,
-  options?: ToObservableOptions,
+  options?: ObserveOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
     const effectFn = options?.sync ? syncEffect : effect;

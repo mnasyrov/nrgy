@@ -5,13 +5,13 @@ import { compute } from '../core/compute';
 import { signal } from '../core/signal';
 import { flushMicrotasks } from '../test/testUtils';
 
-import { toObservable } from './toObservable';
+import { observe } from './observe';
 
-describe('toObservable()', () => {
+describe('observe()', () => {
   it('should produce an observable that tracks a signal', async () => {
     const counter = signal(0);
     const counterValues = firstValueFrom(
-      toObservable(counter).pipe(take(3), toArray()),
+      observe(counter).pipe(take(3), toArray()),
     );
 
     // Initial effect execution, emits 0.
@@ -40,7 +40,7 @@ describe('toObservable()', () => {
       }
     });
 
-    const counter$ = toObservable(counter);
+    const counter$ = observe(counter);
 
     let currentValue = 0;
     let currentError: any = null;
@@ -67,7 +67,7 @@ describe('toObservable()', () => {
       return 0;
     });
 
-    toObservable(counter);
+    observe(counter);
 
     // Simply creating the Observable shouldn't trigger a signal read.
     expect(counterRead).toBe(false);
@@ -86,7 +86,7 @@ describe('toObservable()', () => {
       return counter();
     });
 
-    const counter$ = toObservable(trackedCounter);
+    const counter$ = observe(trackedCounter);
 
     const sub = counter$.subscribe();
     expect(readCount).toBe(0);
@@ -120,7 +120,7 @@ describe('toObservable()', () => {
     });
 
     // const childInjector = createEnvironmentInjector([], injector);
-    toObservable(trackedCounter);
+    observe(trackedCounter);
 
     expect(readCount).toBe(0);
 
@@ -140,7 +140,7 @@ describe('toObservable()', () => {
 
     let hits = 0;
 
-    toObservable(counter).subscribe(() => {
+    observe(counter).subscribe(() => {
       // Read emits. If we are still tracked in the effect, this will cause
       // an infinite loop by triggering the effect again.
 

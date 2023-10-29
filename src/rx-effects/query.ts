@@ -3,12 +3,12 @@ import { Subscription } from 'rxjs';
 
 import { Signal } from '../core/common';
 import { signal } from '../core/signal';
-import { toObservable } from '../rxjs/_public';
+import { observe } from '../rxjs/_public';
 
 export function toQuery<T>(source: Signal<T>): Query<T> {
   return {
     get: () => source(),
-    value$: toObservable(source),
+    value$: observe(source),
   };
 }
 

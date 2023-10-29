@@ -3,7 +3,7 @@ import { MonoTypeOperatorFunction, Subscription } from 'rxjs';
 import { Signal } from '../core/common';
 import { signal } from '../core/signal';
 
-import { toObservable } from './toObservable';
+import { observe } from './observe';
 
 /**
  * Creates a deferred or transformed view of the store.
@@ -23,7 +23,7 @@ export function pipeSignal<T>(
     },
   });
 
-  subscription = toObservable(source)
+  subscription = observe(source)
     .pipe(operator)
     .subscribe({
       next: (state) => clone.set(state),

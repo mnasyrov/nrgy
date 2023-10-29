@@ -1,4 +1,4 @@
-import { toObservable } from '../rxjs/_public';
+import { observe } from '../rxjs/_public';
 import {
   collectChanges,
   collectHistory,
@@ -365,7 +365,7 @@ describe('compute()', () => {
     const sum = compute(() => v1() + v2());
 
     const onSumChanged = jest.fn();
-    toObservable(sum).subscribe(onSumChanged);
+    observe(sum).subscribe(onSumChanged);
 
     await flushMicrotasks();
 
@@ -375,7 +375,7 @@ describe('compute()', () => {
     onSumChanged.mockClear();
 
     const storeChanges = await collectChanges(store, () => {
-      toObservable(sum).subscribe((sum) =>
+      observe(sum).subscribe((sum) =>
         store.update((state) => ({ ...state, sum })),
       );
     });
@@ -394,7 +394,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = toObservable(nextResult, {
+    const subscription = observe(nextResult, {
       onlyChanges: true,
     }).subscribe((result) => {
       store.update((state) => ({ ...state, result }));
@@ -427,7 +427,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = toObservable(nextResult, {
+    const subscription = observe(nextResult, {
       onlyChanges: true,
     }).subscribe((result) => {
       store.update((state) => ({ ...state, result }));
@@ -457,7 +457,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription1 = toObservable(nextResult1, {}).subscribe((result) => {
+    const subscription1 = observe(nextResult1, {}).subscribe((result) => {
       store1.update((state) => ({ ...state, result }));
     });
 
@@ -480,7 +480,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = toObservable(nextResult, {
+    const subscription = observe(nextResult, {
       onlyChanges: true,
     }).subscribe((result) => {
       store.update((state) => ({ ...state, result }));
@@ -536,7 +536,7 @@ describe('compute()', () => {
       return { value: counter() };
     });
 
-    const result$ = toObservable(result, { sync: true });
+    const result$ = observe(result, { sync: true });
 
     const subscription = result$.subscribe();
     expect(readCount).toBe(1);
