@@ -11,20 +11,20 @@ main();
 async function main() {
   const bench = new Bench();
 
-  bench.add('DEV: compute + effectSync', () => {
-    return createComputeTest(DEV_CORE, true);
+  bench.add('DEV: compute + syncEffect', () => {
+    return createComputeTest(DEV_CORE, DEV_CORE.syncEffect);
   });
 
   bench.add('DEV: compute + effect    ', () => {
-    return createComputeTest(DEV_CORE, false);
+    return createComputeTest(DEV_CORE, DEV_CORE.effect);
   });
 
-  bench.add('REF: compute + effectSync', () => {
-    return createComputeTest(REF_CORE, true);
+  bench.add('REF: compute + syncEffect', () => {
+    return createComputeTest(REF_CORE, REF_CORE.effectSync);
   });
 
   bench.add('REF: compute + effect    ', () => {
-    return createComputeTest(REF_CORE, false);
+    return createComputeTest(REF_CORE, REF_CORE.effect);
   });
 
   await bench.run();
@@ -36,10 +36,9 @@ async function main() {
 
 function createComputeTest(
   core: typeof DEV_CORE | typeof REF_CORE,
-  sync: boolean,
+  effectFactory: DEV_CORE.EffectFn,
 ) {
   const { signal, compute } = core;
-  const effectFactory = sync ? core.effectSync : core.effect;
 
   const entry = signal(0);
 

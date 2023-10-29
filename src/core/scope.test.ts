@@ -24,7 +24,7 @@ describe('Scope', () => {
       const source = signal<number>(1);
       const results: number[] = [];
 
-      scope.effectSync(() => results.push(source() * 3));
+      scope.syncEffect(() => results.push(source() * 3));
       source.set(2);
       scope.destroy();
       source.set(3);

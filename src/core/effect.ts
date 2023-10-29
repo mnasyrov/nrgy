@@ -73,7 +73,7 @@ export const effect: EffectFn = <
   );
 };
 
-export const effectSync: EffectFn = <
+export const syncEffect: EffectFn = <
   T,
   Source extends Action<T> | Signal<T> | SideEffectFn,
   Callback extends Source extends Action<T>

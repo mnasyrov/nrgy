@@ -7,7 +7,7 @@ import {
 
 import { defaultEquals, Signal } from './common';
 import { compute, ComputedImpl } from './compute';
-import { effect, effectSync } from './effect';
+import { effect, syncEffect } from './effect';
 import { SIGNAL_RUNTIME } from './runtime';
 import { signal } from './signal';
 import { createSignalSubject } from './signalSubject';
@@ -53,7 +53,7 @@ describe('compute()', () => {
 
     const results: number[] = [];
 
-    effectSync(() => results.push(h()));
+    syncEffect(() => results.push(h()));
 
     entry.set(1);
     entry.set(2);
@@ -160,7 +160,7 @@ describe('compute()', () => {
     const b = compute(() => a() + 1);
 
     const results: number[] = [];
-    const fx = effectSync(() => results.push(b()));
+    const fx = syncEffect(() => results.push(b()));
     source.set(1);
     source.set(2);
     fx.destroy();

@@ -13,7 +13,7 @@ export type {
   EffectCleanupFn,
   EffectCleanupRegisterFn,
 } from './effect';
-export { effect, effectSync } from './effect';
+export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
 

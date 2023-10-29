@@ -1,5 +1,5 @@
 import { action } from './action';
-import { effect, EffectFn, effectSync } from './effect';
+import { effect, EffectFn, syncEffect } from './effect';
 import { signal } from './signal';
 
 export interface Unsubscribable {
@@ -27,7 +27,7 @@ export type Scope = Readonly<
     action: typeof action;
     signal: typeof signal;
     effect: EffectFn;
-    effectSync: EffectFn;
+    syncEffect: EffectFn;
   }
 >;
 
@@ -120,8 +120,8 @@ class ScopeImpl implements Scope {
     return result;
   }
 
-  effectSync(...args: Parameters<EffectFn>) {
-    const result = effectSync(...args);
+  syncEffect(...args: Parameters<EffectFn>) {
+    const result = syncEffect(...args);
     this.add(result);
     return result;
   }
@@ -142,6 +142,6 @@ export function createScope(): Scope {
     action: scope.action.bind(scope),
     signal: scope.signal.bind(scope),
     effect: scope.effect.bind(scope),
-    effectSync: scope.effectSync.bind(scope),
+    syncEffect: scope.syncEffect.bind(scope),
   };
 }

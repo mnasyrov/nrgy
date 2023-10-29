@@ -2,7 +2,7 @@ import { flushMicrotasks } from '../test/testUtils';
 
 import { action } from './action';
 import { compute } from './compute';
-import { effect, effectSync } from './effect';
+import { effect, syncEffect } from './effect';
 import { signal } from './signal';
 
 describe('effect()', () => {
@@ -89,12 +89,12 @@ describe('effect()', () => {
   });
 });
 
-describe('effectSync()', () => {
+describe('syncEffect()', () => {
   it('should subscribe to an action', () => {
     const emitter = action<number>();
 
     let result = 0;
-    const fx = effectSync(emitter, (value) => (result = value));
+    const fx = syncEffect(emitter, (value) => (result = value));
     expect(result).toBe(0);
 
     emitter(1);
@@ -110,7 +110,7 @@ describe('effectSync()', () => {
     const b = signal(2);
 
     let result = 0;
-    const fx = effectSync(
+    const fx = syncEffect(
       compute(() => a() + b()),
       (value) => (result = value),
     );
@@ -129,7 +129,7 @@ describe('effectSync()', () => {
     const b = signal(2);
 
     let result = 0;
-    const fx = effectSync(() => (result = a() + b()));
+    const fx = syncEffect(() => (result = a() + b()));
     expect(result).toBe(3);
 
     a.set(2);
