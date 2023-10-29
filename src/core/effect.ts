@@ -1,6 +1,6 @@
 import { TaskScheduler } from '../utils/schedulers';
 
-import { ActionEmitter, getActionNode, isAction } from './action';
+import { Action, getActionNode, isAction } from './action';
 import { ActionEffect } from './actionEffect';
 import { isSignal, Signal } from './common';
 import { SIGNAL_RUNTIME } from './runtime';
@@ -32,40 +32,42 @@ type SideEffectFn = (onCleanup: EffectCleanupRegisterFn) => void;
 type ValueCallbackFn<T> = (value: T) => unknown;
 type ErrorCallbackFn = (error: unknown) => unknown;
 
+/*
+TODO
+- put "onError" and "sync: boolean" to options as the last argument
+ */
+
 export interface EffectFn {
+  <T>(source: Action<T>, callback: ValueCallbackFn<T>): EffectSubscription;
   <T>(
-    target: ActionEmitter<T>,
-    callback: ValueCallbackFn<T>,
-  ): EffectSubscription;
-  <T>(
-    target: Signal<T>,
+    source: Signal<T>,
     callback: ValueCallbackFn<T>,
     onError?: ErrorCallbackFn,
   ): EffectSubscription;
-  (target: SideEffectFn, onError?: ErrorCallbackFn): EffectSubscription;
+  (source: SideEffectFn, onError?: ErrorCallbackFn): EffectSubscription;
 }
 
 export const effect: EffectFn = <
   T,
-  Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
-  Callback extends Target extends ActionEmitter<T>
+  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ValueCallbackFn<T>
     : never,
-  ErrorCallback extends Target extends ActionEmitter<T>
+  ErrorCallback extends Source extends Action<T>
     ? never
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
-  target: Target,
+  source: Source,
   callback?: Callback,
   errorCallback?: ErrorCallback,
 ) => {
-  return effectFactory<T, Target, Callback, ErrorCallback>(
+  return effectFactory<T, Source, Callback, ErrorCallback>(
     SIGNAL_RUNTIME.asyncScheduler,
-    target,
+    source,
     callback,
     errorCallback,
   );
@@ -73,25 +75,25 @@ export const effect: EffectFn = <
 
 export const effectSync: EffectFn = <
   T,
-  Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
-  Callback extends Target extends ActionEmitter<T>
+  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ValueCallbackFn<T>
     : never,
-  ErrorCallback extends Target extends ActionEmitter<T>
+  ErrorCallback extends Source extends Action<T>
     ? never
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
-  target: Target,
+  source: Source,
   callback?: Callback,
   errorCallback?: ErrorCallback,
 ) => {
-  return effectFactory<T, Target, Callback, ErrorCallback>(
+  return effectFactory<T, Source, Callback, ErrorCallback>(
     SIGNAL_RUNTIME.syncScheduler,
-    target,
+    source,
     callback,
     errorCallback,
   );
@@ -99,49 +101,49 @@ export const effectSync: EffectFn = <
 
 function effectFactory<
   T,
-  Target extends ActionEmitter<T> | Signal<T> | SideEffectFn,
-  Callback extends Target extends ActionEmitter<T>
+  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ValueCallbackFn<T>
     : never,
-  ErrorCallback extends Target extends ActionEmitter<T>
+  ErrorCallback extends Source extends Action<T>
     ? never
-    : Target extends Signal<T>
+    : Source extends Signal<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
   scheduler: TaskScheduler,
-  target: Target,
+  source: Source,
   callback?: Callback,
   errorCallback?: ErrorCallback,
 ): EffectSubscription {
-  if (isAction<T>(target)) {
+  if (isAction<T>(source)) {
     if (!callback) throw new Error('callback is missed');
-    const node = getActionNode<T>(target);
+    const node = getActionNode<T>(source);
 
-    const actionWatch = new ActionEffect<T>(scheduler, callback);
-    node.subscribe(actionWatch.ref);
+    const actionEffect = new ActionEffect<T>(scheduler, callback);
+    node.subscribe(actionEffect.ref);
 
-    return { destroy: () => actionWatch.destroy() };
+    return { destroy: () => actionEffect.destroy() };
   }
 
   let sideEffectFn: SideEffectFn;
-  if (isSignal<T>(target)) {
+  if (isSignal<T>(source)) {
     if (!callback) throw new Error('callback is missed');
     sideEffectFn = function () {
-      callback(target());
+      callback(source());
     };
   } else {
-    sideEffectFn = target as SideEffectFn;
+    sideEffectFn = source as SideEffectFn;
   }
 
-  const signalWatch = createSignalEffect(
+  const signalEffect = createSignalEffect(
     scheduler,
     sideEffectFn,
     errorCallback,
   );
   // Effect starts dirty.
-  signalWatch.notify();
-  return { destroy: () => signalWatch.destroy() };
+  signalEffect.notify();
+  return { destroy: () => signalEffect.destroy() };
 }

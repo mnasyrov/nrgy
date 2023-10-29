@@ -5,7 +5,6 @@ const ACTION_SYMBOL = Symbol.for('ngry.action');
 
 export type Action<Event> = {
   (event: Event): void;
-
   readonly [ACTION_SYMBOL]: unknown;
 } & ([Event] extends [undefined | void]
   ? { (event?: Event): void }
