@@ -61,8 +61,7 @@ class ScopeImpl implements Scope {
     T extends Unsubscribable | Destroyable,
     Factory extends (...args: any[]) => T,
   >(factory: Factory, ...args: Parameters<Factory>): T {
-    const value = factory(...args);
-    return this.add(value);
+    return this.add(factory(...args));
   }
 
   add<T extends Unsubscribable | Destroyable>(resource: T): T {
@@ -103,27 +102,19 @@ class ScopeImpl implements Scope {
   }
 
   action<T>(...args: Parameters<typeof action<T>>) {
-    const result = action<T>(...args);
-    this.add(result);
-    return result;
+    return this.add(action<T>(...args));
   }
 
   signal<T>(...args: Parameters<typeof signal<T>>) {
-    const result = signal(...args);
-    this.add(result);
-    return result;
+    return this.add(signal(...args));
   }
 
   effect(...args: Parameters<EffectFn>) {
-    const result = effect(...args);
-    this.add(result);
-    return result;
+    return this.add(effect(...args));
   }
 
   syncEffect(...args: Parameters<EffectFn>) {
-    const result = syncEffect(...args);
-    this.add(result);
-    return result;
+    return this.add(syncEffect(...args));
   }
 }
 
