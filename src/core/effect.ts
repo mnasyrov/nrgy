@@ -2,9 +2,9 @@ import { TaskScheduler } from '../utils/schedulers';
 
 import { Action, getActionNode, isAction } from './action';
 import { ActionEffect } from './actionEffect';
-import { isSignal, Signal } from './common';
-import { SIGNAL_RUNTIME } from './runtime';
-import { createSignalEffect } from './signalEffect';
+import { createAtomEffect } from './atomEffect';
+import { Atom, isAtom } from './common';
+import { ENERGY_RUNTIME } from './runtime';
 
 /**
  * An effect can, optionally, register a cleanup function. If registered, the cleanup is executed
@@ -40,7 +40,7 @@ TODO
 export interface EffectFn {
   <T>(source: Action<T>, callback: ValueCallbackFn<T>): EffectSubscription;
   <T>(
-    source: Signal<T>,
+    source: Atom<T>,
     callback: ValueCallbackFn<T>,
     onError?: ErrorCallbackFn,
   ): EffectSubscription;
@@ -49,15 +49,15 @@ export interface EffectFn {
 
 export const effect: EffectFn = <
   T,
-  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Source extends Action<T> | Atom<T> | SideEffectFn,
   Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ValueCallbackFn<T>
     : never,
   ErrorCallback extends Source extends Action<T>
     ? never
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
@@ -66,7 +66,7 @@ export const effect: EffectFn = <
   errorCallback?: ErrorCallback,
 ) => {
   return effectFactory<T, Source, Callback, ErrorCallback>(
-    SIGNAL_RUNTIME.asyncScheduler,
+    ENERGY_RUNTIME.asyncScheduler,
     source,
     callback,
     errorCallback,
@@ -75,15 +75,15 @@ export const effect: EffectFn = <
 
 export const syncEffect: EffectFn = <
   T,
-  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Source extends Action<T> | Atom<T> | SideEffectFn,
   Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ValueCallbackFn<T>
     : never,
   ErrorCallback extends Source extends Action<T>
     ? never
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
@@ -92,7 +92,7 @@ export const syncEffect: EffectFn = <
   errorCallback?: ErrorCallback,
 ) => {
   return effectFactory<T, Source, Callback, ErrorCallback>(
-    SIGNAL_RUNTIME.syncScheduler,
+    ENERGY_RUNTIME.syncScheduler,
     source,
     callback,
     errorCallback,
@@ -101,15 +101,15 @@ export const syncEffect: EffectFn = <
 
 function effectFactory<
   T,
-  Source extends Action<T> | Signal<T> | SideEffectFn,
+  Source extends Action<T> | Atom<T> | SideEffectFn,
   Callback extends Source extends Action<T>
     ? ValueCallbackFn<T>
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ValueCallbackFn<T>
     : never,
   ErrorCallback extends Source extends Action<T>
     ? never
-    : Source extends Signal<T>
+    : Source extends Atom<T>
     ? ErrorCallbackFn
     : ErrorCallbackFn,
 >(
@@ -129,7 +129,7 @@ function effectFactory<
   }
 
   let sideEffectFn: SideEffectFn;
-  if (isSignal<T>(source)) {
+  if (isAtom<T>(source)) {
     if (!callback) throw new Error('callback is missed');
     sideEffectFn = function () {
       callback(source());
@@ -138,12 +138,8 @@ function effectFactory<
     sideEffectFn = source as SideEffectFn;
   }
 
-  const signalEffect = createSignalEffect(
-    scheduler,
-    sideEffectFn,
-    errorCallback,
-  );
+  const atomEffect = createAtomEffect(scheduler, sideEffectFn, errorCallback);
   // Effect starts dirty.
-  signalEffect.notify();
-  return { destroy: () => signalEffect.destroy() };
+  atomEffect.notify();
+  return { destroy: () => atomEffect.destroy() };
 }

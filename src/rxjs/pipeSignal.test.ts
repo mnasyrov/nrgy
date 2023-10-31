@@ -1,15 +1,15 @@
 import { map } from 'rxjs/operators';
 
-import { signal } from '../core/signal';
+import { atom } from '../core/atom';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
-import { pipeSignal } from './pipeSignal';
+import { pipeAtom } from './pipeAtom';
 
-describe('pipeSignal()', () => {
-  it('should creates a transformed view of the source store', async () => {
-    const source = signal(1);
+describe('pipeAtom()', () => {
+  it('should creates a transformed view of the source atom', async () => {
+    const source = atom(1);
 
-    const result = pipeSignal(
+    const result = pipeAtom(
       source,
       map((value) => value * 10),
     );
@@ -24,9 +24,9 @@ describe('pipeSignal()', () => {
   });
 
   it('should unsubscribe the view when the source store is destroyed', async () => {
-    const source = signal(1);
+    const source = atom(1);
 
-    const result = pipeSignal(
+    const result = pipeAtom(
       source,
       map((value) => value * 10),
     );
@@ -42,9 +42,9 @@ describe('pipeSignal()', () => {
   });
 
   it('should creates a debounced view of the source store', async () => {
-    const source = signal(1);
+    const source = atom(1);
 
-    const result = pipeSignal(source, (state$) =>
+    const result = pipeAtom(source, (state$) =>
       state$.pipe(map((value) => value * 10)),
     );
 

@@ -1,8 +1,8 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
-import { Signal } from '../core/common';
+import { Atom } from '../core/common';
 import { effect, syncEffect } from '../core/effect';
-import { SIGNAL_RUNTIME } from '../core/runtime';
+import { ENERGY_RUNTIME } from '../core/runtime';
 
 export type ObserveOptions = {
   sync?: boolean;
@@ -10,19 +10,19 @@ export type ObserveOptions = {
 };
 
 /**
- * Exposes the value of an `Signal` as an RxJS `Observable`.
+ * Exposes the value of an `Atom` as an RxJS `Observable`.
  *
- * The signal's value will be propagated into the `Observable`'s subscribers using an `effect`.
+ * The atom's value will be propagated into the `Observable`'s subscribers using an `effect`.
  */
 export function observe<T>(
-  source: Signal<T>,
+  source: Atom<T>,
   options?: ObserveOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
     const effectFn = options?.sync ? syncEffect : effect;
     const scheduler = options?.sync
-      ? SIGNAL_RUNTIME.syncScheduler
-      : SIGNAL_RUNTIME.asyncScheduler;
+      ? ENERGY_RUNTIME.syncScheduler
+      : ENERGY_RUNTIME.asyncScheduler;
 
     const watcher = effectFn(() => {
       try {

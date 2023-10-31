@@ -1,4 +1,4 @@
-import { signal, SignalOptions, WritableSignal } from '../core/signal';
+import { atom, AtomOptions, WritableAtom } from '../core/atom';
 
 /**
  * A function to update a state.
@@ -91,12 +91,12 @@ export type StoreUpdates<
 export type Store<
   State,
   Updates extends StateUpdates<State>,
-> = WritableSignal<State> & { readonly updates: StoreUpdates<State, Updates> };
+> = WritableAtom<State> & { readonly updates: StoreUpdates<State, Updates> };
 
 export type StoreOptions<
   State,
   Updates extends StateUpdates<State> = StateUpdates<State>,
-> = SignalOptions<State> & {
+> = AtomOptions<State> & {
   updates: Updates;
 };
 
@@ -113,7 +113,7 @@ export function createStore<
   initialState: State,
   options: StoreOptions<State, Updates>,
 ): Store<State, Updates> {
-  const store = signal<State>(initialState, options) as any;
+  const store = atom<State>(initialState, options) as any;
 
   store.updates = createStoreUpdates<State, Updates>(
     store.update,
@@ -125,7 +125,7 @@ export function createStore<
 
 /** Creates StateUpdates for updating the store by provided state mutations */
 export function createStoreUpdates<State, Updates extends StateUpdates<State>>(
-  signalUpdate: WritableSignal<State>['update'],
+  atomUpdate: WritableAtom<State>['update'],
   stateUpdates: Updates,
 ): StoreUpdates<State, Updates> {
   const updates: any = {};
@@ -134,7 +134,7 @@ export function createStoreUpdates<State, Updates extends StateUpdates<State>>(
     (updates as any)[key] = (...args: any[]) => {
       const mutation = mutationFactory(...args);
 
-      signalUpdate(mutation);
+      atomUpdate(mutation);
     };
   });
 

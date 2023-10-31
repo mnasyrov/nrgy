@@ -5,16 +5,16 @@ import {
   flushMicrotasks,
 } from '../test/testUtils';
 
-import { defaultEquals, Signal } from './common';
+import { atom } from './atom';
+import { createAtomSubject } from './atomSubject';
+import { Atom, defaultEquals } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
-import { SIGNAL_RUNTIME } from './runtime';
-import { signal } from './signal';
-import { createSignalSubject } from './signalSubject';
+import { ENERGY_RUNTIME } from './runtime';
 
 describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {
-    const entry = signal(0); // 0
+    const entry = atom(0); // 0
 
     const a = compute(() => entry()); // [0] -> 0
     const b = compute(() => a() + 1); // [0] -> 1
@@ -40,7 +40,7 @@ describe('compute()', () => {
   });
 
   it('should calculate the benchmark with synchronous effect', () => {
-    const entry = signal(0); // 0
+    const entry = atom(0); // 0
 
     const a = compute(() => entry()); // [0] -> 0
     const b = compute(() => a() + 1); // [0] -> 1
@@ -63,9 +63,9 @@ describe('compute()', () => {
 
   it('should process dynamic dependencies', async () => {
     let i = 0;
-    const isA = signal(true);
-    const a = signal('a1');
-    const b = signal('b1');
+    const isA = atom(true);
+    const a = atom('a1');
+    const b = atom('b1');
 
     const output = compute(() => (isA() ? a() : b()) + `, i${i}`);
 
@@ -98,7 +98,7 @@ describe('compute()', () => {
     expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4']);
   });
 
-  it('should not compute external dependencies in a signal was not changed', async () => {
+  it('should not compute external dependencies in an atom was not changed', async () => {
     let value = 1;
     const subscribed = compute(() => value);
     const notSubscribed = compute(() => value);
@@ -128,7 +128,7 @@ describe('compute()', () => {
     expect(notSubscribed()).toBe(1);
 
     // Trigger recalculations
-    signal(10).set(11);
+    atom(10).set(11);
     expect(subscribed()).toBe(4);
     expect(notSubscribed()).toBe(4);
 
@@ -136,13 +136,13 @@ describe('compute()', () => {
   });
 
   it('should have typings to return another type', () => {
-    const source = signal<number>(1);
-    const query: Signal<string> = compute(() => source() + '!');
+    const source = atom<number>(1);
+    const query: Atom<string> = compute(() => source() + '!');
     expect(query()).toBe('1!');
   });
 
   it('should compute "entry -> a" chain', async () => {
-    const source = signal(1);
+    const source = atom(1);
 
     const a = compute(() => source() * 10);
     expect(a()).toEqual(10);
@@ -155,7 +155,7 @@ describe('compute()', () => {
   });
 
   it('should work with a simple sync effect', () => {
-    const source = signal(0);
+    const source = atom(0);
     const a = compute(() => source() + 1);
     const b = compute(() => a() + 1);
 
@@ -169,7 +169,7 @@ describe('compute()', () => {
   });
 
   it('should work with a simple async effect', async () => {
-    const source = signal(0);
+    const source = atom(0);
     const a = compute(() => source() + 1);
     const b = compute(() => a() + 1);
 
@@ -190,7 +190,7 @@ describe('compute()', () => {
   });
 
   it('should compute "entry -> a -> observer" chain', async () => {
-    const source = signal(1);
+    const source = atom(1);
 
     const a = compute(() => source() * 10);
 
@@ -206,7 +206,7 @@ describe('compute()', () => {
   });
 
   it('should compute "entry -> a -> b -> observer" chain', async () => {
-    const entry = signal(0);
+    const entry = atom(0);
 
     const a = compute(() => entry() + 1);
     const b = compute(() => a() + 1);
@@ -227,8 +227,8 @@ describe('compute()', () => {
   });
 
   it('should compute a chain: s1 -> a; a + s2 -> b; b -> observer', async () => {
-    const s1 = signal(0);
-    const s2 = signal(0);
+    const s1 = atom(0);
+    const s2 = atom(0);
 
     const a = compute(() => s1() + 1);
     const b = compute(() => ({ a: a(), b: s2() }), {
@@ -261,7 +261,7 @@ describe('compute()', () => {
   });
 
   it('should compute "entry -> a -> b/c -> d -> observer" chain', async () => {
-    const entry = signal(0);
+    const entry = atom(0);
 
     const a = compute(() => entry() + 1);
     const b = compute(() => a() + 1);
@@ -284,7 +284,7 @@ describe('compute()', () => {
   });
 
   it('should throw an error on a cycle', async () => {
-    const entry = signal(0);
+    const entry = atom(0);
 
     const a = compute(() => entry() + 1);
 
@@ -311,7 +311,7 @@ describe('compute()', () => {
   });
 
   it('should propagate "error" event from a source to observers', async () => {
-    const source = createSignalSubject<number>(1);
+    const source = createAtomSubject<number>(1);
 
     const query1 = compute(() => source() + 1);
     const query2 = compute(() => query1() * 2);
@@ -350,7 +350,7 @@ describe('compute()', () => {
   });
 
   it('should notify an observer only once on subscribe', async () => {
-    const store = signal<{ v1: string; v2: string; sum?: string }>(
+    const store = atom<{ v1: string; v2: string; sum?: string }>(
       {
         v1: 'a',
         v2: 'b',
@@ -388,7 +388,7 @@ describe('compute()', () => {
   });
 
   it('should handle recursion during store updates: Value selector', async () => {
-    const store = signal({ a: 0, result: { value: 0 } });
+    const store = atom({ a: 0, result: { value: 0 } });
 
     const nextResult = compute(() => ({ value: store().a }), {
       equal: (a, b) => a.value === b.value,
@@ -420,7 +420,7 @@ describe('compute()', () => {
   });
 
   it('should handle recursion during store updates: Intermediate compute', async () => {
-    const store = signal({ a: 0, result: { value: 0 } });
+    const store = atom({ a: 0, result: { value: 0 } });
 
     const a = compute(() => store().a);
     const nextResult = compute(() => ({ value: a() }), {
@@ -451,7 +451,7 @@ describe('compute()', () => {
   });
 
   it('should correctly clean tracked effects', async () => {
-    const store1 = signal({ a: 0, result: { value: 0 } });
+    const store1 = atom({ a: 0, result: { value: 0 } });
 
     const nextResult1 = compute(() => ({ value: store1().a }), {
       equal: (a, b) => a.value === b.value,
@@ -468,12 +468,12 @@ describe('compute()', () => {
     subscription1?.unsubscribe();
 
     // Expect that the runtime in empty
-    expect(SIGNAL_RUNTIME.getTrackedEffects().length).toBe(0);
-    expect(SIGNAL_RUNTIME.getVisitedComputedNodes().length).toBe(0);
-    expect(SIGNAL_RUNTIME.asyncScheduler.isEmpty()).toBe(true);
-    expect(SIGNAL_RUNTIME.syncScheduler.isEmpty()).toBe(true);
+    expect(ENERGY_RUNTIME.getTrackedEffects().length).toBe(0);
+    expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
+    expect(ENERGY_RUNTIME.asyncScheduler.isEmpty()).toBe(true);
+    expect(ENERGY_RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
-    const store = signal({ a: 0, result: { value: 0 } });
+    const store = atom({ a: 0, result: { value: 0 } });
 
     const a = compute(() => store().a);
     const nextResult = compute(() => ({ value: a() }), {
@@ -501,7 +501,7 @@ describe('compute()', () => {
   });
 
   it('should use a custom comparator', async () => {
-    const source = signal({ key: 1, val: 'a' });
+    const source = atom({ key: 1, val: 'a' });
 
     const query = compute(() => source(), {
       equal: (a, b) => a.key === b.key,
@@ -520,14 +520,14 @@ describe('compute()', () => {
   });
 
   it('should use a getter without selector', async () => {
-    const source = signal({ key: 1, val: 'a' });
+    const source = atom({ key: 1, val: 'a' });
 
     const query = compute(() => source());
     expect(query()).toEqual({ key: 1, val: 'a' });
   });
 
   it('should do extra computing after reading by an effect', async () => {
-    const counter = signal(0);
+    const counter = atom(0);
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
@@ -555,8 +555,8 @@ describe('compute()', () => {
 
 describe('ComputedImpl()', () => {
   it('should tell about a changed state', () => {
-    const source = signal('a');
-    const other = signal('something 1');
+    const source = atom('a');
+    const other = atom('something 1');
     const result = new ComputedImpl(() => source(), defaultEquals);
 
     // Case 1: recalculation is triggered by result.isChanged()
@@ -568,24 +568,24 @@ describe('ComputedImpl()', () => {
     expect(result.isChanged()).toBe(true);
     expect(result.version).toBe(1);
 
-    expect(result.signal()).toBe('a');
+    expect(result.get()).toBe('a');
     expect(result.version).toBe(1);
 
-    // Case 2: recalculation is triggered by result.signal()
+    // Case 2: recalculation is triggered by result.get()
     source.set('b');
     expect(result.version).toBe(1);
 
-    expect(result.signal()).toBe('b');
+    expect(result.get()).toBe('b');
     expect(result.version).toBe(2);
 
     expect(result.isChanged()).toBe(true);
     expect(result.version).toBe(2);
 
-    expect(result.signal()).toBe('b');
+    expect(result.get()).toBe('b');
     expect(result.version).toBe(2);
 
     /*
-    Case 3: other signal increases SIGNAL_CLOCK, the result makes recalculation,
+    Case 3: other atom increases ATOM_CLOCK, the result makes recalculation,
     but its value remains the same.
     */
     other.set('something 2');
@@ -594,7 +594,7 @@ describe('ComputedImpl()', () => {
     expect(result.isChanged()).toBe(false);
     expect(result.version).toBe(2);
 
-    expect(result.signal()).toBe('b');
+    expect(result.get()).toBe('b');
     expect(result.version).toBe(2);
 
     expect(result.isChanged()).toBe(false);

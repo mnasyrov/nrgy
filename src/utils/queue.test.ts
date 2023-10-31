@@ -2,7 +2,7 @@ import { createQueue } from './queue';
 
 describe('Queue', () => {
   describe('isEmpty()', () => {
-    it('should signals is there any item in the queue', () => {
+    it('should displays is there any item in the queue', () => {
       const queue = createQueue<number>();
       expect(queue.isEmpty()).toBe(true);
 

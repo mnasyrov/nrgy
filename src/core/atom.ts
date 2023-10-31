@@ -1,26 +1,26 @@
 import {
-  createSignalFromFunction,
+  Atom,
+  AtomEffectNode,
+  createAtomFromFunction,
   defaultEquals,
   ReactiveNode,
-  Signal,
-  SignalEffectNode,
   ValueEqualityFn,
 } from './common';
-import { SIGNAL_RUNTIME } from './runtime';
+import { ENERGY_RUNTIME } from './runtime';
 
 /**
- * A `Signal` with a value that can be mutated via a setter interface.
+ * A `Atom` with a value that can be mutated via a setter interface.
  */
-export interface WritableSignal<T> extends Signal<T> {
+export interface WritableAtom<T> extends Atom<T> {
   destroy(): void;
 
   /**
-   * Directly set the signal to a new value, and notify any dependents.
+   * Directly set the atom to a new value, and notify any dependents.
    */
   set(value: T): void;
 
   /**
-   * Update the value of the signal based on its current value, and
+   * Update the value of the atom based on its current value, and
    * notify any dependents.
    */
   update(updateFn: (value: T) => T): void;
@@ -32,25 +32,25 @@ export interface WritableSignal<T> extends Signal<T> {
   mutate(mutatorFn: (value: T) => void): void;
 
   /**
-   * Returns a readonly version of this signal. Readonly signal can be accessed to read their value
+   * Returns a readonly version of this atom. Readonly atom can be accessed to read their value
    * but can't be changed using set, update or mutate methods.
    */
-  asReadonly(): Signal<T>;
+  asReadonly(): Atom<T>;
 
   destroy(): void;
 }
 
 /**
- * Options passed to the `signal` creation function.
+ * Options passed to the `atom` creation function.
  */
-export type SignalOptions<T> = {
+export type AtomOptions<T> = {
   /**
-   * Signal's name
+   * Atom's name
    */
   name?: string;
 
   /**
-   * A comparison function which defines equality for signal values.
+   * A comparison function which defines equality for atom values.
    */
   equal?: ValueEqualityFn<T>;
 
@@ -60,29 +60,26 @@ export type SignalOptions<T> = {
   onDestroy?: () => void;
 };
 
-class WritableSignalImpl<T> implements ReactiveNode {
-  private readonlySignal: Signal<T> | undefined;
+class WritableAtomImpl<T> implements ReactiveNode {
+  private readonlyAtom: Atom<T> | undefined;
 
   private readonly name?: string;
   private readonly equal: ValueEqualityFn<T>;
   private onDestroy?: () => void;
-  private readonly consumerEffects = new Map<
-    WeakRef<SignalEffectNode>,
-    number
-  >();
+  private readonly consumerEffects = new Map<WeakRef<AtomEffectNode>, number>();
 
   private isDestroyed = false;
 
   constructor(
     private value: T,
-    options?: SignalOptions<T>,
+    options?: AtomOptions<T>,
   ) {
     this.name = options?.name;
     this.equal = options?.equal ?? defaultEquals;
     this.onDestroy = options?.onDestroy;
   }
 
-  signal(): T {
+  get(): T {
     if (!this.isDestroyed) {
       this.producerAccessed();
     }
@@ -91,7 +88,7 @@ class WritableSignalImpl<T> implements ReactiveNode {
   }
 
   /**
-   * Directly update the value of the signal to a new value, which may or may not be
+   * Directly update the value of the atom to a new value, which may or may not be
    * equal to the previous.
    *
    * In the event that `newValue` is semantically equal to the current value, `set` is
@@ -112,7 +109,7 @@ class WritableSignalImpl<T> implements ReactiveNode {
   }
 
   /**
-   * Derive a new value for the signal from its current value using the `updater` function.
+   * Derive a new value for the atom from its current value using the `updater` function.
    *
    * This is equivalent to calling `set` on the result of running `updater` on the current
    * value.
@@ -135,11 +132,11 @@ class WritableSignalImpl<T> implements ReactiveNode {
     this.producerChanged();
   }
 
-  asReadonly(): Signal<T> {
-    if (this.readonlySignal === undefined) {
-      this.readonlySignal = createSignalFromFunction(this, () => this.signal());
+  asReadonly(): Atom<T> {
+    if (this.readonlyAtom === undefined) {
+      this.readonlyAtom = createAtomFromFunction(this, () => this.get());
     }
-    return this.readonlySignal;
+    return this.readonlyAtom;
   }
 
   destroy() {
@@ -157,7 +154,7 @@ class WritableSignalImpl<T> implements ReactiveNode {
    * Notify all consumers of this producer that its value is changed.
    */
   protected producerChanged(): void {
-    SIGNAL_RUNTIME.updateSignalClock();
+    ENERGY_RUNTIME.updateAtomClock();
 
     for (const [effectRef, atEffectClock] of this.consumerEffects) {
       const effect = effectRef.deref();
@@ -179,7 +176,7 @@ class WritableSignalImpl<T> implements ReactiveNode {
    * Mark that this producer node has been accessed in the current reactive context.
    */
   protected producerAccessed(): void {
-    const effects = SIGNAL_RUNTIME.getTrackedEffects();
+    const effects = ENERGY_RUNTIME.getTrackedEffects();
 
     if (effects.length > 0) {
       effects.forEach((effect) => {
@@ -192,24 +189,24 @@ class WritableSignalImpl<T> implements ReactiveNode {
 }
 
 /**
- * Create a `Signal` that can be set or updated directly.
+ * Create a `Atom` that can be set or updated directly.
  */
-export function signal<T>(
+export function atom<T>(
   initialValue: T,
-  options?: SignalOptions<T>,
-): WritableSignal<T> {
-  const signalNode = new WritableSignalImpl<T>(initialValue, options);
+  options?: AtomOptions<T>,
+): WritableAtom<T> {
+  const node = new WritableAtomImpl<T>(initialValue, options);
 
-  const result: WritableSignal<T> = createSignalFromFunction(
-    signalNode,
-    signalNode.signal.bind(signalNode),
+  const result: WritableAtom<T> = createAtomFromFunction(
+    node,
+    node.get.bind(node),
     {
-      set: signalNode.set.bind(signalNode),
-      update: signalNode.update.bind(signalNode),
-      mutate: signalNode.mutate.bind(signalNode),
-      asReadonly: signalNode.asReadonly.bind(signalNode),
+      set: node.set.bind(node),
+      update: node.update.bind(node),
+      mutate: node.mutate.bind(node),
+      asReadonly: node.asReadonly.bind(node),
 
-      destroy: signalNode.destroy.bind(signalNode),
+      destroy: node.destroy.bind(node),
     },
   );
 

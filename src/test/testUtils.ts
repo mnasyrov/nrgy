@@ -1,4 +1,4 @@
-import { Signal } from '../core/common';
+import { Atom } from '../core/common';
 import { createScope } from '../core/scope';
 import { createLatch } from '../utils/latch';
 
@@ -11,7 +11,7 @@ type HistoryEvent<T> =
   | { type: 'error'; error: unknown };
 
 export function collectHistory<T>(
-  source: Signal<T>,
+  source: Atom<T>,
   action: () => void | Promise<void>,
   timeout = 500,
 ): Promise<Array<HistoryEvent<T>>> {
@@ -47,7 +47,7 @@ export function collectHistory<T>(
 }
 
 export async function collectChanges<T>(
-  source: Signal<T>,
+  source: Atom<T>,
   action: () => void | Promise<void>,
   timeout = 500,
 ): Promise<Array<T>> {

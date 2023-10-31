@@ -1,37 +1,37 @@
 export type AnyObject = Record<string, any>;
 
 /**
- * Symbol used to tell `Signal`s apart from other functions.
+ * Symbol used to tell `Atom`s apart from other functions.
  *
- * This can be used to auto-unwrap signal in various cases, or to auto-wrap non-signal values.
+ * This can be used to auto-unwrap atom in various cases, or to auto-wrap non-atom values.
  */
-const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
+const ATOM_SYMBOL = Symbol.for('ngry.atom');
 
 /**
  * A reactive value which notifies consumers of any changes.
  *
- * Signals are functions which returns their current value. To access the current value of a signal,
+ * Atoms are functions which returns their current value. To access the current value of an atom,
  * call it.
  *
- * Ordinary values can be turned into `Signal`s with the `signal` function.
+ * Ordinary values can be turned into `Atom`s with the `get` function.
  */
-export type Signal<T> = (() => T) & {
-  readonly [SIGNAL_SYMBOL]: unknown;
+export type Atom<T> = (() => T) & {
+  readonly [ATOM_SYMBOL]: unknown;
 };
 
 /**
- * Checks if the given `value` is a reactive `Signal`.
+ * Checks if the given `value` is a reactive `Atom`.
  */
-export function isSignal<T>(value: unknown): value is Signal<T> {
+export function isAtom<T>(value: unknown): value is Atom<T> {
   return (
     typeof value === 'function' &&
-    SIGNAL_SYMBOL in value &&
-    value[SIGNAL_SYMBOL] !== undefined
+    ATOM_SYMBOL in value &&
+    value[ATOM_SYMBOL] !== undefined
   );
 }
 
-export function getSignalNode<T>(value: Signal<T>): ReactiveNode {
-  return value[SIGNAL_SYMBOL] as ReactiveNode;
+export function getAtomNode<T>(value: Atom<T>): ReactiveNode {
+  return value[ATOM_SYMBOL] as ReactiveNode;
 }
 
 /**
@@ -40,7 +40,7 @@ export function getSignalNode<T>(value: Signal<T>): ReactiveNode {
 export type ValueEqualityFn<T> = (a: T, b: T) => boolean;
 
 /**
- * The default equality function used for `signal` and `computed`, which treats values using identity semantics.
+ * The default equality function used for `atom` and `compute`, which treats values using identity semantics.
  */
 export const defaultEquals: ValueEqualityFn<unknown> = Object.is;
 
@@ -71,40 +71,40 @@ export const objectEquals: ValueEqualityFn<
 };
 
 /**
- * Converts `fn` into a marked signal function (where `isSignal(fn)` will be `true`).
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`).
  *
- * @param fn A zero-argument function which will be converted into a `Signal`.
+ * @param fn A zero-argument function which will be converted into a `Atom`.
  */
-export function createSignalFromFunction<T>(
+export function createAtomFromFunction<T>(
   node: ReactiveNode,
   fn: () => T,
-): Signal<T>;
+): Atom<T>;
 
 /**
- * Converts `fn` into a marked signal function (where `isSignal(fn)` will be `true`), and
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
  * potentially add some set of extra properties (passed as an object record `extraApi`).
  *
- * @param fn A zero-argument function which will be converted into a `Signal`.
+ * @param fn A zero-argument function which will be converted into a `Atom`.
  * @param extraApi An object whose properties will be copied onto `fn` in order to create a specific
- *     desired interface for the `Signal`.
+ *     desired interface for the `Atom`.
  */
-export function createSignalFromFunction<T, U extends Record<string, unknown>>(
+export function createAtomFromFunction<T, U extends Record<string, unknown>>(
   node: ReactiveNode,
   fn: () => T,
   extraApi: U,
-): Signal<T> & U;
+): Atom<T> & U;
 
 /**
- * Converts `fn` into a marked signal function (where `isSignal(fn)` will be `true`), and
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
  * potentially add some set of extra properties (passed as an object record `extraApi`).
  */
-export function createSignalFromFunction<
+export function createAtomFromFunction<
   T,
   U extends Record<string, unknown> = AnyObject,
->(node: ReactiveNode, fn: () => T, extraApi: U = {} as U): Signal<T> & U {
-  (fn as any)[SIGNAL_SYMBOL] = node;
-  // Copy properties from `extraApi` to `fn` to complete the desired API of the `Signal`.
-  return Object.assign(fn, extraApi) as Signal<T> & U;
+>(node: ReactiveNode, fn: () => T, extraApi: U = {} as U): Atom<T> & U {
+  (fn as any)[ATOM_SYMBOL] = node;
+  // Copy properties from `extraApi` to `fn` to complete the desired API of the `Atom`.
+  return Object.assign(fn, extraApi) as Atom<T> & U;
 }
 
 export type ReactiveNode = Readonly<{
@@ -115,13 +115,13 @@ export type ComputedNode<T> = ReactiveNode &
   Readonly<{
     clock: number | undefined;
     version: number;
-    signal: () => T;
+    get: () => T;
     isChanged: () => boolean;
   }>;
 
-export type SignalEffectNode = ReactiveNode &
+export type AtomEffectNode = ReactiveNode &
   Readonly<{
-    ref: WeakRef<SignalEffectNode>;
+    ref: WeakRef<AtomEffectNode>;
     isDestroyed: boolean;
     dirty: boolean;
 

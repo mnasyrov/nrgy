@@ -1,20 +1,20 @@
 import { MonoTypeOperatorFunction, Subscription } from 'rxjs';
 
-import { Signal } from '../core/common';
-import { signal } from '../core/signal';
+import { atom } from '../core/atom';
+import { Atom } from '../core/common';
 
 import { observe } from './observe';
 
 /**
- * Creates a deferred or transformed view of the store.
+ * Creates a deferred or transformed view of the atom.
  */
-export function pipeSignal<T>(
-  source: Signal<T>,
+export function pipeAtom<T>(
+  source: Atom<T>,
   operator: MonoTypeOperatorFunction<T>,
-): Signal<T> {
+): Atom<T> {
   let subscription: Subscription | undefined;
 
-  const clone = signal<T>(source(), {
+  const clone = atom<T>(source(), {
     onDestroy: () => {
       if (subscription) {
         subscription.unsubscribe();

@@ -38,9 +38,10 @@ function createComputeTest(
   core: typeof DEV_CORE | typeof REF_CORE,
   effectFactory: DEV_CORE.EffectFn,
 ) {
-  const { signal, compute } = core;
+  const atom = (core as any).atom ?? (core as any).signal;
+  const { compute } = core;
 
-  const entry = signal(0);
+  const entry = atom(0);
 
   const a = compute(() => entry());
   const b = compute(() => a() + 1);

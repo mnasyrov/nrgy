@@ -1,29 +1,29 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 import { TaskScheduler } from '../utils/schedulers';
 
-import { ComputedNode, SignalEffectNode } from './common';
-import { SIGNAL_RUNTIME } from './runtime';
+import { AtomEffectNode, ComputedNode } from './common';
+import { ENERGY_RUNTIME } from './runtime';
 
 /**
  * A cleanup function that can be optionally registered from the watch logic. If registered, the
  * cleanup logic runs before the next watch execution.
  */
-export type SignalEffectCleanupFn = () => void;
+export type AtomEffectCleanupFn = () => void;
 
 /**
  * A callback passed to the watch function that makes it possible to register cleanup logic.
  */
-export type SignalEffectCleanupRegisterFn = (
-  cleanupFn: SignalEffectCleanupFn,
+export type AtomEffectCleanupRegisterFn = (
+  cleanupFn: AtomEffectCleanupFn,
 ) => void;
 
-const NOOP_CLEANUP_FN: SignalEffectCleanupFn = () => undefined;
+const NOOP_CLEANUP_FN: AtomEffectCleanupFn = () => undefined;
 
-export function createSignalEffect(
+export function createAtomEffect(
   scheduler: TaskScheduler,
-  action: (onCleanup: SignalEffectCleanupRegisterFn) => void,
+  action: (onCleanup: AtomEffectCleanupRegisterFn) => void,
   onError?: (error: unknown) => unknown,
-): SignalEffectNode {
+): AtomEffectNode {
   const node = new EffectNodeImpl(scheduler, action, onError);
 
   Object.assign<
@@ -45,8 +45,8 @@ export function createSignalEffect(
  * `Watch` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `Watch.run()`.
  */
-class EffectNodeImpl implements SignalEffectNode {
-  readonly ref: WeakRef<SignalEffectNode> = new WeakRef(this);
+class EffectNodeImpl implements AtomEffectNode {
+  readonly ref: WeakRef<AtomEffectNode> = new WeakRef(this);
   clock = 0;
 
   dirty = false;
@@ -55,19 +55,19 @@ class EffectNodeImpl implements SignalEffectNode {
   private scheduler?: TaskScheduler;
   private action:
     | undefined
-    | ((onCleanup: SignalEffectCleanupRegisterFn) => void);
+    | ((onCleanup: AtomEffectCleanupRegisterFn) => void);
   private onError: undefined | ((error: unknown) => unknown);
   private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  private registerOnCleanup = (cleanupFn: SignalEffectCleanupFn) => {
+  private registerOnCleanup = (cleanupFn: AtomEffectCleanupFn) => {
     this.cleanupFn = cleanupFn;
   };
 
   constructor(
     scheduler: TaskScheduler,
-    action: (onCleanup: SignalEffectCleanupRegisterFn) => void,
+    action: (onCleanup: AtomEffectCleanupRegisterFn) => void,
     onError?: (error: unknown) => unknown,
   ) {
     this.scheduler = scheduler;
@@ -106,16 +106,16 @@ class EffectNodeImpl implements SignalEffectNode {
       return;
     }
 
-    const prevEffect = SIGNAL_RUNTIME.setCurrentEffect(this);
+    const prevEffect = ENERGY_RUNTIME.setCurrentEffect(this);
 
     const isChanged =
       !this.seenComputedNodes || isComputedNodesChanged(this.seenComputedNodes);
 
     if (!isChanged) {
-      SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
+      ENERGY_RUNTIME.setCurrentEffect(prevEffect);
 
       if (!prevEffect) {
-        SIGNAL_RUNTIME.resetVisitedComputedNodes();
+        ENERGY_RUNTIME.resetVisitedComputedNodes();
       }
 
       return;
@@ -130,12 +130,12 @@ class EffectNodeImpl implements SignalEffectNode {
     } catch (error) {
       errorRef = { error };
     } finally {
-      SIGNAL_RUNTIME.setCurrentEffect(prevEffect);
+      ENERGY_RUNTIME.setCurrentEffect(prevEffect);
 
-      this.seenComputedNodes = SIGNAL_RUNTIME.getVisitedComputedNodes();
+      this.seenComputedNodes = ENERGY_RUNTIME.getVisitedComputedNodes();
 
       if (!prevEffect) {
-        SIGNAL_RUNTIME.resetVisitedComputedNodes();
+        ENERGY_RUNTIME.resetVisitedComputedNodes();
       }
 
       if (errorRef && this.onError) {

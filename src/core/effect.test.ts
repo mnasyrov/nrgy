@@ -1,9 +1,9 @@
 import { flushMicrotasks } from '../test/testUtils';
 
 import { action } from './action';
+import { atom } from './atom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
-import { signal } from './signal';
 
 describe('effect()', () => {
   it('should subscribe to an action', async () => {
@@ -25,9 +25,9 @@ describe('effect()', () => {
     expect(result).toBe(1);
   });
 
-  it('should subscribe to a signal', async () => {
-    const a = signal(1);
-    const b = signal(2);
+  it('should subscribe to an atom', async () => {
+    const a = atom(1);
+    const b = atom(2);
 
     let result = 0;
     const fx = effect(
@@ -49,8 +49,8 @@ describe('effect()', () => {
   });
 
   it('should handle a computing function', async () => {
-    const a = signal(1);
-    const b = signal(2);
+    const a = atom(1);
+    const b = atom(2);
 
     let result = 0;
     const fx = effect(() => (result = a() + b()));
@@ -69,7 +69,7 @@ describe('effect()', () => {
   });
 
   it('should not lost its subscription context', async () => {
-    const a = signal(0);
+    const a = atom(0);
 
     const results: number[] = [];
     effect(() => results.push(a()));
@@ -105,9 +105,9 @@ describe('syncEffect()', () => {
     expect(result).toBe(1);
   });
 
-  it('should subscribe to a signal', () => {
-    const a = signal(1);
-    const b = signal(2);
+  it('should subscribe to an atom', () => {
+    const a = atom(1);
+    const b = atom(2);
 
     let result = 0;
     const fx = syncEffect(
@@ -125,8 +125,8 @@ describe('syncEffect()', () => {
   });
 
   it('should handle a computing function', () => {
-    const a = signal(1);
-    const b = signal(2);
+    const a = atom(1);
+    const b = atom(2);
 
     let result = 0;
     const fx = syncEffect(() => (result = a() + b()));

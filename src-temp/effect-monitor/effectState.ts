@@ -1,5 +1,5 @@
 import { Action } from '../../src/core/action';
-import { Signal } from '../../src/core/common';
+import { Atom } from '../../src/core/common';
 
 export type EffectResult<Event, Value> = Readonly<{
   event: Event;
@@ -44,8 +44,8 @@ export type EffectState<Event, Result = void, ErrorType = Error> = Readonly<{
   final: Action<EffectNotification<Event, Result, ErrorType>>;
 
   /** Provides `true` if there is any execution of the handler in progress */
-  pending: Signal<boolean>;
+  pending: Atom<boolean>;
 
   /** Provides a count of the handler in progress */
-  pendingCount: Signal<number>;
+  pendingCount: Atom<number>;
 }>;

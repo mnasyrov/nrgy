@@ -1,4 +1,4 @@
-import { SignalOptions } from '../core/signal';
+import { AtomOptions } from '../core/atom';
 
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
@@ -8,7 +8,7 @@ export type DeclareStoreOptions<
 > = Readonly<{
   initialState: State;
   updates: Updates;
-  options?: SignalOptions<State>;
+  options?: AtomOptions<State>;
 }>;
 
 type FactoryStateArg<State> =
@@ -18,7 +18,7 @@ type FactoryStateArg<State> =
 export type StoreFactory<State, Updates extends StateUpdates<State>> = {
   (
     initialState?: FactoryStateArg<State>,
-    options?: SignalOptions<State>,
+    options?: AtomOptions<State>,
   ): Store<State, Updates>;
 
   readonly updates: Updates;
@@ -104,7 +104,7 @@ export function declareStore<
 
   function factory(
     initialState?: FactoryStateArg<State>,
-    signalOptions?: SignalOptions<State>,
+    atomOptions?: AtomOptions<State>,
   ) {
     const state =
       initialState === undefined
@@ -115,7 +115,7 @@ export function declareStore<
 
     const store = createStore(state, {
       ...baseOptions,
-      ...signalOptions,
+      ...atomOptions,
       updates,
     });
 

@@ -1,15 +1,15 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
+import { atom } from '../core/atom';
 import { compute } from '../core/compute';
-import { signal } from '../core/signal';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { observe } from './observe';
 
 describe('observe()', () => {
-  it('should produce an observable that tracks a signal', async () => {
-    const counter = signal(0);
+  it('should produce an observable that tracks an atom', async () => {
+    const counter = atom(0);
     const counterValues = firstValueFrom(
       observe(counter).pipe(take(3), toArray()),
     );
@@ -29,8 +29,8 @@ describe('observe()', () => {
     expect(await counterValues).toEqual([0, 1, 3]);
   });
 
-  it('should propagate errors from the signal', async () => {
-    const source = signal(1);
+  it('should propagate errors from the atom', async () => {
+    const source = atom(1);
     const counter = compute(() => {
       const value = source();
       if (value === 2) {
@@ -60,7 +60,7 @@ describe('observe()', () => {
     sub.unsubscribe();
   });
 
-  it('monitors the signal even if the Observable is never subscribed', async () => {
+  it('monitors the atom even if the Observable is never subscribed', async () => {
     let counterRead = false;
     const counter = compute(() => {
       counterRead = true;
@@ -69,15 +69,15 @@ describe('observe()', () => {
 
     observe(counter);
 
-    // Simply creating the Observable shouldn't trigger a signal read.
+    // Simply creating the Observable shouldn't trigger an atom read.
     expect(counterRead).toBe(false);
 
     await flushMicrotasks();
     expect(counterRead).toBe(false);
   });
 
-  it('should not monitor the signal if the Observable has no active subscribers', async () => {
-    const counter = signal(0);
+  it('should not monitor the atom if the Observable has no active subscribers', async () => {
+    const counter = atom(0);
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
@@ -103,14 +103,14 @@ describe('observe()', () => {
     // Tear down the only subscription.
     sub.unsubscribe();
 
-    // Now, setting the signal still triggers additional reads
+    // Now, setting the atom still triggers additional reads
     counter.set(2);
     await flushMicrotasks();
     expect(readCount).toBe(2);
   });
 
-  it('stops monitoring the signal once injector is destroyed', async () => {
-    const counter = signal(0);
+  it('stops monitoring the atom once injector is destroyed', async () => {
+    const counter = atom(0);
 
     // Tracks how many reads of `counter()` there have been.
     let readCount = 0;
@@ -127,16 +127,16 @@ describe('observe()', () => {
     await flushMicrotasks();
     expect(readCount).toBe(0);
 
-    // Now, setting the signal shouldn't trigger any additional reads, as the Injector was destroyed
+    // Now, setting the atom shouldn't trigger any additional reads, as the Injector was destroyed
     // childInjector.destroy();
     counter.set(2);
     await flushMicrotasks();
     expect(readCount).toBe(0);
   });
 
-  it('does not track downstream signal reads in the effect', async () => {
-    const counter = signal(0);
-    const emits = signal(0);
+  it('does not track downstream atom reads in the effect', async () => {
+    const counter = atom(0);
+    const emits = atom(0);
 
     let hits = 0;
 

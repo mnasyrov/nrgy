@@ -1,7 +1,7 @@
+import { atom } from '../core/atom';
 import { objectEquals } from '../core/common';
 import { compute } from '../core/compute';
 import { effect } from '../core/effect';
-import { signal } from '../core/signal';
 import { observe } from '../rxjs/_public';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
@@ -24,7 +24,7 @@ describe('pipeStateMutations()', () => {
       (state) => ({ value: state.value * 2 }),
     ]);
 
-    const value = signal({ value: 0 });
+    const value = atom({ value: 0 });
     value.update(composedMutation);
     expect(value()).toStrictEqual({ value: 22 });
   });
@@ -40,12 +40,12 @@ describe('Store', () => {
 
   describe('createStore()', () => {
     it('should create a store with the provided initial state', () => {
-      const store = signal<State>({ value: 1 });
+      const store = atom<State>({ value: 1 });
       expect(store()).toEqual({ value: 1 });
     });
 
     it('should use a custom comparator', async () => {
-      const store = signal<State>(
+      const store = atom<State>(
         { value: 1, data: 'a' },
         { equal: (s1, s2) => s1.value === s2.value },
       );
@@ -64,14 +64,14 @@ describe('Store', () => {
 
   describe('get()', () => {
     it('should return a current state of the store', () => {
-      const store = signal<State>({ value: 1 });
+      const store = atom<State>({ value: 1 });
       expect(store()).toEqual({ value: 1 });
     });
   });
 
   describe('set()', () => {
     it('should set a new state to the store', () => {
-      const store = signal<State>({ value: 1 });
+      const store = atom<State>({ value: 1 });
       store.set({ value: 2 });
       expect(store()).toEqual({ value: 2 });
     });
@@ -79,13 +79,13 @@ describe('Store', () => {
 
   describe('update()', () => {
     it('should apply a mutation to the store', () => {
-      const store = signal<State>({ value: 1 });
+      const store = atom<State>({ value: 1 });
       store.update((state) => ({ value: state.value + 10 }));
       expect(store()).toEqual({ value: 11 });
     });
 
     it('should not apply a mutation if the new state is the same', async () => {
-      const store = signal<State>({ value: 1 });
+      const store = atom<State>({ value: 1 });
 
       const statePromise = collectChanges(store, () => {
         store.update((state) => state);
@@ -98,7 +98,7 @@ describe('Store', () => {
 
   describe('destroy()', () => {
     it('should complete an internal store', async () => {
-      const store = signal<number>(1);
+      const store = atom<number>(1);
 
       const changes = await collectChanges(store, () => {
         store.set(2);
@@ -111,7 +111,7 @@ describe('Store', () => {
 
     it('should call `onDestroy` callback', async () => {
       const onDestroy = jest.fn();
-      const store = signal<number>(1, { onDestroy });
+      const store = atom<number>(1, { onDestroy });
 
       store.destroy();
       expect(onDestroy).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe('Store', () => {
 
 describe('Concurrent Store updates', () => {
   it('should update the store and apply derived updates until completing the current one', async () => {
-    const store = signal<{
+    const store = atom<{
       v1: string;
       v2: string;
       merged?: string;
@@ -175,7 +175,7 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should trigger a listener in case a state was changed', async () => {
-    const store = signal<{
+    const store = atom<{
       bar: number;
       foo: number;
     }>({ bar: 0, foo: 0 }, { equal: objectEquals });
@@ -195,7 +195,7 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should preserve order of pending updates during applying the current update', async () => {
-    const store = signal<{
+    const store = atom<{
       x: number;
       y: number;
       z: number;
@@ -217,7 +217,7 @@ describe('Concurrent Store updates', () => {
   });
 
   it('should reschedule continuous setting a state by subscribers', async () => {
-    const store = signal<number>(0);
+    const store = atom<number>(0);
 
     observe(store).subscribe((x) => {
       if (x < 100) {
@@ -235,9 +235,9 @@ describe('Concurrent Store updates', () => {
   });
 });
 
-describe('createSignalUpdates()', () => {
+describe('createStoreUpdates()', () => {
   it('should provide actions to change a state of a store', () => {
-    const store = signal(1);
+    const store = atom(1);
 
     const updates = createStoreUpdates(store.update, {
       add: (value: number) => (state) => state + value,
@@ -291,7 +291,7 @@ describe('declareStateUpdates()', () => {
       multiply: (value: number) => (state) => state * value,
     });
 
-    const value = signal<number>(1);
+    const value = atom<number>(1);
     const updates = createStoreUpdates(value.update, stateUpdates);
 
     updates.add(2);
@@ -305,7 +305,7 @@ describe('declareStateUpdates()', () => {
       multiply: (value: number) => (state) => state * value,
     });
 
-    const value = signal<number>(1);
+    const value = atom<number>(1);
     const updates = createStoreUpdates(value.update, stateUpdates);
 
     updates.add(2);

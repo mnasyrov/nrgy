@@ -1,5 +1,5 @@
+import { AtomOptions } from './atom';
 import { ActionEffectNode, ActionNode } from './common';
-import { SignalOptions } from './signal';
 
 const ACTION_SYMBOL = Symbol.for('ngry.action');
 
@@ -71,7 +71,7 @@ class ActionImpl<T> implements ActionNode<T> {
 
   isDestroyed = false;
 
-  constructor(options?: SignalOptions<T>) {
+  constructor(options?: AtomOptions<T>) {
     this.name = options?.name;
     this.onDestroy = options?.onDestroy;
   }

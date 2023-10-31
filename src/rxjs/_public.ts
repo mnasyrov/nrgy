@@ -1,7 +1,7 @@
 export type { ObserveOptions } from './observe';
 export { observe } from './observe';
 
-export type { ToSignalOptions } from './fromObservable';
+export type { FromObservableOptions } from './fromObservable';
 export { fromObservable } from './fromObservable';
 
-export { pipeSignal } from './pipeSignal';
+export { pipeAtom } from './pipeAtom';

@@ -4,11 +4,11 @@ import {
   createSyncTaskScheduler,
 } from '../utils/schedulers';
 
-import { ComputedNode, SignalEffectNode } from './common';
+import { AtomEffectNode, ComputedNode } from './common';
 
-export class SignalRuntime {
-  private currentEffect: SignalEffectNode | undefined = undefined;
-  private trackedEffects: SignalEffectNode[] = [];
+export class EnergyRuntime {
+  private currentEffect: AtomEffectNode | undefined = undefined;
+  private trackedEffects: AtomEffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
   readonly asyncScheduler = createMicrotaskScheduler();
@@ -17,21 +17,21 @@ export class SignalRuntime {
   /** @readonly */
   clock = 0;
 
-  updateSignalClock(): void {
+  updateAtomClock(): void {
     this.clock = nextSafeInteger(this.clock);
   }
 
-  getCurrentEffect(): SignalEffectNode | undefined {
+  getCurrentEffect(): AtomEffectNode | undefined {
     return this.currentEffect;
   }
 
-  getTrackedEffects(): SignalEffectNode[] {
+  getTrackedEffects(): AtomEffectNode[] {
     return this.trackedEffects;
   }
 
   setCurrentEffect(
-    effect: SignalEffectNode | undefined,
-  ): SignalEffectNode | undefined {
+    effect: AtomEffectNode | undefined,
+  ): AtomEffectNode | undefined {
     const prev = this.currentEffect;
     this.currentEffect = effect;
 
@@ -59,8 +59,8 @@ export class SignalRuntime {
   }
 }
 
-export const SIGNAL_RUNTIME = new SignalRuntime();
+export const ENERGY_RUNTIME = new EnergyRuntime();
 
 export function runEffects(): void {
-  SIGNAL_RUNTIME.asyncScheduler.execute();
+  ENERGY_RUNTIME.asyncScheduler.execute();
 }

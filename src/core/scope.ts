@@ -1,6 +1,6 @@
 import { action } from './action';
+import { atom } from './atom';
 import { effect, EffectFn, syncEffect } from './effect';
-import { signal } from './signal';
 
 export interface Unsubscribable {
   unsubscribe(): void;
@@ -25,7 +25,7 @@ export type Scope = Readonly<
     add: <T extends Unsubscribable | Destroyable>(resource: T) => T;
 
     action: typeof action;
-    signal: typeof signal;
+    atom: typeof atom;
     effect: EffectFn;
     syncEffect: EffectFn;
   }
@@ -105,8 +105,8 @@ class ScopeImpl implements Scope {
     return this.add(action<T>(...args));
   }
 
-  signal<T>(...args: Parameters<typeof signal<T>>) {
-    return this.add(signal(...args));
+  atom<T>(...args: Parameters<typeof atom<T>>) {
+    return this.add(atom(...args));
   }
 
   effect(...args: Parameters<EffectFn>) {
@@ -131,7 +131,7 @@ export function createScope(): Scope {
     add: scope.add.bind(scope),
 
     action: scope.action.bind(scope),
-    signal: scope.signal.bind(scope),
+    atom: scope.atom.bind(scope),
     effect: scope.effect.bind(scope),
     syncEffect: scope.syncEffect.bind(scope),
   };

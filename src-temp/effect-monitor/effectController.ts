@@ -49,7 +49,7 @@ export function createEffectController<
   const result = scope.action<Result>();
   const error = scope.action<EffectError<Event, ErrorType>>();
   const final = scope.action<EffectNotification<Event, Result, ErrorType>>();
-  const pendingCount = scope.signal(0);
+  const pendingCount = scope.atom(0);
 
   return {
     state: {

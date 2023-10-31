@@ -1,6 +1,6 @@
-import { Signal } from './common';
+import { atom, AtomOptions } from './atom';
+import { Atom } from './common';
 import { compute } from './compute';
-import { signal, SignalOptions } from './signal';
 
 const enum StateType {
   value,
@@ -11,24 +11,24 @@ type State<T> =
   | { type: StateType.value; value: T }
   | { type: StateType.error; error: unknown };
 
-export type SignalObservable<T> = Signal<T> &
+export type AtomObservable<T> = Atom<T> &
   Readonly<{
     destroy: () => void;
-    asReadonly(): Signal<T>;
+    asReadonly(): Atom<T>;
   }>;
 
-export type SignalSubject<T> = SignalObservable<T> &
+export type AtomSubject<T> = AtomObservable<T> &
   Readonly<{
     next: (value: T) => void;
     error: (error: unknown) => void;
-    asObservable(): SignalObservable<T>;
+    asObservable(): AtomObservable<T>;
   }>;
 
-export function createSignalSubject<T>(
+export function createAtomSubject<T>(
   initialValue: T,
-  options?: SignalOptions<T>,
-): SignalSubject<T> {
-  const state = signal<State<T>>(
+  options?: AtomOptions<T>,
+): AtomSubject<T> {
+  const state = atom<State<T>>(
     {
       type: StateType.value,
       value: initialValue,
@@ -39,7 +39,7 @@ export function createSignalSubject<T>(
     },
   );
 
-  // The actual returned signal is a `computed` of the `State` signal, which maps the various states
+  // The actual returned atom is a `computed` of the `State` atom, which maps the various states
   // to either values or errors.
   const result = compute<T>(
     () => {
@@ -70,5 +70,5 @@ export function createSignalSubject<T>(
     asReadonly: () => result,
   });
 
-  return result as SignalSubject<T>;
+  return result as AtomSubject<T>;
 }

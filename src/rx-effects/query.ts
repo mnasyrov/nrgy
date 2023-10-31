@@ -1,21 +1,21 @@
 import { Query } from 'rx-effects';
 import { Subscription } from 'rxjs';
 
-import { Signal } from '../core/common';
-import { signal } from '../core/signal';
+import { atom } from '../core/atom';
+import { Atom } from '../core/common';
 import { observe } from '../rxjs/_public';
 
-export function toQuery<T>(source: Signal<T>): Query<T> {
+export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
     get: () => source(),
     value$: observe(source),
   };
 }
 
-export function fromQuery<T>(query: Query<T>): Signal<T> {
+export function fromQuery<T>(query: Query<T>): Atom<T> {
   let subscription: Subscription | undefined = undefined;
 
-  const result = signal(query.get(), {
+  const result = atom(query.get(), {
     onDestroy: () => subscription?.unsubscribe(),
   });
 

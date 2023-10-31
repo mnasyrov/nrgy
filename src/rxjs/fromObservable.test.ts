@@ -2,7 +2,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 
 import { fromObservable } from './fromObservable';
 
-describe('toSignal()', () => {
+describe('fromObservable()', () => {
   it('should reflect the last emitted value of an Observable', () => {
     const counter$ = new BehaviorSubject(0);
     const counter = fromObservable(counter$);

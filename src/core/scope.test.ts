@@ -1,5 +1,5 @@
+import { atom } from './atom';
 import { createScope } from './scope';
-import { signal } from './signal';
 
 describe('Scope', () => {
   describe('destroy()', () => {
@@ -18,10 +18,10 @@ describe('Scope', () => {
   });
 
   describe('handle()', () => {
-    it('should be able to unsubscribe the created effect from the signal', async () => {
+    it('should be able to unsubscribe the created effect from the atom', async () => {
       const scope = createScope();
 
-      const source = signal<number>(1);
+      const source = atom<number>(1);
       const results: number[] = [];
 
       scope.syncEffect(() => results.push(source() * 3));
@@ -34,10 +34,10 @@ describe('Scope', () => {
   });
 
   describe('create()', () => {
-    it('should be able to unsubscribe the created signal', async () => {
+    it('should be able to unsubscribe the created atom', async () => {
       const scope = createScope();
 
-      const value = scope.add(signal(1));
+      const value = scope.add(atom(1));
 
       expect(value()).toBe(1);
 

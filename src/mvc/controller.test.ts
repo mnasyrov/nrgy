@@ -5,7 +5,7 @@ describe('createController()', () => {
     const onDestroy = jest.fn();
 
     const controller = createController((scope) => {
-      const store = scope.signal(1);
+      const store = scope.atom(1);
 
       return {
         counter: store.asReadonly(),

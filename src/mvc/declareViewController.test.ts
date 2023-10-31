@@ -1,7 +1,7 @@
 import { createContainer, token } from 'ditox';
 
-import { Signal } from '../core/common';
-import { signal } from '../core/signal';
+import { atom } from '../core/atom';
+import { Atom } from '../core/common';
 
 import { declareViewController } from './declareViewController';
 import { InferredService } from './utilityTypes';
@@ -31,7 +31,7 @@ describe('declareViewController()', () => {
 
   it('should create a factory without DI dependencies', () => {
     const controllerFactory = declareViewController((scope) => {
-      const $value = scope.signal(10);
+      const $value = scope.atom(10);
 
       return {
         getValue: () => $value(),
@@ -55,8 +55,8 @@ describe('declareViewController()', () => {
     const controllerFactory = declareViewController(
       { value: VALUE_TOKEN },
       ({ value }) =>
-        (scope, arg: Signal<number>) => {
-          const $value = scope.signal(10);
+        (scope, arg: Atom<number>) => {
+          const $value = scope.atom(10);
           return {
             getValue: () => value * $value() + arg(),
           };
@@ -66,7 +66,7 @@ describe('declareViewController()', () => {
     const container = createContainer();
     container.bindValue(VALUE_TOKEN, 1);
 
-    const controller = controllerFactory(container, signal(2));
+    const controller = controllerFactory(container, atom(2));
     expect(controller.getValue()).toBe(12);
 
     // Check inferring of a service type

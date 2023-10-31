@@ -1,8 +1,8 @@
 export type { Action, ActionEmitter, ActionOptions } from './action';
 export { action, isAction } from './action';
 
-export type { Signal, ValueEqualityFn } from './common';
-export { isSignal, defaultEquals, objectEquals } from './common';
+export type { Atom, ValueEqualityFn } from './common';
+export { isAtom, defaultEquals, objectEquals } from './common';
 
 export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';
@@ -26,8 +26,8 @@ export type {
 } from './scope';
 export { createScope, ScopeDestructionError } from './scope';
 
-export type { SignalOptions, WritableSignal } from './signal';
-export { signal } from './signal';
+export type { AtomOptions, WritableAtom } from './atom';
+export { atom } from './atom';
 
-export type { SignalSubject, SignalObservable } from './signalSubject';
-export { createSignalSubject } from './signalSubject';
+export type { AtomSubject, AtomObservable } from './atomSubject';
+export { createAtomSubject } from './atomSubject';

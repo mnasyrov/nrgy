@@ -1,6 +1,6 @@
 import { Container, injectable } from 'ditox';
 
-import { AnyObject, Signal } from '../core/common';
+import { AnyObject, Atom } from '../core/common';
 import { Scope } from '../core/scope';
 
 import { Controller, createController } from './controller';
@@ -8,12 +8,12 @@ import { DependencyProps, TokenProps } from './declareController';
 
 export type ViewControllerFactory<
   Service extends AnyObject,
-  Params extends Signal<unknown>[],
+  Params extends Atom<unknown>[],
 > = (container: Container, ...params: Params) => Controller<Service>;
 
 export function declareViewController<
   Service extends AnyObject,
-  Params extends Signal<unknown>[],
+  Params extends Atom<unknown>[],
 >(
   factory: (scope: Scope, ...params: Params) => Service,
 ): ViewControllerFactory<Service, Params>;
@@ -21,7 +21,7 @@ export function declareViewController<
 export function declareViewController<
   Dependencies extends DependencyProps,
   Service extends AnyObject,
-  Params extends Signal<unknown>[],
+  Params extends Atom<unknown>[],
 >(
   tokens: TokenProps<Dependencies>,
   factory: (
@@ -33,7 +33,7 @@ export function declareViewController<
 export function declareViewController<
   Dependencies extends DependencyProps,
   Service extends AnyObject,
-  Params extends Signal<unknown>[],
+  Params extends Atom<unknown>[],
   Factory extends (scope: Scope, ...params: Params) => Service,
   FactoryWithDependencies extends
     | ((deps: Dependencies, scope: Scope) => Service)

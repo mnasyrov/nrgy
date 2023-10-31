@@ -1,14 +1,14 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import {
+  Atom,
+  AtomEffectNode,
   ComputedNode,
-  createSignalFromFunction,
+  createAtomFromFunction,
   defaultEquals,
-  Signal,
-  SignalEffectNode,
   ValueEqualityFn,
 } from './common';
-import { SIGNAL_RUNTIME } from './runtime';
+import { ENERGY_RUNTIME } from './runtime';
 
 export type Computation<T> = () => T;
 
@@ -17,36 +17,36 @@ export type ComputeOptions<T> = {
 };
 
 /**
- * Create a computed `Signal` which derives a reactive value from an expression.
+ * Create a computed `Atom` which derives a reactive value from an expression.
  */
 export function compute<T>(
   computation: Computation<T>,
   options?: ComputeOptions<T>,
-): Signal<T> {
+): Atom<T> {
   const node = new ComputedImpl(computation, options?.equal ?? defaultEquals);
 
-  return createSignalFromFunction(node, node.signal.bind(node), {
+  return createAtomFromFunction(node, node.get.bind(node), {
     destroy: node.destroy.bind(node),
   });
 }
 
 /**
  * A dedicated symbol used before a computed value has been calculated for the first time.
- * Explicitly typed as `any` so we can use it as signal's value.
+ * Explicitly typed as `any` so we can use it as atom's value.
  */
 const UNSET: any = Symbol('UNSET');
 
 /**
- * A dedicated symbol used in place of a computed signal value to indicate that a given computation
+ * A dedicated symbol used in place of a computed atom value to indicate that a given computation
  * is in progress. Used to detect cycles in computation chains.
- * Explicitly typed as `any` so we can use it as signal's value.
+ * Explicitly typed as `any` so we can use it as atom's value.
  */
 const COMPUTING: any = Symbol('COMPUTING');
 
 /**
- * A dedicated symbol used in place of a computed signal value to indicate that a given computation
+ * A dedicated symbol used in place of a computed atom value to indicate that a given computation
  * failed. The thrown error is cached until the computation gets dirty again.
- * Explicitly typed as `any` so we can use it as signal's value.
+ * Explicitly typed as `any` so we can use it as atom's value.
  */
 const ERRORED: any = Symbol('ERRORED');
 
@@ -73,7 +73,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
-  private lastEffectRef: WeakRef<SignalEffectNode> | undefined;
+  private lastEffectRef: WeakRef<AtomEffectNode> | undefined;
 
   constructor(
     private computation: Computation<T>,
@@ -87,7 +87,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   isChanged(): boolean {
     if (
-      this.clock === SIGNAL_RUNTIME.clock &&
+      this.clock === ENERGY_RUNTIME.clock &&
       this.value !== UNSET &&
       this.value !== COMPUTING
     ) {
@@ -100,7 +100,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     return this.version !== prevVersion;
   }
 
-  signal(): T {
+  get(): T {
     this.accessValue(true);
 
     if (this.value === ERRORED) {
@@ -117,13 +117,13 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     }
 
     if (trackNode) {
-      SIGNAL_RUNTIME.visitComputedNode(this);
+      ENERGY_RUNTIME.visitComputedNode(this);
     }
 
-    const activeEffect = SIGNAL_RUNTIME.getCurrentEffect();
+    const activeEffect = ENERGY_RUNTIME.getCurrentEffect();
 
     const isStale =
-      this.clock !== SIGNAL_RUNTIME.clock ||
+      this.clock !== ENERGY_RUNTIME.clock ||
       this.value === UNSET ||
       (activeEffect && this.lastEffectRef !== activeEffect.ref);
 
@@ -146,7 +146,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
       this.error = err;
     }
 
-    this.clock = SIGNAL_RUNTIME.clock;
+    this.clock = ENERGY_RUNTIME.clock;
 
     if (
       oldValue === UNSET ||
