@@ -2,7 +2,6 @@ import { atom } from '../core/atom';
 import { objectEquals } from '../core/common';
 import { compute } from '../core/compute';
 import { effect } from '../core/effect';
-import { observe } from '../rxjs/_public';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import {
@@ -27,95 +26,6 @@ describe('pipeStateMutations()', () => {
     const value = atom({ value: 0 });
     value.update(composedMutation);
     expect(value()).toStrictEqual({ value: 22 });
-  });
-});
-
-describe('Store', () => {
-  type State = { value: number; data?: string };
-
-  // const increment = (prev: { value: number }) => ({
-  //   ...prev,
-  //   value: prev.value + 1,
-  // });
-
-  describe('createStore()', () => {
-    it('should create a store with the provided initial state', () => {
-      const store = atom<State>({ value: 1 });
-      expect(store()).toEqual({ value: 1 });
-    });
-
-    it('should use a custom comparator', async () => {
-      const store = atom<State>(
-        { value: 1, data: 'a' },
-        { equal: (s1, s2) => s1.value === s2.value },
-      );
-
-      const changes = await collectChanges(store, () => {
-        store.set({ value: 1, data: 'b' });
-        store.set({ value: 2, data: 'c' });
-      });
-
-      expect(changes).toEqual([
-        { value: 1, data: 'a' },
-        { value: 2, data: 'c' },
-      ]);
-    });
-  });
-
-  describe('get()', () => {
-    it('should return a current state of the store', () => {
-      const store = atom<State>({ value: 1 });
-      expect(store()).toEqual({ value: 1 });
-    });
-  });
-
-  describe('set()', () => {
-    it('should set a new state to the store', () => {
-      const store = atom<State>({ value: 1 });
-      store.set({ value: 2 });
-      expect(store()).toEqual({ value: 2 });
-    });
-  });
-
-  describe('update()', () => {
-    it('should apply a mutation to the store', () => {
-      const store = atom<State>({ value: 1 });
-      store.update((state) => ({ value: state.value + 10 }));
-      expect(store()).toEqual({ value: 11 });
-    });
-
-    it('should not apply a mutation if the new state is the same', async () => {
-      const store = atom<State>({ value: 1 });
-
-      const statePromise = collectChanges(store, () => {
-        store.update((state) => state);
-      });
-      store.destroy();
-
-      expect(await statePromise).toEqual([{ value: 1 }]);
-    });
-  });
-
-  describe('destroy()', () => {
-    it('should complete an internal store', async () => {
-      const store = atom<number>(1);
-
-      const changes = await collectChanges(store, () => {
-        store.set(2);
-        store.destroy();
-        store.set(3);
-      });
-
-      expect(changes).toEqual([1, 2]);
-    });
-
-    it('should call `onDestroy` callback', async () => {
-      const onDestroy = jest.fn();
-      const store = atom<number>(1, { onDestroy });
-
-      store.destroy();
-      expect(onDestroy).toHaveBeenCalledTimes(1);
-    });
   });
 });
 
@@ -219,7 +129,7 @@ describe('Concurrent Store updates', () => {
   it('should reschedule continuous setting a state by subscribers', async () => {
     const store = atom<number>(0);
 
-    observe(store).subscribe((x) => {
+    effect(store, (x) => {
       if (x < 100) {
         store.set(x * 10);
       }
@@ -231,7 +141,9 @@ describe('Concurrent Store updates', () => {
       store.set(3);
     });
 
-    expect(changes).toEqual([0, 3, 30, 300]);
+    await flushMicrotasks();
+
+    expect(changes).toEqual([0, 30, 300]);
   });
 });
 

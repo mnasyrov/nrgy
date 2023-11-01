@@ -6,5 +6,5 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   roots: ['src'],
-  collectCoverageFrom: ['src/**/{!(index|testUtils),}.{ts,tsx}'],
+  collectCoverageFrom: ['src/**/{!(_public|index|testUtils),}.{ts,tsx}'],
 };

@@ -12,8 +12,6 @@ import { ENERGY_RUNTIME } from './runtime';
  * A `Atom` with a value that can be mutated via a setter interface.
  */
 export interface WritableAtom<T> extends Atom<T> {
-  destroy(): void;
-
   /**
    * Directly set the atom to a new value, and notify any dependents.
    */
