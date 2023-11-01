@@ -134,18 +134,18 @@ export type AtomEffectNode = ReactiveNode &
     notify: () => void;
   }>;
 
-export type ActionNode<T> = ReactiveNode &
+export type SignalNode<T> = ReactiveNode &
   Readonly<{
     isDestroyed: boolean;
     isObserved: () => boolean;
 
     emit: (value: T) => void;
-    subscribe: (effectRef: WeakRef<ActionEffectNode<T>>) => void;
+    subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
   }>;
 
-export type ActionEffectNode<T> = ReactiveNode &
+export type SignalEffectNode<T> = ReactiveNode &
   Readonly<{
-    ref: WeakRef<ActionEffectNode<T>>;
+    ref: WeakRef<SignalEffectNode<T>>;
     isDestroyed: boolean;
 
     notify: (value: T) => void;

@@ -1,11 +1,11 @@
 import { flushMicrotasks } from '../test/testUtils';
 
-import { action } from './action';
 import { effect } from './effect';
+import { signal } from './signal';
 
-describe('action', () => {
-  it('should emit the event', async () => {
-    const a = action<number>();
+describe('signal()', () => {
+  it('should return an event emitter', async () => {
+    const a = signal<number>();
 
     let result;
     effect(a, (value) => (result = value));
@@ -16,7 +16,7 @@ describe('action', () => {
   });
 
   it('should use void type and undefined value if a generic type is not specified', async () => {
-    const a = action();
+    const a = signal();
 
     let count = 0;
     effect(a, () => count++);

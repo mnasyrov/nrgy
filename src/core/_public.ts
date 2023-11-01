@@ -1,5 +1,5 @@
-export type { Action, ActionOptions } from './action';
-export { action, isAction, destroyAction, isActionObserved } from './action';
+export type { Signal, SignalOptions } from './signal';
+export { signal, isSignal, destroySignal, isSignalObserved } from './signal';
 
 export type { Atom, ValueEqualityFn } from './common';
 export { isAtom, defaultEquals, objectEquals } from './common';

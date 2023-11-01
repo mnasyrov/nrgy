@@ -8,7 +8,7 @@ import {
   Unsubscribable,
 } from 'rxjs';
 
-import { Action } from '../../src/core/action';
+import { Signal } from '../../src/core/signal';
 import { Controller } from '../../src/mvc/controller';
 
 import { createEffectController } from './effectController';
@@ -35,7 +35,7 @@ const DEFAULT_MERGE_MAP_PIPELINE: EffectPipeline<any, any> = (eventProject) =>
   mergeMap(eventProject);
 
 /**
- * Effect encapsulates a handler for Action or Observable.
+ * Effect encapsulates a handler for Signal or Observable.
  *
  * It provides the state of execution results, which can be used to construct
  * a graph of business logic.
@@ -46,7 +46,7 @@ const DEFAULT_MERGE_MAP_PIPELINE: EffectPipeline<any, any> = (eventProject) =>
 export type Effect<Event, Result = void, ErrorType = Error> = Controller<
   EffectState<Event, Result, ErrorType> & {
     handle: (
-      source: Action<Event> | Observable<Event> | Query<Event>,
+      source: Signal<Event> | Observable<Event> | Query<Event>,
     ) => Unsubscribable;
   }
 >;
@@ -105,7 +105,7 @@ export function createEffect<Event = void, Result = void, ErrorType = Error>(
     ...controller.state,
 
     handle(
-      source: Observable<Event> | Action<Event> | Query<Event>,
+      source: Observable<Event> | Signal<Event> | Query<Event>,
     ): Subscription {
       const observable = getSourceObservable(source);
 
@@ -125,7 +125,7 @@ export function createEffect<Event = void, Result = void, ErrorType = Error>(
 }
 
 function getSourceObservable<T>(
-  source: Observable<T> | Action<T> | Query<T>,
+  source: Observable<T> | Signal<T> | Query<T>,
 ): Observable<T> {
   const type = typeof source;
 

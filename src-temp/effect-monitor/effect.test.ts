@@ -12,7 +12,7 @@ import {
 } from 'rxjs';
 import { switchMap, take, toArray } from 'rxjs/operators';
 
-import { createAction } from '../../src/core/action';
+import { createAction } from '../../src/core/signal';
 
 import { createEffect } from './effect';
 import { GLOBAL_EFFECT_UNHANDLED_ERROR$ } from './effectController';

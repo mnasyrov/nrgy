@@ -1,9 +1,9 @@
 import { TaskScheduler } from '../utils/schedulers';
 
-import { ActionEffectNode } from './common';
+import { SignalEffectNode } from './common';
 
-export class ActionEffect<T> implements ActionEffectNode<any> {
-  readonly ref: WeakRef<ActionEffectNode<T>> = new WeakRef(this);
+export class SignalEffect<T> implements SignalEffectNode<any> {
+  readonly ref: WeakRef<SignalEffectNode<T>> = new WeakRef(this);
 
   isDestroyed = false;
 

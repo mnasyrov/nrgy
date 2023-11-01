@@ -1,10 +1,10 @@
 import { AtomOptions } from './atom';
-import { ActionEffectNode, ActionNode } from './common';
+import { SignalEffectNode, SignalNode } from './common';
 
-const ACTION_SYMBOL = Symbol.for('ngry.action');
+const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
 
 /**
- * Action is an event emitter
+ * Signal is an event emitter
  *
  * @param operator Optional transformation or handler for an event
  *
@@ -12,63 +12,63 @@ const ACTION_SYMBOL = Symbol.for('ngry.action');
  *
  * @example
  * ```ts
- * // Create the action
- * const submitForm = createAction<{login: string, password: string}>();
+ * // Create the signal
+ * const submitForm = signal<{login: string, password: string}>();
  *
- * // Call the action
+ * // Call the signal
  * submitForm({login: 'foo', password: 'bar'});
  *
- * // Handle action's events
+ * // Handle signal's events
  * effect(submitForm, (formData) => {
  *   // Process the formData
  * });
  * ```
  */
-export type Action<Event> = {
+export type Signal<Event> = {
   (event: Event): void;
-  readonly [ACTION_SYMBOL]: unknown;
+  readonly [SIGNAL_SYMBOL]: unknown;
 } & ([Event] extends [undefined | void]
   ? { (event?: Event): void }
   : { (event: Event): void });
 
 /**
- * Options passed to the `action` creation function.
+ * Options passed to the `signal` creation function.
  */
-export type ActionOptions = {
+export type SignalOptions = {
   /**
-   * Action's name
+   * Signal's name
    */
   name?: string;
 
   /**
-   * Callback is called when the action is destroyed.
+   * Callback is called when the signal is destroyed.
    */
   onDestroy?: () => void;
 };
 
 /**
- * Checks if the given `value` is a reactive `Action`.
+ * Checks if the given `value` is a reactive `Signal`.
  */
-export function isAction<T>(value: unknown): value is Action<T> {
-  return typeof value === 'function' && ACTION_SYMBOL in value;
+export function isSignal<T>(value: unknown): value is Signal<T> {
+  return typeof value === 'function' && SIGNAL_SYMBOL in value;
 }
 
-export function getActionNode<T>(value: Action<T>): ActionNode<T> {
-  return value[ACTION_SYMBOL] as ActionNode<T>;
+export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {
+  return value[SIGNAL_SYMBOL] as SignalNode<T>;
 }
 
-export function destroyAction(action: Action<any>): void {
-  getActionNode(action).destroy();
+export function destroySignal(emitter: Signal<any>): void {
+  getSignalNode(emitter).destroy();
 }
 
-export function isActionObserved(action: Action<any>): boolean {
-  return getActionNode(action).isObserved();
+export function isSignalObserved(emitter: Signal<any>): boolean {
+  return getSignalNode(emitter).isObserved();
 }
 
-class ActionImpl<T> implements ActionNode<T> {
+class SignalImpl<T> implements SignalNode<T> {
   private readonly name?: string;
   private onDestroy?: () => void;
-  private readonly consumerEffects = new Set<WeakRef<ActionEffectNode<T>>>();
+  private readonly consumerEffects = new Set<WeakRef<SignalEffectNode<T>>>();
 
   isDestroyed = false;
 
@@ -99,7 +99,7 @@ class ActionImpl<T> implements ActionNode<T> {
     this.onDestroy = undefined;
   }
 
-  subscribe(effectRef: WeakRef<ActionEffectNode<T>>): void {
+  subscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
     this.consumerEffects.add(effectRef);
   }
 
@@ -124,11 +124,11 @@ class ActionImpl<T> implements ActionNode<T> {
   }
 }
 
-export function action<T = void>(options?: ActionOptions): Action<T> {
-  const node = new ActionImpl<T>(options);
+export function signal<T = void>(options?: SignalOptions): Signal<T> {
+  const node = new SignalImpl<T>(options);
 
-  const action = (value: T) => node.emit(value);
-  (action as any)[ACTION_SYMBOL] = node;
+  const result = (value: T) => node.emit(value);
+  (result as any)[SIGNAL_SYMBOL] = node;
 
-  return action as Action<T>;
+  return result as Signal<T>;
 }

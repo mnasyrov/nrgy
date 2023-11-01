@@ -1,5 +1,5 @@
-import { Action } from '../../src/core/action';
 import { Atom } from '../../src/core/common';
+import { Signal } from '../../src/core/signal';
 
 export type EffectResult<Event, Value> = Readonly<{
   event: Event;
@@ -31,17 +31,17 @@ export type EffectNotification<Event, Result, ErrorType> = Readonly<
  */
 export type EffectState<Event, Result = void, ErrorType = Error> = Readonly<{
   /** Provides a result of successful execution of the handler */
-  result: Action<Result>;
+  result: Signal<Result>;
 
   /** Provides a source event and a result of successful execution of the handler */
-  done: Action<EffectResult<Event, Result>>;
+  done: Signal<EffectResult<Event, Result>>;
 
   /** Provides an error emitter by a source (`event` is `undefined`)
    * or by the handler (`event` is not `undefined`) */
-  error: Action<EffectError<Event, ErrorType>>;
+  error: Signal<EffectError<Event, ErrorType>>;
 
   /** Provides a notification after execution of the handler for both success or error result  */
-  final: Action<EffectNotification<Event, Result, ErrorType>>;
+  final: Signal<EffectNotification<Event, Result, ErrorType>>;
 
   /** Provides `true` if there is any execution of the handler in progress */
   pending: Atom<boolean>;

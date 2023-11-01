@@ -1,6 +1,6 @@
-import { action, isActionObserved } from '../../src/core/action';
 import { compute } from '../../src/core/compute';
 import { createScope } from '../../src/core/scope';
+import { isSignalObserved, signal } from '../../src/core/signal';
 import { Controller } from '../../src/mvc/controller';
 
 import {
@@ -11,7 +11,7 @@ import {
 } from './effectState';
 
 const GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER =
-  action<EffectError<unknown, unknown>>();
+  signal<EffectError<unknown, unknown>>();
 
 export const GLOBAL_EFFECT_UNHANDLED_ERRORS =
   GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER;
@@ -19,7 +19,7 @@ export const GLOBAL_EFFECT_UNHANDLED_ERRORS =
 function emitGlobalUnhandledError(
   effectError: EffectError<unknown, unknown>,
 ): void {
-  if (isActionObserved(GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER)) {
+  if (isSignalObserved(GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER)) {
     GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER(effectError);
   } else {
     console.error('Uncaught error in EffectMonitor', effectError);
@@ -45,10 +45,10 @@ export function createEffectController<
 >(): EffectController<Event, Result, ErrorType> {
   const scope = createScope();
 
-  const done = scope.action<EffectResult<Event, Result>>();
-  const result = scope.action<Result>();
-  const error = scope.action<EffectError<Event, ErrorType>>();
-  const final = scope.action<EffectNotification<Event, Result, ErrorType>>();
+  const done = scope.signal<EffectResult<Event, Result>>();
+  const result = scope.signal<Result>();
+  const error = scope.signal<EffectError<Event, ErrorType>>();
+  const final = scope.signal<EffectNotification<Event, Result, ErrorType>>();
   const pendingCount = scope.atom(0);
 
   return {
@@ -76,7 +76,7 @@ export function createEffectController<
         pendingCount.update(decreaseCount);
       }
 
-      if (isActionObserved(error) || isActionObserved(final)) {
+      if (isSignalObserved(error) || isSignalObserved(final)) {
         error(effectError);
         final({ type: 'error', ...effectError });
       } else {

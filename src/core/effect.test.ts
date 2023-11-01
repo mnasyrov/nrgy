@@ -1,13 +1,13 @@
 import { flushMicrotasks } from '../test/testUtils';
 
-import { action } from './action';
 import { atom } from './atom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
+import { signal } from './signal';
 
 describe('effect()', () => {
-  it('should subscribe to an action', async () => {
-    const emitter = action<number>();
+  it('should subscribe to a signal', async () => {
+    const emitter = signal<number>();
 
     let result = 0;
     const fx = effect(emitter, (value) => (result = value));
@@ -90,8 +90,8 @@ describe('effect()', () => {
 });
 
 describe('syncEffect()', () => {
-  it('should subscribe to an action', () => {
-    const emitter = action<number>();
+  it('should subscribe to a signal', () => {
+    const emitter = signal<number>();
 
     let result = 0;
     const fx = syncEffect(emitter, (value) => (result = value));
