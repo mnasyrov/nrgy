@@ -1,4 +1,4 @@
-import { action } from '../../src/core/action';
+import { action, isActionObserved } from '../../src/core/action';
 import { compute } from '../../src/core/compute';
 import { createScope } from '../../src/core/scope';
 import { Controller } from '../../src/mvc/controller';
@@ -14,12 +14,12 @@ const GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER =
   action<EffectError<unknown, unknown>>();
 
 export const GLOBAL_EFFECT_UNHANDLED_ERRORS =
-  GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER.asAction();
+  GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER;
 
 function emitGlobalUnhandledError(
   effectError: EffectError<unknown, unknown>,
 ): void {
-  if (GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER.isObserved()) {
+  if (isActionObserved(GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER)) {
     GLOBAL_EFFECT_UNHANDLED_ERROR_EMITTER(effectError);
   } else {
     console.error('Uncaught error in EffectMonitor', effectError);
@@ -53,10 +53,10 @@ export function createEffectController<
 
   return {
     state: {
-      done: done.asAction(),
-      result: result.asAction(),
-      error: error.asAction(),
-      final: final.asAction(),
+      done,
+      result,
+      error,
+      final,
       pending: compute(() => pendingCount() > 0),
       pendingCount: pendingCount.asReadonly(),
     },
@@ -76,7 +76,7 @@ export function createEffectController<
         pendingCount.update(decreaseCount);
       }
 
-      if (error.isObserved() || final.isObserved()) {
+      if (isActionObserved(error) || isActionObserved(final)) {
         error(effectError);
         final({ type: 'error', ...effectError });
       } else {

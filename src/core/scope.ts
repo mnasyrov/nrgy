@@ -1,4 +1,4 @@
-import { action } from './action';
+import { action, destroyAction } from './action';
 import { atom } from './atom';
 import { effect, EffectFn, syncEffect } from './effect';
 
@@ -102,7 +102,9 @@ class ScopeImpl implements Scope {
   }
 
   action<T>(...args: Parameters<typeof action<T>>) {
-    return this.add(action<T>(...args));
+    const emitter = action<T>(...args);
+    this.onDestroy(() => destroyAction(emitter));
+    return emitter;
   }
 
   atom<T>(...args: Parameters<typeof atom<T>>) {

@@ -3,13 +3,6 @@ import { ActionEffectNode, ActionNode } from './common';
 
 const ACTION_SYMBOL = Symbol.for('ngry.action');
 
-export type Action<Event> = {
-  (event: Event): void;
-  readonly [ACTION_SYMBOL]: unknown;
-} & ([Event] extends [undefined | void]
-  ? { (event?: Event): void }
-  : { (event: Event): void });
-
 /**
  * Action is an event emitter
  *
@@ -26,17 +19,17 @@ export type Action<Event> = {
  * submitForm({login: 'foo', password: 'bar'});
  *
  * // Handle action's events
- * submitForm.even$.subscribe((formData) => {
+ * effect(submitForm, (formData) => {
  *   // Process the formData
  * });
  * ```
  */
-export type ActionEmitter<Event> = Action<Event> &
-  Readonly<{
-    destroy(): void;
-    isObserved(): boolean;
-    asAction(): Action<Event>;
-  }>;
+export type Action<Event> = {
+  (event: Event): void;
+  readonly [ACTION_SYMBOL]: unknown;
+} & ([Event] extends [undefined | void]
+  ? { (event?: Event): void }
+  : { (event: Event): void });
 
 /**
  * Options passed to the `action` creation function.
@@ -62,6 +55,14 @@ export function isAction<T>(value: unknown): value is Action<T> {
 
 export function getActionNode<T>(value: Action<T>): ActionNode<T> {
   return value[ACTION_SYMBOL] as ActionNode<T>;
+}
+
+export function destroyAction(action: Action<any>): void {
+  getActionNode(action).destroy();
+}
+
+export function isActionObserved(action: Action<any>): boolean {
+  return getActionNode(action).isObserved();
 }
 
 class ActionImpl<T> implements ActionNode<T> {
@@ -118,25 +119,16 @@ class ActionImpl<T> implements ActionNode<T> {
         continue;
       }
 
-      effect.notify?.(value);
+      effect.notify(value);
     }
   }
 }
 
-export function action<T = void>(options?: ActionOptions): ActionEmitter<T> {
+export function action<T = void>(options?: ActionOptions): Action<T> {
   const node = new ActionImpl<T>(options);
 
   const action = (value: T) => node.emit(value);
   (action as any)[ACTION_SYMBOL] = node;
 
-  const emitter = (value: T) => node.emit(value);
-  (emitter as any)[ACTION_SYMBOL] = node;
-
-  Object.assign(emitter, {
-    destroy: node.destroy.bind(node),
-    isObserved: node.isObserved.bind(node),
-    asAction: () => action,
-  });
-
-  return emitter as ActionEmitter<T>;
+  return action as Action<T>;
 }

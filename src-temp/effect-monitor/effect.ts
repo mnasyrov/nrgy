@@ -8,7 +8,7 @@ import {
   Unsubscribable,
 } from 'rxjs';
 
-import { Action, ActionEmitter } from '../../src/core/action';
+import { Action } from '../../src/core/action';
 import { Controller } from '../../src/mvc/controller';
 
 import { createEffectController } from './effectController';
@@ -46,7 +46,7 @@ const DEFAULT_MERGE_MAP_PIPELINE: EffectPipeline<any, any> = (eventProject) =>
 export type Effect<Event, Result = void, ErrorType = Error> = Controller<
   EffectState<Event, Result, ErrorType> & {
     handle: (
-      source: ActionEmitter<Event> | Observable<Event> | Query<Event>,
+      source: Action<Event> | Observable<Event> | Query<Event>,
     ) => Unsubscribable;
   }
 >;
@@ -105,7 +105,7 @@ export function createEffect<Event = void, Result = void, ErrorType = Error>(
     ...controller.state,
 
     handle(
-      source: Observable<Event> | ActionEmitter<Event> | Query<Event>,
+      source: Observable<Event> | Action<Event> | Query<Event>,
     ): Subscription {
       const observable = getSourceObservable(source);
 
