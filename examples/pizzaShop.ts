@@ -1,14 +1,8 @@
 import { delay, filter, map, mapTo, of } from 'rxjs';
 
-import {
-  Controller,
-  createAction,
-  createScope,
-  declareStateUpdates,
-  EffectState,
-  Query,
-  withStoreUpdates,
-} from '../src/rx-effects/_public';
+import { Atom } from '../src/core/common';
+import { Controller } from '../src/mvc/controller';
+import { declareStateUpdates } from '../src/store/store';
 
 // The state
 type CartState = Readonly<{ orders: Array<string> }>;
@@ -33,7 +27,7 @@ const CART_STATE_UPDATES = declareStateUpdates(CART_STATE, {
 // It should provide methods for triggering the actions,
 // and queries or observables for subscribing to data.
 export type PizzaShopController = Controller<{
-  ordersQuery: Query<Array<string>>;
+  ordersQuery: Atom<Array<string>>;
 
   addPizza: (name: string) => void;
   removePizza: (name: string) => void;

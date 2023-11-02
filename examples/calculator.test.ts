@@ -1,39 +1,28 @@
-import { firstValueFrom } from 'rxjs';
-import { take, toArray } from 'rxjs/operators';
-
-import {
-  Action,
-  Controller,
-  createAction,
-  createScope,
-  createStore,
-  Effect,
-  Scope,
-  StateMutation,
-  Store,
-} from '../../src/rx-effects/_public';
-
 // Example usage of RxEffects: a calculator which has actions: increment,
 // decrement, add, subtract and reset.
 
+import { Atom } from '../src/core/common';
+import { Scope } from '../src/core/scope';
+import { Signal } from '../src/core/signal';
+
 type CalculatorState = Readonly<{ value: number }>;
-type CalculatorStateMutation = StateMutation<CalculatorState>;
-type CalculatorStore = Store<CalculatorState>;
 
 const CALCULATOR_STATE: CalculatorState = { value: 0 };
 
-const addValue: (value: number) => CalculatorStateMutation =
-  (value) => (state) => ({ ...state, value: state.value + value });
+const addValue = (value) => (state) => ({
+  ...state,
+  value: state.value + value,
+});
 
 function createCalculatorEffects(
   scope: Scope,
-  store: CalculatorStore,
+  store: Atom<CalculatorState>,
 ): {
-  incrementEffect: Effect<void>;
-  decrementEffect: Effect<void>;
-  sumEffect: Effect<number>;
-  subtractEffect: Effect<number, number>;
-  resetEffect: Effect<void>;
+  incrementEffect: Signal<void>;
+  decrementEffect: Signal<void>;
+  sumEffect: Signal<number>;
+  subtractEffect: Signal<number, number>;
+  resetEffect: Signal<void>;
 } {
   const incrementEffect = scope.createEffect(() => store.update(addValue(1)));
   const decrementEffect = scope.createEffect(() => store.update(addValue(-1)));

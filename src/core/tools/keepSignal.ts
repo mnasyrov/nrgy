@@ -1,7 +1,7 @@
-import { createAtomSubject } from './atomSubject';
-import { Atom } from './common';
-import { createScope } from './scope';
-import { Signal } from './signal';
+import { createAtomSubject } from '../atomSubject';
+import { Atom } from '../common';
+import { createScope } from '../scope';
+import { Signal } from '../signal';
 
 export function keepSignal<T>(source: Signal<T>): Atom<T | undefined>;
 

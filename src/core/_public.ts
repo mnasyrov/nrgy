@@ -32,4 +32,4 @@ export { atom } from './atom';
 export type { AtomSubject, AtomObservable } from './atomSubject';
 export { createAtomSubject } from './atomSubject';
 
-export { keepSignal } from './tools';
+export { keepSignal } from './tools/keepSignal';
