@@ -3,5 +3,3 @@ export { observe } from './observe';
 
 export type { FromObservableOptions } from './fromObservable';
 export { fromObservable } from './fromObservable';
-
-export { pipeAtom } from './pipeAtom';
