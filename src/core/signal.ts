@@ -1,4 +1,3 @@
-import { AtomOptions } from './atom';
 import { SignalEffectNode, SignalNode } from './common';
 
 const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
@@ -72,7 +71,7 @@ class SignalImpl<T> implements SignalNode<T> {
 
   isDestroyed = false;
 
-  constructor(options?: AtomOptions<T>) {
+  constructor(options?: SignalOptions) {
     this.name = options?.name;
     this.onDestroy = options?.onDestroy;
   }
