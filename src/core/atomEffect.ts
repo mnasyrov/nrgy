@@ -1,3 +1,4 @@
+import { createWeakRef } from '../utils/createWeakRef';
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 import { TaskScheduler } from '../utils/schedulers';
 
@@ -46,7 +47,7 @@ export function createAtomEffect(
  * scheduling operation to coordinate calling `Watch.run()`.
  */
 class EffectNodeImpl implements AtomEffectNode {
-  readonly ref: WeakRef<AtomEffectNode> = new WeakRef(this);
+  readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
   clock = 0;
 
   dirty = false;

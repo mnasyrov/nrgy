@@ -1,9 +1,10 @@
+import { createWeakRef } from '../utils/createWeakRef';
 import { TaskScheduler } from '../utils/schedulers';
 
 import { SignalEffectNode } from './common';
 
 export class SignalEffect<T> implements SignalEffectNode<any> {
-  readonly ref: WeakRef<SignalEffectNode<T>> = new WeakRef(this);
+  readonly ref: WeakRef<SignalEffectNode<T>> = createWeakRef(this);
 
   isDestroyed = false;
 

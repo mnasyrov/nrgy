@@ -14,7 +14,9 @@ export const queueMicrotaskPolyfill: QueueMicrotaskFn = (
 };
 
 export const queueMicrotask: QueueMicrotaskFn =
-  'queueMicrotask' in global ? global.queueMicrotask : queueMicrotaskPolyfill;
+  'queueMicrotask' in globalThis
+    ? globalThis.queueMicrotask
+    : queueMicrotaskPolyfill;
 
 export type TaskScheduler = Readonly<{
   isEmpty(): boolean;
