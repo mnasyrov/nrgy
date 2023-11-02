@@ -1,9 +1,9 @@
 import { Query } from 'rx-effects';
-import { Subscription } from 'rxjs';
+import { skip } from 'rxjs';
 
-import { atom } from '../core/atom';
+import { AtomObservable } from '../core/atomSubject';
 import { Atom } from '../core/common';
-import { observe } from '../rxjs/_public';
+import { fromObservable, observe } from '../rxjs/_public';
 
 export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
@@ -12,16 +12,6 @@ export function toQuery<T>(source: Atom<T>): Query<T> {
   };
 }
 
-export function fromQuery<T>(query: Query<T>): Atom<T> {
-  let subscription: Subscription | undefined = undefined;
-
-  const result = atom(query.get(), {
-    onDestroy: () => subscription?.unsubscribe(),
-  });
-
-  subscription = query.value$.subscribe((value) => {
-    result.set(value);
-  });
-
-  return result;
+export function fromQuery<T>(query: Query<T>): AtomObservable<T> {
+  return fromObservable(query.value$.pipe(skip(1)), query.get());
 }
