@@ -3,11 +3,28 @@ import { Observable, share, shareReplay, skip } from 'rxjs';
 import { Atom } from '../core/common';
 import { effect, syncEffect } from '../core/effect';
 import { ENERGY_RUNTIME } from '../core/runtime';
+import { isSignal, Signal } from '../core/signal';
 
-export type ObserveOptions = {
+export type SignalObserveOptions = {
+  sync?: boolean;
+};
+
+export type AtomObserveOptions = {
   sync?: boolean;
   onlyChanges?: boolean;
 };
+
+type ObserveOptions = SignalObserveOptions & AtomObserveOptions;
+
+export function observe<T>(
+  source: Atom<T>,
+  options?: AtomObserveOptions,
+): Observable<T>;
+
+export function observe<T>(
+  source: Signal<T>,
+  options?: SignalObserveOptions,
+): Observable<T>;
 
 /**
  * Exposes the value of an `Atom` as an RxJS `Observable`.
@@ -15,7 +32,7 @@ export type ObserveOptions = {
  * The atom's value will be propagated into the `Observable`'s subscribers using an `effect`.
  */
 export function observe<T>(
-  source: Atom<T>,
+  source: Atom<T> | Signal<T>,
   options?: ObserveOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
@@ -24,21 +41,24 @@ export function observe<T>(
       ? ENERGY_RUNTIME.syncScheduler
       : ENERGY_RUNTIME.asyncScheduler;
 
-    const watcher = effectFn(() => {
-      try {
-        const value = source();
-        scheduler.schedule(() => subscriber.next(value));
-      } catch (error) {
-        scheduler.schedule(() => subscriber.error(error));
-      }
-    });
+    const subscription = effectFn<T>(
+      source as any,
+      (value) => scheduler.schedule(() => subscriber.next(value)),
+      (error) => scheduler.schedule(() => subscriber.error(error)),
+    );
 
-    return () => watcher.destroy();
+    return () => subscription.destroy();
   });
 
-  if (options?.onlyChanges) {
-    return observable.pipe(skip(1), share({ resetOnRefCountZero: true }));
+  if (isSignal(source)) {
+    // Signal
+    return observable.pipe(share({ resetOnRefCountZero: true }));
   } else {
-    return observable.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    // Atom
+    if (options?.onlyChanges) {
+      return observable.pipe(skip(1), share({ resetOnRefCountZero: true }));
+    } else {
+      return observable.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    }
   }
 }

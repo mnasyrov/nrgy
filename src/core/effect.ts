@@ -38,12 +38,18 @@ TODO
  */
 
 export interface EffectFn {
-  <T>(source: Signal<T>, callback: ValueCallbackFn<T>): EffectSubscription;
+  <T>(
+    source: Signal<T>,
+    callback: ValueCallbackFn<T>,
+    onError?: ErrorCallbackFn,
+  ): EffectSubscription;
+
   <T>(
     source: Atom<T>,
     callback: ValueCallbackFn<T>,
     onError?: ErrorCallbackFn,
   ): EffectSubscription;
+
   (source: SideEffectFn, onError?: ErrorCallbackFn): EffectSubscription;
 }
 

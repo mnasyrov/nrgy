@@ -1,4 +1,4 @@
-export type { ObserveOptions } from './observe';
+export type { AtomObserveOptions, SignalObserveOptions } from './observe';
 export { observe } from './observe';
 
 export type { FromObservableOptions } from './fromObservable';
