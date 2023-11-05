@@ -1,12 +1,71 @@
 import {
+  AnyObject,
   Atom,
+  ATOM_SYMBOL,
   AtomEffectNode,
-  createAtomFromFunction,
   defaultEquals,
   ReactiveNode,
   ValueEqualityFn,
 } from './common';
 import { ENERGY_RUNTIME } from './runtime';
+
+/**
+ * Checks if the given `value` is a reactive `Atom`.
+ */
+export function isAtom<T>(value: unknown): value is Atom<T> {
+  return (
+    typeof value === 'function' &&
+    ATOM_SYMBOL in value &&
+    value[ATOM_SYMBOL] !== undefined
+  );
+}
+
+export function getAtomNode<T>(value: Atom<T>): ReactiveNode {
+  return value[ATOM_SYMBOL] as ReactiveNode;
+}
+
+/**
+ * @deprecated
+ *
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`).
+ *
+ * @param fn A zero-argument function which will be converted into a `Atom`.
+ */
+export function createAtomFromFunction<T>(
+  node: ReactiveNode,
+  fn: () => T,
+): Atom<T>;
+
+/**
+ * @deprecated
+ *
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
+ * potentially add some set of extra properties (passed as an object record `extraApi`).
+ *
+ * @param fn A zero-argument function which will be converted into a `Atom`.
+ * @param extraApi An object whose properties will be copied onto `fn` in order to create a specific
+ *     desired interface for the `Atom`.
+ */
+export function createAtomFromFunction<T, U extends Record<string, unknown>>(
+  node: ReactiveNode,
+  fn: () => T,
+  extraApi: U,
+): Atom<T> & U;
+
+/**
+ * @deprecated
+ *
+ * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
+ * potentially add some set of extra properties (passed as an object record `extraApi`).
+ */
+export function createAtomFromFunction<
+  T,
+  U extends Record<string, unknown> = AnyObject,
+>(node: ReactiveNode, fn: () => T, extraApi: U = {} as U): Atom<T> & U {
+  (fn as any)[ATOM_SYMBOL] = node;
+  // Copy properties from `extraApi` to `fn` to complete the desired API of the `Atom`.
+  return Object.assign(fn, extraApi) as Atom<T> & U;
+}
 
 /**
  * A `Atom` with a value that can be mutated via a setter interface.

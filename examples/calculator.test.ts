@@ -1,9 +1,8 @@
 // Example usage of RxEffects: a calculator which has actions: increment,
 // decrement, add, subtract and reset.
 
-import { Atom } from '../src/core/common';
+import { Atom, Signal } from '../src/core/common';
 import { Scope } from '../src/core/scope';
-import { Signal } from '../src/core/signal';
 
 type CalculatorState = Readonly<{ value: number }>;
 

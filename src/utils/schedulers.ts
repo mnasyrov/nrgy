@@ -1,8 +1,8 @@
 import { createQueue } from './queue';
 
 const reportError =
-  typeof self !== 'undefined' && typeof self.reportError === 'function'
-    ? self.reportError
+  'queueMicrotask' in globalThis && typeof globalThis.reportError === 'function'
+    ? globalThis.reportError
     : undefined;
 
 export type QueueMicrotaskFn = (callback: () => void) => void;

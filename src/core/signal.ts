@@ -1,34 +1,4 @@
-import { SignalEffectNode, SignalNode } from './common';
-
-const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
-
-/**
- * Signal is an event emitter
- *
- * @param operator Optional transformation or handler for an event
- *
- * @field event$ - Observable for emitted events.
- *
- * @example
- * ```ts
- * // Create the signal
- * const submitForm = signal<{login: string, password: string}>();
- *
- * // Call the signal
- * submitForm({login: 'foo', password: 'bar'});
- *
- * // Handle signal's events
- * effect(submitForm, (formData) => {
- *   // Process the formData
- * });
- * ```
- */
-export type Signal<Event> = {
-  (event: Event): void;
-  readonly [SIGNAL_SYMBOL]: unknown;
-} & ([Event] extends [undefined | void]
-  ? { (event?: Event): void }
-  : { (event: Event): void });
+import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from './common';
 
 /**
  * Options passed to the `signal` creation function.

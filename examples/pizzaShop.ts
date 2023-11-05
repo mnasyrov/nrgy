@@ -1,87 +1,70 @@
-import { delay, filter, map, mapTo, of } from 'rxjs';
+import { delay, firstValueFrom, of } from 'rxjs';
 
-import { Atom } from '../src/core/common';
+import { Atom, compute, createScope, signal } from '../src/core/_public';
+import {
+  futureOperation,
+  FutureResult,
+} from '../src/core/tools/futureOperation';
 import { Controller } from '../src/mvc/controller';
-import { declareStateUpdates } from '../src/store/store';
+import { declareStore } from '../src/store/_public';
 
-// The state
+// The state and a factory for the store
 type CartState = Readonly<{ orders: Array<string> }>;
 
-// Declare the initial state.
-const CART_STATE: CartState = { orders: [] };
+const createCartStore = declareStore<CartState>({
+  initialState: { orders: [] },
+  updates: {
+    addPizza: (name: string) => (state) => ({
+      ...state,
+      orders: [...state.orders, name],
+    }),
 
-// Declare updates of the state.
-const CART_STATE_UPDATES = declareStateUpdates(CART_STATE, {
-  addPizzaToCart: (name: string) => (state) => ({
-    ...state,
-    orders: [...state.orders, name],
-  }),
-
-  removePizzaFromCart: (name: string) => (state) => ({
-    ...state,
-    orders: state.orders.filter((order) => order !== name),
-  }),
+    removePizza: (name: string) => (state) => ({
+      ...state,
+      orders: state.orders.filter((order) => order !== name),
+    }),
+  },
 });
 
 // Declaring the controller.
 // It should provide methods for triggering the actions,
 // and queries or observables for subscribing to data.
 export type PizzaShopController = Controller<{
-  ordersQuery: Atom<Array<string>>;
+  getOrders: Atom<Array<string>>;
 
   addPizza: (name: string) => void;
   removePizza: (name: string) => void;
-  submitCart: () => void;
-  submitState: EffectState<Array<string>>;
+  submitCart: () => Atom<FutureResult<Array<string>>>;
 }>;
 
 export function createPizzaShopController(): PizzaShopController {
   // Creates the scope to track subscriptions
   const scope = createScope();
 
-  // Creates the state store
-  const store = withStoreUpdates(
-    scope.createStore(CART_STATE),
-    CART_STATE_UPDATES,
-  );
+  // Creates the store
+  const store = scope.add(createCartStore());
 
   // Creates queries for the state data
-  const ordersQuery = store.query((state) => state.orders);
+  const getOrders = compute(() => store().orders);
 
   // Introduces actions
-  const addPizza = createAction<string>();
-  const removePizza = createAction<string>();
-  const submitCart = createAction();
+  const addPizza = signal<string>();
+  const removePizza = signal<string>();
 
   // Handle simple actions
-  scope.handle(addPizza, (order) => store.updates.addPizzaToCart(order));
+  scope.effect(addPizza, (order) => store.updates.addPizzaToCart(order));
+  scope.effect(removePizza, (name) => store.updates.removePizzaFromCart(name));
 
-  scope.handle(removePizza, (name) => store.updates.removePizzaFromCart(name));
-
-  // Create a effect in a general way
-  const submitEffect = scope.createEffect<Array<string>>((orders) => {
-    // Sending an async request to a server
-    return of(orders).pipe(delay(1000), mapTo(undefined));
+  const submitCart = futureOperation<void, Array<string>>(() => {
+    const orders = getOrders();
+    return firstValueFrom(of(orders).pipe(delay(1000)));
   });
 
-  // Effect can handle `Observable` and `Action`. It allows to filter action events
-  // and transform data which is passed to effect's handler.
-  submitEffect.handle(
-    submitCart.event$.pipe(
-      map(() => ordersQuery.get()),
-      filter((orders) => !submitEffect.pending.get() && orders.length > 0),
-    ),
-  );
-
-  // Effect's results can be used as actions
-  scope.handle(submitEffect.done$, () => store.set(CART_STATE));
-
   return {
-    ordersQuery,
+    getOrders,
     addPizza,
     removePizza,
     submitCart,
-    submitState: submitEffect,
     destroy: () => scope.destroy(),
   };
 }

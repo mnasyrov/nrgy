@@ -13,11 +13,10 @@ export const PizzaShopComponent: FC = () => {
   // const controller = useController(createPizzaShopController);
 
   // Using the controller
-  const { ordersQuery, addPizza, removePizza, submitCart, submitState } =
-    controller;
+  const { orders, addPizza, removePizza, submitCart, submitState } = controller;
 
   // Subscribing to state data and the effect stata
-  const orders = useQuery(ordersQuery);
+  const orders = useQuery(orders);
   const isPending = useQuery(submitState.pending);
   const submitError = useObservable(submitState.error$, undefined);
 

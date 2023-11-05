@@ -21,6 +21,7 @@ export type StoreFactory<State, Updates extends StateUpdates<State>> = {
     options?: AtomOptions<State>,
   ): Store<State, Updates>;
 
+  readonly initialState: State;
   readonly updates: Updates;
 };
 
@@ -96,31 +97,23 @@ export function declareStore<
 >(
   storeOptions: DeclareStoreOptions<State, Updates>,
 ): StoreFactory<State, Updates> {
-  const {
-    initialState: baseState,
-    updates,
-    options: baseOptions,
-  } = storeOptions;
+  const { initialState, updates, options } = storeOptions;
 
   function factory(
-    initialState?: FactoryStateArg<State>,
-    atomOptions?: AtomOptions<State>,
+    customInitialState?: FactoryStateArg<State>,
+    customOptions?: AtomOptions<State>,
   ) {
     const state =
-      initialState === undefined
-        ? baseState
-        : typeof initialState === 'function'
-        ? (initialState as StateMutation<State>)(baseState)
-        : initialState;
+      customInitialState === undefined
+        ? initialState
+        : typeof customInitialState === 'function'
+        ? (customInitialState as StateMutation<State>)(initialState)
+        : customInitialState;
 
-    const store = createStore(state, {
-      ...baseOptions,
-      ...atomOptions,
-      updates,
-    });
+    const store = createStore(state, { ...options, ...customOptions, updates });
 
     return store;
   }
 
-  return Object.assign(factory, { updates });
+  return Object.assign(factory, { initialState, updates });
 }

@@ -4,40 +4,7 @@ import { TaskScheduler } from '../utils/schedulers';
 
 import { AtomEffectNode, ComputedNode } from './common';
 import { ENERGY_RUNTIME } from './runtime';
-
-/**
- * A cleanup function that can be optionally registered from the watch logic. If registered, the
- * cleanup logic runs before the next watch execution.
- */
-export type AtomEffectCleanupFn = () => void;
-
-/**
- * A callback passed to the watch function that makes it possible to register cleanup logic.
- */
-export type AtomEffectCleanupRegisterFn = (
-  cleanupFn: AtomEffectCleanupFn,
-) => void;
-
-const NOOP_CLEANUP_FN: AtomEffectCleanupFn = () => undefined;
-
-export function createAtomEffect(
-  scheduler: TaskScheduler,
-  action: (onCleanup: AtomEffectCleanupRegisterFn) => void,
-  onError?: (error: unknown) => unknown,
-): AtomEffectNode {
-  const node = new EffectNodeImpl(scheduler, action, onError);
-
-  Object.assign<
-    EffectNodeImpl,
-    Pick<EffectNodeImpl, 'notify' | 'run' | 'destroy'>
-  >(node, {
-    notify: node.notify.bind(node),
-    run: node.run.bind(node),
-    destroy: node.destroy.bind(node),
-  });
-
-  return node;
-}
+import { destroySignal, signal } from './signal';
 
 /**
  * Watches a reactive expression and allows it to be scheduled to re-run
@@ -46,34 +13,38 @@ export function createAtomEffect(
  * `Watch` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `Watch.run()`.
  */
-class EffectNodeImpl implements AtomEffectNode {
+export class AtomEffect implements AtomEffectNode {
   readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
   clock = 0;
 
   dirty = false;
   isDestroyed = false;
+  next = signal<any>();
 
   private scheduler?: TaskScheduler;
-  private action:
-    | undefined
-    | ((onCleanup: AtomEffectCleanupRegisterFn) => void);
+  private action: undefined | (() => void);
   private onError: undefined | ((error: unknown) => unknown);
-  private cleanupFn = NOOP_CLEANUP_FN;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  private registerOnCleanup = (cleanupFn: AtomEffectCleanupFn) => {
-    this.cleanupFn = cleanupFn;
-  };
-
   constructor(
     scheduler: TaskScheduler,
-    action: (onCleanup: AtomEffectCleanupRegisterFn) => void,
+    action: () => void,
     onError?: (error: unknown) => unknown,
   ) {
     this.scheduler = scheduler;
     this.action = action;
     this.onError = onError;
+  }
+
+  destroy(): void {
+    this.isDestroyed = true;
+    this.scheduler = undefined;
+    this.action = undefined;
+    this.onError = undefined;
+    this.seenComputedNodes = undefined;
+
+    destroySignal(this.next);
   }
 
   notify(): void {
@@ -86,7 +57,7 @@ class EffectNodeImpl implements AtomEffectNode {
     this.dirty = true;
 
     if (needsSchedule) {
-      this.scheduler?.schedule(this.run);
+      this.scheduler?.schedule(() => this.run());
     }
   }
 
@@ -103,7 +74,7 @@ class EffectNodeImpl implements AtomEffectNode {
 
     this.dirty = false;
 
-    if (this.isDestroyed) {
+    if (this.isDestroyed || !this.action) {
       return;
     }
 
@@ -123,11 +94,9 @@ class EffectNodeImpl implements AtomEffectNode {
     }
 
     let errorRef: undefined | { error: unknown };
-
     try {
-      this.cleanupFn();
-      this.cleanupFn = NOOP_CLEANUP_FN;
-      this.action?.(this.registerOnCleanup);
+      const result = this.action();
+      this.next(result);
     } catch (error) {
       errorRef = { error };
     } finally {
@@ -142,20 +111,6 @@ class EffectNodeImpl implements AtomEffectNode {
       if (errorRef && this.onError) {
         this.onError(errorRef.error);
       }
-    }
-  }
-
-  destroy(): void {
-    this.isDestroyed = true;
-    this.action = undefined;
-    this.onError = undefined;
-    this.scheduler = undefined;
-    this.seenComputedNodes = undefined;
-
-    try {
-      this.cleanupFn();
-    } finally {
-      this.cleanupFn = NOOP_CLEANUP_FN;
     }
   }
 }

@@ -45,7 +45,10 @@ describe('Atom', () => {
 
       const changes = await collectChanges(store, () => {
         store.set({ value: 1, data: 'b' });
+        expect(store()).toEqual({ value: 1, data: 'a' });
+
         store.set({ value: 2, data: 'c' });
+        expect(store()).toEqual({ value: 2, data: 'c' });
       });
 
       expect(changes).toEqual([

@@ -27,6 +27,24 @@ describe('effect()', () => {
 
   it('should subscribe to an atom', async () => {
     const a = atom(1);
+
+    let result = 0;
+    const fx = effect(a, (value) => (result = value));
+    await flushMicrotasks();
+    expect(result).toBe(1);
+
+    a.set(2);
+    await flushMicrotasks();
+    expect(result).toBe(2);
+
+    fx.destroy();
+    a.set(3);
+    await flushMicrotasks();
+    expect(result).toBe(2);
+  });
+
+  it('should subscribe to a compute', async () => {
+    const a = atom(1);
     const b = atom(2);
 
     let result = 0;
@@ -106,6 +124,21 @@ describe('syncEffect()', () => {
   });
 
   it('should subscribe to an atom', () => {
+    const a = atom(1);
+
+    let result = 0;
+    const fx = syncEffect(a, (value) => (result = value));
+    expect(result).toBe(1);
+
+    a.set(2);
+    expect(result).toBe(2);
+
+    fx.destroy();
+    a.set(3);
+    expect(result).toBe(2);
+  });
+
+  it('should subscribe to a compute', () => {
     const a = atom(1);
     const b = atom(2);
 

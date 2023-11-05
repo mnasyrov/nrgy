@@ -5,7 +5,9 @@ export type AnyObject = Record<string, any>;
  *
  * This can be used to auto-unwrap atom in various cases, or to auto-wrap non-atom values.
  */
-const ATOM_SYMBOL = Symbol.for('ngry.atom');
+export const ATOM_SYMBOL = Symbol.for('ngry.atom');
+
+export const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
 
 /**
  * A reactive value which notifies consumers of any changes.
@@ -20,19 +22,32 @@ export type Atom<T> = (() => T) & {
 };
 
 /**
- * Checks if the given `value` is a reactive `Atom`.
+ * Signal is an event emitter
+ *
+ * @param operator Optional transformation or handler for an event
+ *
+ * @field event$ - Observable for emitted events.
+ *
+ * @example
+ * ```ts
+ * // Create the signal
+ * const submitForm = signal<{login: string, password: string}>();
+ *
+ * // Call the signal
+ * submitForm({login: 'foo', password: 'bar'});
+ *
+ * // Handle signal's events
+ * effect(submitForm, (formData) => {
+ *   // Process the formData
+ * });
+ * ```
  */
-export function isAtom<T>(value: unknown): value is Atom<T> {
-  return (
-    typeof value === 'function' &&
-    ATOM_SYMBOL in value &&
-    value[ATOM_SYMBOL] !== undefined
-  );
-}
-
-export function getAtomNode<T>(value: Atom<T>): ReactiveNode {
-  return value[ATOM_SYMBOL] as ReactiveNode;
-}
+export type Signal<Event> = {
+  (event: Event): void;
+  readonly [SIGNAL_SYMBOL]: unknown;
+} & ([Event] extends [undefined | void]
+  ? { (event?: Event): void }
+  : { (event: Event): void });
 
 /**
  * A comparison function which can determine if two values are equal.
@@ -70,43 +85,6 @@ export const objectEquals: ValueEqualityFn<
   return true;
 };
 
-/**
- * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`).
- *
- * @param fn A zero-argument function which will be converted into a `Atom`.
- */
-export function createAtomFromFunction<T>(
-  node: ReactiveNode,
-  fn: () => T,
-): Atom<T>;
-
-/**
- * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
- * potentially add some set of extra properties (passed as an object record `extraApi`).
- *
- * @param fn A zero-argument function which will be converted into a `Atom`.
- * @param extraApi An object whose properties will be copied onto `fn` in order to create a specific
- *     desired interface for the `Atom`.
- */
-export function createAtomFromFunction<T, U extends Record<string, unknown>>(
-  node: ReactiveNode,
-  fn: () => T,
-  extraApi: U,
-): Atom<T> & U;
-
-/**
- * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
- * potentially add some set of extra properties (passed as an object record `extraApi`).
- */
-export function createAtomFromFunction<
-  T,
-  U extends Record<string, unknown> = AnyObject,
->(node: ReactiveNode, fn: () => T, extraApi: U = {} as U): Atom<T> & U {
-  (fn as any)[ATOM_SYMBOL] = node;
-  // Copy properties from `extraApi` to `fn` to complete the desired API of the `Atom`.
-  return Object.assign(fn, extraApi) as Atom<T> & U;
-}
-
 export type ReactiveNode = Readonly<{
   destroy: () => void;
 }>;
@@ -124,6 +102,7 @@ export type AtomEffectNode = ReactiveNode &
     ref: WeakRef<AtomEffectNode>;
     isDestroyed: boolean;
     dirty: boolean;
+    next: Signal<any>;
 
     /**
      * Monotonically increasing counter representing a version of this `Consumer`'s

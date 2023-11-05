@@ -1,9 +1,9 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
-import { Atom } from '../core/common';
+import { Atom, Signal } from '../core/common';
 import { effect, syncEffect } from '../core/effect';
 import { ENERGY_RUNTIME } from '../core/runtime';
-import { isSignal, Signal } from '../core/signal';
+import { isSignal } from '../core/signal';
 
 export type SignalObserveOptions = {
   sync?: boolean;
@@ -41,8 +41,8 @@ export function observe<T>(
       ? ENERGY_RUNTIME.syncScheduler
       : ENERGY_RUNTIME.asyncScheduler;
 
-    const subscription = effectFn<T>(
-      source as any,
+    const subscription = effectFn<T, unknown>(
+      source as Atom<T>,
       (value) => scheduler.schedule(() => subscriber.next(value)),
       (error) => scheduler.schedule(() => subscriber.error(error)),
     );

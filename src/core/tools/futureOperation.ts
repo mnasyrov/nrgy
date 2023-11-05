@@ -8,7 +8,8 @@ export type FutureResult<Value, Error = unknown> =
   | { readonly type: 'success'; readonly value: Value }
   | { readonly type: 'error'; readonly error: Error };
 
-const FR_PENDING: FutureResult<never, never> = { type: 'pending' };
+export const FR_INITIAL: FutureResult<never, never> = { type: 'initial' };
+export const FR_PENDING: FutureResult<never, never> = { type: 'pending' };
 
 export type FutureOperation<Event, Result, Error = unknown> = {
   (event: Event): Atom<FutureResult<Result, Error>>;
@@ -31,22 +32,20 @@ export function futureOperation<Event, Result, Error = unknown>(
 
     pendingCount.update(increaseCount);
 
-    let result;
     try {
-      result = action(event);
+      const result = action(event);
+
+      if (result instanceof Promise) {
+        result
+          .then((value) => state.set({ type: 'success', value }))
+          .catch((error) => state.set({ type: 'error', error }))
+          .finally(() => pendingCount.update(decreaseCount));
+      } else {
+        state.set({ type: 'success', value: result });
+        pendingCount.update(decreaseCount);
+      }
     } catch (error) {
       state.set({ type: 'error', error: error as any });
-      return state;
-    }
-
-    if (result instanceof Promise) {
-      result
-        .then((value) => state.set({ type: 'success', value }))
-        .catch((error) => state.set({ type: 'error', error }))
-        .finally(() => pendingCount.update(decreaseCount));
-    } else {
-      state.set({ type: 'success', value: result });
-      pendingCount.update(decreaseCount);
     }
 
     return state;

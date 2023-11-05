@@ -1,18 +1,13 @@
-export type { Signal, SignalOptions } from './signal';
+export type { SignalOptions } from './signal';
 export { signal, isSignal, destroySignal, isSignalObserved } from './signal';
 
-export type { Atom, ValueEqualityFn } from './common';
-export { isAtom, defaultEquals, objectEquals } from './common';
+export type { Atom, Signal, ValueEqualityFn } from './common';
+export { defaultEquals, objectEquals } from './common';
 
 export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';
 
-export type {
-  EffectFn,
-  EffectSubscription,
-  EffectCleanupFn,
-  EffectCleanupRegisterFn,
-} from './effect';
+export type { EffectFn, EffectSubscription } from './effect';
 export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
@@ -27,7 +22,7 @@ export type {
 export { createScope, ScopeDestructionError } from './scope';
 
 export type { AtomOptions, WritableAtom } from './atom';
-export { atom } from './atom';
+export { atom, isAtom } from './atom';
 
 export type { AtomSubject, AtomObservable } from './atomSubject';
 export { createAtomSubject } from './atomSubject';

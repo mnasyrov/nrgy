@@ -91,12 +91,12 @@ const CART_STATE: CartState = { orders: [] };
 
 // Declare updates of the state.
 const CART_STATE_UPDATES = declareStateUpdates<CartState>({
-  addPizzaToCart: (name: string) => (state) => ({
+  addPizza: (name: string) => (state) => ({
     ...state,
     orders: [...state.orders, name],
   }),
 
-  removePizzaFromCart: (name: string) => (state) => ({
+  removePizza: (name: string) => (state) => ({
     ...state,
     orders: state.orders.filter((order) => order !== name),
   }),

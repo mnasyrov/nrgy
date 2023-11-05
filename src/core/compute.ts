@@ -1,10 +1,10 @@
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 
+import { createAtomFromFunction } from './atom';
 import {
   Atom,
   AtomEffectNode,
   ComputedNode,
-  createAtomFromFunction,
   defaultEquals,
   ValueEqualityFn,
 } from './common';
