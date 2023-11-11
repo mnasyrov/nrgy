@@ -89,7 +89,9 @@ export type ReactiveNode = Readonly<{
   destroy: () => void;
 }>;
 
-export type ComputedNode<T> = ReactiveNode &
+export type AtomNode = ReactiveNode;
+
+export type ComputedNode<T> = AtomNode &
   Readonly<{
     clock: number | undefined;
     version: number;
@@ -116,7 +118,6 @@ export type AtomEffectNode = ReactiveNode &
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
     isDestroyed: boolean;
-    isObserved: () => boolean;
 
     emit: (value: T) => void;
     subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;

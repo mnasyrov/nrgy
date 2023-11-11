@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 
-import { Controller } from '../../src/rx-effects/_public';
+import { Controller } from '../mvc/controller';
 
 import { useController } from './useController';
 

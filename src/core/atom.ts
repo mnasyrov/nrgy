@@ -3,6 +3,7 @@ import {
   Atom,
   ATOM_SYMBOL,
   AtomEffectNode,
+  AtomNode,
   defaultEquals,
   ReactiveNode,
   ValueEqualityFn,
@@ -20,8 +21,8 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
   );
 }
 
-export function getAtomNode<T>(value: Atom<T>): ReactiveNode {
-  return value[ATOM_SYMBOL] as ReactiveNode;
+export function getAtomNode<T>(value: Atom<T>): AtomNode {
+  return value[ATOM_SYMBOL] as AtomNode;
 }
 
 /**
@@ -117,7 +118,7 @@ export type AtomOptions<T> = {
   onDestroy?: () => void;
 };
 
-class WritableAtomImpl<T> implements ReactiveNode {
+class WritableAtomImpl<T> implements AtomNode {
   private readonlyAtom: Atom<T> | undefined;
 
   private readonly name?: string;

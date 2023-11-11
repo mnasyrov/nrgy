@@ -30,10 +30,6 @@ export function destroySignal(emitter: Signal<any>): void {
   getSignalNode(emitter).destroy();
 }
 
-export function isSignalObserved(emitter: Signal<any>): boolean {
-  return getSignalNode(emitter).isObserved();
-}
-
 class SignalImpl<T> implements SignalNode<T> {
   private readonly name?: string;
   private onDestroy?: () => void;
@@ -70,10 +66,6 @@ class SignalImpl<T> implements SignalNode<T> {
 
   subscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
     this.consumerEffects.add(effectRef);
-  }
-
-  isObserved(): boolean {
-    return this.consumerEffects.size > 0;
   }
 
   /**

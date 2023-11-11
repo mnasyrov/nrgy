@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 
-import { Controller } from '../../src/rx-effects/_public';
+import { Controller } from '../mvc/controller';
 
 const EMPTY_DEPENDENCIES: unknown[] = [];
 

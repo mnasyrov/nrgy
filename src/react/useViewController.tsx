@@ -9,41 +9,23 @@ import React, {
 import { declareModule, Token } from 'ditox';
 import { DependencyModule, useDependencyContainer } from 'ditox-react';
 
-import {
-  Controller,
-  ControllerFactory,
-  createStore,
-  Query,
-  Store,
-  ViewControllerFactory,
-} from '../../src/rx-effects/_public';
-
-type AnyObject = Record<string, any>;
-
-export function useInjectableController<Result extends Record<string, unknown>>(
-  factory: ControllerFactory<Result>,
-): Controller<Result> {
-  const container = useDependencyContainer('strict');
-  const controller = useMemo(() => factory(container), [container, factory]);
-
-  useEffect(() => () => controller.destroy(), [controller]);
-
-  return controller;
-}
+import { atom, WritableAtom } from '../core/atom';
+import { AnyObject, Atom } from '../core/common';
+import { Controller, ControllerFactory } from '../mvc/controller';
+import { ViewControllerFactory } from '../mvc/declareViewController';
 
 export function useViewController<
   Result extends Record<string, unknown>,
   Params extends unknown[],
   QueryParams extends {
-    [K in keyof Params]: Params[K] extends infer V ? Query<V> : never;
+    [K in keyof Params]: Params[K] extends infer V ? Atom<V> : never;
   },
 >(
   factory: ViewControllerFactory<Result, QueryParams>,
   ...params: Params
 ): Controller<Result> {
   const container = useDependencyContainer('strict');
-
-  const storesRef = useRef<Store<any>[]>();
+  const storesRef = useRef<WritableAtom<any>[]>();
 
   const controller = useMemo(() => {
     if (!storesRef.current) {
@@ -68,12 +50,12 @@ export function useViewController<
   return controller;
 }
 
-function createStoresForParams(params: any[]): Store<any>[] {
+function createStoresForParams(params: any[]): WritableAtom<any>[] {
   return params.length === 0
     ? []
     : new Array(params.length)
         .fill(undefined)
-        .map((_, index) => createStore(params[index]));
+        .map((_, index) => atom(params[index]));
 }
 
 export function createControllerContainer<T extends AnyObject>(

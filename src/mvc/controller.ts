@@ -16,13 +16,12 @@ import { createScope, Scope } from '../core/scope';
  * }>;
  * ```
  */
-export type Controller<ControllerProps extends AnyObject = AnyObject> =
-  Readonly<
-    ControllerProps & {
-      /** Dispose the controller and clean its resources */
-      destroy: () => void;
-    }
-  >;
+export type Controller<Props extends AnyObject = AnyObject> = Readonly<
+  Props & {
+    /** Dispose the controller and clean its resources */
+    destroy: () => void;
+  }
+>;
 
 export type ControllerFactory<Service extends AnyObject> = (
   container: Container,
@@ -34,13 +33,11 @@ export function createController<Service extends AnyObject>(
   const scope = createScope();
 
   const controller = factory(scope);
+  scope.onDestroy(() => controller.destroy?.());
 
   return {
     ...controller,
 
-    destroy: () => {
-      controller.destroy?.();
-      scope.destroy();
-    },
+    destroy: () => scope.destroy(),
   };
 }

@@ -1,5 +1,5 @@
 export type { SignalOptions } from './signal';
-export { signal, isSignal, destroySignal, isSignalObserved } from './signal';
+export { signal, isSignal, destroySignal } from './signal';
 
 export type { Atom, Signal, ValueEqualityFn } from './common';
 export { defaultEquals, objectEquals } from './common';

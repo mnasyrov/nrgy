@@ -1,12 +1,52 @@
 import { createContainer, token } from 'ditox';
 
-import { atom } from '../core/atom';
-import { Atom } from '../core/common';
+import { compute } from '../src/core/_public';
+import { atom } from '../src/core/atom';
+import { Atom } from '../src/core/common';
+import { declareViewController } from '../src/mvc/declareViewController';
+import { InferredService } from '../src/mvc/utilityTypes';
 
-import { declareViewController } from './declareViewController';
-import { InferredService } from './utilityTypes';
+declare function declareViewController2(...args: any[]): any;
 
 describe('declareViewController()', () => {
+  it('should use the new API', () => {
+    const VALUE_TOKEN = token<number>();
+
+    const controllerFactory = declareViewController2.extend(
+      withInjections({ value: VALUE_TOKEN }),
+      withViewProps<{ factor: number }>(),
+      withViewLifecycle(),
+    )(({ scope, props }) => {
+      const { value: initialValue, factor } = props;
+
+      // UI lifecycle callbacks
+      scope.onInit(() => {});
+      scope.onMount(() => {});
+      scope.onUnmount(() => {});
+      scope.onDestroy(() => {});
+
+      const store = atom(initialValue);
+
+      const increment = () => store.update((prev) => prev + 1);
+
+      return {
+        value: compute(() => store() * factor()),
+
+        increment,
+      };
+    });
+
+    const container = createContainer();
+    container.bindValue(VALUE_TOKEN, 1);
+
+    const controller = controllerFactory(container);
+
+    // Check inferring of a service type
+    type Service = InferredService<typeof controllerFactory>;
+    const service: Service = controller;
+    expect(service.value()).toBe(10);
+  });
+
   it('should create a factory without DI dependencies', () => {
     const controllerFactory = declareViewController((scope) => {
       const $value = scope.atom(10);
