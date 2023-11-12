@@ -6,8 +6,10 @@ export default defineConfig({
   entry: {
     core: 'src/core/_public.ts',
     mvc: 'src/mvc/_public.ts',
+    react: 'src/react/_public.ts',
     'rx-effects': 'src/rx-effects/_public.ts',
     rxjs: 'src/rxjs/_public.ts',
+    'rxjs-react': 'src/rxjs-react/_public.ts',
     store: 'src/store/_public.ts',
   },
   clean: true,

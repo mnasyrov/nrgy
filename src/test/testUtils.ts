@@ -1,3 +1,5 @@
+import { defer, finalize, MonoTypeOperatorFunction, noop } from 'rxjs';
+
 import { Atom } from '../core/common';
 import { createScope } from '../core/scope';
 import { createLatch } from '../utils/latch';
@@ -58,4 +60,23 @@ export async function collectChanges<T>(
 
     return event.value;
   });
+}
+
+export function monitorSubscriptionCount<T>(
+  onCountUpdate: (count: number) => void = noop,
+): MonoTypeOperatorFunction<T> {
+  return (source$) => {
+    let counter = 0;
+
+    return defer(() => {
+      counter += 1;
+      onCountUpdate(counter);
+      return source$;
+    }).pipe(
+      finalize(() => {
+        counter -= 1;
+        onCountUpdate(counter);
+      }),
+    );
+  };
 }

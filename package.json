@@ -28,6 +28,10 @@
       "require": "./dist/mvc.cjs",
       "default": "./dist/mvc.js"
     },
+    "./react": {
+      "require": "./dist/react.cjs",
+      "default": "./dist/react.js"
+    },
     "./rx-effects": {
       "require": "./dist/rx-effects.cjs",
       "default": "./dist/rx-effects.js"
@@ -35,6 +39,10 @@
     "./rxjs": {
       "require": "./dist/rxjs.cjs",
       "default": "./dist/rxjs.js"
+    },
+    "./rxjs-react": {
+      "require": "./dist/rxjs-react.cjs",
+      "default": "./dist/rxjs-react.js"
     },
     "./store": {
       "require": "./dist/store.cjs",
