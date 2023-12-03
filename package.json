@@ -55,7 +55,7 @@
     "lint": "npm run eslint && npm run tsc",
     "eslint": "eslint --cache --max-warnings 0 \"src/**\"",
     "eslint-fix": "npm run eslint -- --fix",
-    "tsc": "tsc --noEmit --jsx react",
+    "tsc": "tsc --noEmit --jsx react-jsx",
     "test": "jest",
     "build": "tsup",
     "benchmarks": "npm run build -- --silent && tsx ./benchmarks",

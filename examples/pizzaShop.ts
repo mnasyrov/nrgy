@@ -5,7 +5,7 @@ import {
   futureOperation,
   FutureResult,
 } from '../src/core/tools/futureOperation';
-import { Controller } from '../src/mvc/controller';
+import { Controller } from '../src/mvc/_public';
 import { declareStore } from '../src/store/_public';
 
 // The state and a factory for the store

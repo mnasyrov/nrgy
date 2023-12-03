@@ -1,26 +1,89 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { Controller } from '../mvc/controller';
+import {
+  BaseControllerContext,
+  BaseService,
+  Controller,
+  ControllerDeclaration,
+  createController,
+  createViewProxy,
+  provideView,
+  ViewControllerContext,
+  ViewProxy,
+  withExtensionParams,
+} from '../mvc/_public';
 
-const EMPTY_DEPENDENCIES: unknown[] = [];
+import { useNrgyReactExtensionContext } from './NrgyReactExtension';
 
-/**
- * Creates an ad-hoc controller by the factory and destroys it on unmounting a
- * component.
- *
- * The factory is not part of the dependencies by default. It should be
- * included explicitly when it is needed.
- *
- * @param factory a controller factory
- * @param dependencies array of hook dependencies to recreate the controller.
- */
-export function useController<T extends Controller<Record<string, any>>>(
-  factory: () => T,
-  dependencies: unknown[] = EMPTY_DEPENDENCIES,
-): T {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const controller = useMemo(factory, dependencies);
-  useEffect(() => () => controller.destroy(), [controller]);
+export function useController<
+  TContext extends BaseControllerContext,
+  TService extends BaseService,
+>(declaration: ControllerDeclaration<TContext, TService>): TService;
 
-  return controller;
+export function useController<
+  TContext extends BaseControllerContext,
+  TService extends BaseService,
+  TProps extends TContext extends ViewControllerContext<infer InferredProps>
+    ? InferredProps
+    : never,
+>(
+  declaration: ControllerDeclaration<TContext, TService>,
+  props: TProps,
+): TService;
+
+export function useController<
+  TContext extends BaseControllerContext,
+  TService extends BaseService,
+  TProps extends TContext extends ViewControllerContext<infer InferredProps>
+    ? InferredProps
+    : undefined,
+>(
+  declaration: ControllerDeclaration<TContext, TService>,
+  props?: TProps,
+): TService {
+  type ViewProxyProps = TProps extends undefined
+    ? Record<string, never>
+    : TProps;
+
+  type HookContext = {
+    controller: Controller<TService>;
+    view: ViewProxy<ViewProxyProps>;
+  };
+
+  const extensionParamsProviders = useNrgyReactExtensionContext();
+
+  const hookContextRef = useRef<HookContext>();
+  const isMountedRef = useRef(false);
+
+  if (!hookContextRef.current) {
+    const view = createViewProxy<ViewProxyProps>(
+      (props ?? {}) as ViewProxyProps,
+    );
+
+    const extensionParams = withExtensionParams(
+      provideView(view),
+      ...extensionParamsProviders,
+    );
+    const controller = createController(declaration, extensionParams);
+
+    hookContextRef.current = { controller, view };
+  }
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      hookContextRef.current?.view.update(props);
+    }
+  }, [props]);
+
+  useEffect(() => {
+    hookContextRef.current?.view.mount();
+    isMountedRef.current = true;
+
+    return () => {
+      hookContextRef.current?.view?.unmount();
+      hookContextRef.current?.controller?.destroy();
+    };
+  }, []);
+
+  return hookContextRef.current!.controller;
 }

@@ -77,7 +77,10 @@ export const objectEquals: ValueEqualityFn<
 
   for (let i = 0; i < keysA.length; i++) {
     const key = keysA[i];
-    if (!hasOwnProperty.call(objB, key) || objA[key] !== objB[key]) {
+    if (
+      !hasOwnProperty.call(objB, key) ||
+      !defaultEquals(objA[key], objB[key])
+    ) {
       return false;
     }
   }

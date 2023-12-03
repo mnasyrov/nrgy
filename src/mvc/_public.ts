@@ -1,9 +1,32 @@
-export type { Controller, ControllerFactory } from './controller';
-export { createController } from './controller';
+export type {
+  BaseControllerContext,
+  BaseService,
+  Controller,
+  ControllerDeclaration,
+  ControllerFactory,
+  ExtensionFn,
+  ExtensionParams,
+  ExtensionParamsProvider,
+  InferredService,
+} from './controller';
 
-export { declareController } from './declareController';
+export {
+  ControllerConstructorError,
+  createController,
+  declareController,
+  withExtensionParams,
+} from './controller';
 
-export type { ViewControllerFactory } from './declareViewController';
-export { declareViewController } from './declareViewController';
+export type { ControllerCompositionContext } from './withControllers';
 
-export type { InferredService } from './utilityTypes';
+export { withControllers } from './withControllers';
+
+export type {
+  ViewBinding,
+  ViewControllerContext,
+  ViewPropAtoms,
+  ViewProps,
+  ViewProxy,
+} from './withView';
+
+export { createViewProxy, viewProps, withView, provideView } from './withView';
