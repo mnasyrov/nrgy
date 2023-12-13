@@ -1,6 +1,6 @@
 {
   "name": "nrgy",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Reactive state and effect management",
   "license": "MIT",
   "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
