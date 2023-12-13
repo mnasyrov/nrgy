@@ -1,23 +1,33 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
-import { useStore } from '../src/react/_public';
-import { declareStateUpdates } from '../src/rx-effects/_public';
+import { declareController } from '../src/core/mvc/_public';
+import { declareStore } from '../src/core/store/_public';
+import { useAtom } from '../src/react/_public';
+import { useController } from '../src/react/useController';
 
-const COUNTER_STATE = 0;
+const CounterStore = declareStore({
+  initialState: 0,
+  updates: {
+    increment: () => (state) => state + 1,
+    decrement: () => (state) => state - 1,
+  },
+});
 
-const COUNTER_UPDATES = declareStateUpdates<number>()({
-  decrement: () => (state) => state - 1,
-  increment: () => (state) => state + 1,
+const CounterController = declareController(({ scope }) => {
+  const store = scope.add(new CounterStore());
+
+  return { value: store.asReadonly(), updates: store.updates };
 });
 
 export const App: FC = () => {
-  const [counter, counterUpdates] = useStore(COUNTER_STATE, COUNTER_UPDATES);
+  const store = useController(CounterController);
+  const value = useAtom(store.value);
 
   return (
     <div>
-      <button onClick={() => counterUpdates.decrement()}>-</button>
-      <span>{counter}</span>
-      <button onClick={() => counterUpdates.increment()}>+</button>
+      <button onClick={() => store.updates.decrement()}>-</button>
+      <span>{value}</span>
+      <button onClick={() => store.updates.increment()}>+</button>
     </div>
   );
 };

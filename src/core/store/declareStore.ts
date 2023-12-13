@@ -21,6 +21,11 @@ export type StoreFactory<State, Updates extends StateUpdates<State>> = {
     options?: AtomOptions<State>,
   ): Store<State, Updates>;
 
+  new (
+    initialState?: FactoryStateArg<State>,
+    options?: AtomOptions<State>,
+  ): Store<State, Updates>;
+
   readonly initialState: State;
   readonly updates: Updates;
 };
@@ -115,5 +120,7 @@ export function declareStore<
     return store;
   }
 
-  return Object.assign(factory, { initialState, updates });
+  Object.assign(factory, { initialState, updates });
+
+  return factory as StoreFactory<State, Updates>;
 }

@@ -60,7 +60,6 @@ export interface ControllerDeclaration<
   TService extends BaseService,
 > {
   (
-    this: never,
     context?: Omit<TContext, 'scope'>,
     extensionParams?: ExtensionParams,
   ): Controller<TService>;
