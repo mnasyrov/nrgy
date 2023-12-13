@@ -2,19 +2,24 @@ import { defineConfig } from 'tsup';
 
 import pkg from './package.json';
 
-export default defineConfig({
-  entry: {
-    // Core libs
-    core: 'src/core/_public.ts',
-    mvc: 'src/core/mvc/_public.ts',
-    store: 'src/core/store/_public.ts',
+const entries = [
+  // Core libs
+  { entry: 'core', source: 'src/core' },
+  { entry: 'mvc', source: 'src/core/mvc' },
+  { entry: 'store', source: 'src/core/store' },
 
-    // Extensions
-    react: 'src/react/_public.ts',
-    'rx-effects': 'src/rx-effects/_public.ts',
-    rxjs: 'src/rxjs/_public.ts',
-    'rxjs-react': 'src/rxjs-react/_public.ts',
-  },
+  // Extensions
+  { entry: 'react', source: 'src/react' },
+  { entry: 'rx-effects', source: 'src/rx-effects' },
+  { entry: 'rxjs', source: 'src/rxjs' },
+  { entry: 'rxjs-react', source: 'src/rxjs-react' },
+];
+
+export default defineConfig({
+  entry: entries.reduce(
+    (obj, { entry, source }) => ({ ...obj, [entry]: `${source}/_public.ts` }),
+    {},
+  ),
   clean: true,
   dts: true,
   format: ['cjs', 'esm'],
