@@ -1,8 +1,5 @@
-import { atom } from '../core/atom';
-import { objectEquals } from '../core/common';
-import { compute } from '../core/compute';
-import { effect } from '../core/effect';
-import { collectChanges, flushMicrotasks } from '../test/testUtils';
+import { collectChanges, flushMicrotasks } from '../../test/testUtils';
+import { atom, compute, effect, objectEquals } from '../_public';
 
 import {
   createStore,
