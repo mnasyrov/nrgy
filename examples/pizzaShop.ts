@@ -1,12 +1,12 @@
 import { delay, firstValueFrom, of } from 'rxjs';
 
 import { Atom, compute, createScope, signal } from '../src/core/_public';
-import { Controller } from '../src/core/mvc/_public';
 import {
   futureOperation,
   FutureResult,
-} from '../src/core/tools/futureOperation';
-import { declareStore } from '../src/store/_public';
+} from '../src/core/futures/futureOperation';
+import { Controller } from '../src/core/mvc/_public';
+import { declareStore } from '../src/core/store/_public';
 
 // The state and a factory for the store
 type CartState = Readonly<{ orders: Array<string> }>;

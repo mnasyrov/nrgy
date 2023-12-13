@@ -8,8 +8,12 @@ export type FutureResult<Value, Error = unknown> =
   | { readonly type: 'success'; readonly value: Value }
   | { readonly type: 'error'; readonly error: Error };
 
-export const FR_INITIAL: FutureResult<never, never> = { type: 'initial' };
-export const FR_PENDING: FutureResult<never, never> = { type: 'pending' };
+export const FUTURE_RESULT_INITIAL: FutureResult<never, never> = {
+  type: 'initial',
+};
+export const FUTURE_RESULT_PENDING: FutureResult<never, never> = {
+  type: 'pending',
+};
 
 export type FutureOperation<Event, Result, Error = unknown> = {
   (event: Event): Atom<FutureResult<Result, Error>>;
@@ -28,7 +32,7 @@ export function futureOperation<Event, Result, Error = unknown>(
   const pending = compute(() => pendingCount() > 0);
 
   const fn = (event: Event) => {
-    const state = atom<FutureResult<Result, Error>>(FR_PENDING);
+    const state = atom<FutureResult<Result, Error>>(FUTURE_RESULT_PENDING);
 
     pendingCount.update(increaseCount);
 
