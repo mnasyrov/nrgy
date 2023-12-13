@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react';
 
-import { ExtensionParamsProvider } from '../mvc/_public';
+import { ExtensionParamsProvider } from '../core/mvc/_public';
 
 type NrgyReactExtensionContextType = ReadonlyArray<ExtensionParamsProvider>;
 

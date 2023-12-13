@@ -6,7 +6,7 @@ import {
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,
-} from '../mvc/_public';
+} from '../core/mvc/_public';
 
 const DITOX_EXTENSION_CONTAINER_KEY = 'ditox.container';
 

@@ -11,7 +11,7 @@ import {
   ViewControllerContext,
   ViewProxy,
   withExtensionParams,
-} from '../mvc/_public';
+} from '../core/mvc/_public';
 
 import { useNrgyReactExtensionContext } from './NrgyReactExtension';
 

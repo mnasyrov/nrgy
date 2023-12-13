@@ -4,7 +4,7 @@ import {
   createController,
   declareController,
   withExtensionParams,
-} from '../mvc/_public';
+} from '../core/mvc/_public';
 
 import { provideDependencyContainer, withInjections } from './withInjections';
 

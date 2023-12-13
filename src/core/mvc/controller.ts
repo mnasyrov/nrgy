@@ -1,5 +1,5 @@
-import { createScope, Scope } from '../core/_public';
-import type { AnyObject } from '../core/common';
+import { createScope, Scope } from '../_public';
+import type { AnyObject } from '../common';
 
 /**
  * Effects and business logic controller.

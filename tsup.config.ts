@@ -5,7 +5,7 @@ import pkg from './package.json';
 export default defineConfig({
   entry: {
     core: 'src/core/_public.ts',
-    mvc: 'src/mvc/_public.ts',
+    mvc: 'src/core/mvc/_public.ts',
     react: 'src/react/_public.ts',
     'rx-effects': 'src/rx-effects/_public.ts',
     rxjs: 'src/rxjs/_public.ts',

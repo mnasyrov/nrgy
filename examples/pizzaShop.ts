@@ -1,11 +1,11 @@
 import { delay, firstValueFrom, of } from 'rxjs';
 
 import { Atom, compute, createScope, signal } from '../src/core/_public';
+import { Controller } from '../src/core/mvc/_public';
 import {
   futureOperation,
   FutureResult,
 } from '../src/core/tools/futureOperation';
-import { Controller } from '../src/mvc/_public';
 import { declareStore } from '../src/store/_public';
 
 // The state and a factory for the store
