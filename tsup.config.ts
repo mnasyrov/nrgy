@@ -9,6 +9,8 @@ const entries = [
   { entry: 'store', source: 'src/core/store' },
 
   // Extensions
+  { entry: 'ditox', source: 'src/ditox' },
+  { entry: 'ditox-react', source: 'src/ditox-react' },
   { entry: 'react', source: 'src/react' },
   { entry: 'rx-effects', source: 'src/rx-effects' },
   { entry: 'rxjs', source: 'src/rxjs' },

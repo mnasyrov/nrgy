@@ -28,6 +28,18 @@
       "require": "./dist/mvc.cjs",
       "default": "./dist/mvc.js"
     },
+    "./store": {
+      "require": "./dist/store.cjs",
+      "default": "./dist/store.js"
+    },
+    "./ditox": {
+      "require": "./dist/ditox.cjs",
+      "default": "./dist/ditox.js"
+    },
+    "./ditox-react": {
+      "require": "./dist/ditox-react.cjs",
+      "default": "./dist/ditox-react.js"
+    },
     "./react": {
       "require": "./dist/react.cjs",
       "default": "./dist/react.js"
@@ -43,10 +55,6 @@
     "./rxjs-react": {
       "require": "./dist/rxjs-react.cjs",
       "default": "./dist/rxjs-react.js"
-    },
-    "./store": {
-      "require": "./dist/store.cjs",
-      "default": "./dist/store.js"
     }
   },
   "scripts": {
