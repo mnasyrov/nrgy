@@ -25,14 +25,6 @@ export type ViewBinding<TProps extends ViewProps> = {
   readonly onUnmount: Signal<void>;
 };
 
-type W = { value: number };
-type PW = Partial<W>;
-const a: PW = {};
-
-if (a.value !== undefined) {
-  a.value;
-}
-
 export type ViewProxy<TProps extends ViewProps> = ViewBinding<TProps> & {
   readonly mount: () => void;
   readonly update: (props?: Partial<TProps>) => void;

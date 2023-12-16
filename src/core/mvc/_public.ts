@@ -4,6 +4,7 @@ export type {
   Controller,
   ControllerDeclaration,
   ControllerFactory,
+  ControllerParams,
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,
@@ -12,7 +13,6 @@ export type {
 
 export {
   ControllerConstructorError,
-  createController,
   declareController,
   withExtensionParams,
 } from './controller';

@@ -1,5 +1,6 @@
 import { createScope, Scope } from '../_public';
-import type { AnyObject } from '../common';
+
+export type BaseService = object | ((...args: any[]) => any);
 
 /**
  * Effects and business logic controller.
@@ -14,26 +15,20 @@ import type { AnyObject } from '../common';
  * }>;
  * ```
  */
-export type Controller<Props extends AnyObject = AnyObject> = Props & {
+export type Controller<TService extends BaseService> = TService & {
   /** Dispose the controller and clean its resources */
   destroy: () => void;
 };
-
-export type BaseControllerContext = { scope: Scope };
-
-type PartialControllerContext<T extends BaseControllerContext> = Omit<
-  T,
-  'scope'
-> & {
-  scope?: Scope;
-};
-
-export type BaseService = object | ((...args: any[]) => any);
 
 type PartialController<TService extends BaseService> = TService & {
   /** Dispose the controller and clean its resources */
   destroy?: () => void;
 };
+
+export type ControllerParams = Record<string, any>;
+export type ExtensionParams = Record<string, any>;
+
+export type BaseControllerContext = { scope: Scope; params?: unknown };
 
 /**
  * An error thrown when a controller is failed to be created
@@ -45,8 +40,6 @@ export class ControllerConstructorError extends Error {
   }
 }
 
-export type ExtensionParams = Record<string, any>;
-
 export type ExtensionFn<
   TSourceContext extends BaseControllerContext,
   TResultContext extends TSourceContext,
@@ -55,22 +48,36 @@ export type ExtensionFn<
   extensionParams?: ExtensionParams,
 ) => TResultContext;
 
-export interface ControllerDeclaration<
+export type ControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-> {
-  (
-    context?: Omit<TContext, 'scope'>,
-    extensionParams?: ExtensionParams,
-  ): Controller<TService>;
+> = TContext extends { params: infer TParams }
+  ? {
+      (
+        params: TParams,
+        extensionParams?: ExtensionParams,
+      ): Controller<TService>;
+      new (
+        params: TParams,
+        extensionParams?: ExtensionParams,
+      ): Controller<TService>;
 
-  new (
-    context?: Omit<TContext, 'scope'>,
-    extensionParams?: ExtensionParams,
-  ): Controller<TService>;
+      /** @internal Keep the type for inference */
+      _contextType?: TContext;
+    }
+  : {
+      (
+        params?: undefined,
+        extensionParams?: ExtensionParams,
+      ): Controller<TService>;
+      new (
+        params?: undefined,
+        extensionParams?: ExtensionParams,
+      ): Controller<TService>;
 
-  readonly extensions: ReadonlyArray<ExtensionFn<any, any>>;
-}
+      /** @internal Keep the type for inference */
+      _contextType?: TContext;
+    };
 
 export type InferredService<
   TDeclaration extends ControllerDeclaration<
@@ -128,12 +135,20 @@ function createBaseControllerDeclaration<TService extends BaseService>(
 }
 
 type DeclareControllerFn = typeof createBaseControllerDeclaration & {
+  params: <TParams extends ControllerParams>() => Builder<
+    BaseControllerContext & { params: TParams }
+  >;
+
   extend: Builder<BaseControllerContext>['extend'];
 };
 
 export const declareController: DeclareControllerFn = Object.assign(
   createBaseControllerDeclaration,
   {
+    params<TParams extends ControllerParams>() {
+      return createBuilder<BaseControllerContext & { params: TParams }>([]);
+    },
+
     extend<TResultContext extends BaseControllerContext>(
       extension: ExtensionFn<BaseControllerContext, TResultContext>,
     ) {
@@ -150,13 +165,16 @@ function createControllerDeclaration<
   extensions: ExtensionFn<any, any>[],
 ): ControllerDeclaration<TContext, TService> {
   function constructorFn(
-    this: unknown,
-    partialContext?: PartialControllerContext<TContext>,
+    params: TContext['params'],
+    extensionParams?: ExtensionParams,
   ): Controller<TService> {
-    return controllerConstructor<TContext, TService>(factory, partialContext);
+    return controllerConstructor<TContext, TService>(
+      factory,
+      params,
+      extensions,
+      extensionParams,
+    );
   }
-
-  constructorFn.extensions = extensions;
 
   return constructorFn as unknown as ControllerDeclaration<TContext, TService>;
 }
@@ -166,17 +184,17 @@ function controllerConstructor<
   TService extends BaseService,
 >(
   factory: ControllerFactory<TContext, TService>,
-  partialContext: undefined | PartialControllerContext<TContext>,
+  params: TContext['params'],
+  extensions: ReadonlyArray<ExtensionFn<any, any>>,
+  extensionParams?: ExtensionParams,
 ): Controller<TService> {
-  const context = (
-    partialContext
-      ? partialContext.scope
-        ? partialContext
-        : { ...partialContext, scope: createScope() }
-      : { scope: createScope() }
-  ) as TContext;
+  const scope = createScope();
+  const baseContext: BaseControllerContext = { scope, params: params ?? {} };
 
-  const scope = context.scope;
+  const context: TContext = extensions.reduce(
+    (prevContext, extension) => extension(prevContext, extensionParams),
+    baseContext,
+  ) as TContext;
 
   const result = factory(context) ?? { destroy: undefined };
 
@@ -188,37 +206,6 @@ function controllerConstructor<
   return Object.assign(result, {
     destroy: () => scope.destroy(),
   });
-}
-
-export function createController<
-  TContext extends BaseControllerContext,
-  TService extends BaseService,
->(declaration: ControllerDeclaration<TContext, TService>): Controller<TService>;
-
-export function createController<
-  TContext extends BaseControllerContext,
-  TService extends BaseService,
->(
-  declaration: ControllerDeclaration<TContext, TService>,
-  extensionParams?: ExtensionParams,
-): Controller<TService>;
-
-export function createController<
-  TContext extends BaseControllerContext,
-  TService extends BaseService,
->(
-  declaration: ControllerDeclaration<TContext, TService>,
-  extensionParams?: ExtensionParams,
-): Controller<TService> {
-  const scope = createScope();
-  const baseContext: BaseControllerContext = { scope };
-
-  const context: TContext = declaration.extensions.reduce(
-    (prevContext, extension) => extension(prevContext, extensionParams),
-    baseContext,
-  ) as TContext;
-
-  return controllerConstructor<TContext, TService>(declaration, context);
 }
 
 export type ExtensionParamsProvider = (

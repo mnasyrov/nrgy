@@ -1,10 +1,6 @@
 import { createContainer, token } from 'ditox';
 
-import {
-  createController,
-  declareController,
-  withExtensionParams,
-} from '../core/mvc/_public';
+import { declareController, withExtensionParams } from '../core/mvc/_public';
 
 import { provideDependencyContainer, withInjections } from './withInjections';
 
@@ -21,8 +17,8 @@ describe('withInjections()', () => {
     const container = createContainer();
     container.bindValue(VALUE_TOKEN, 1);
 
-    const controller = createController(
-      TestController,
+    const controller = new TestController(
+      undefined,
       withExtensionParams(provideDependencyContainer(container)),
     );
     expect(controller.value).toBe(1);

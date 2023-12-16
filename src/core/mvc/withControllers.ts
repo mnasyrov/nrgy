@@ -1,7 +1,6 @@
 import {
   BaseControllerContext,
   ControllerDeclaration,
-  createController,
   ExtensionFn,
   InferredService,
 } from './controller';
@@ -34,9 +33,7 @@ export function withControllers<
     const { scope } = sourceContext;
 
     const entries = Object.entries(declarations).map(([key, declaration]) => {
-      const controller = scope.add(
-        createController(declaration, extensionParams),
-      );
+      const controller = scope.add(declaration(undefined, extensionParams));
 
       return [key, controller];
     });

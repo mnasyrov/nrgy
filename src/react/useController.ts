@@ -5,7 +5,6 @@ import {
   BaseService,
   Controller,
   ControllerDeclaration,
-  createController,
   createViewProxy,
   provideView,
   ViewControllerContext,
@@ -64,7 +63,7 @@ export function useController<
       provideView(view),
       ...extensionParamsProviders,
     );
-    const controller = createController(declaration, extensionParams);
+    const controller = declaration(undefined, extensionParams);
 
     hookContextRef.current = { controller, view };
   }

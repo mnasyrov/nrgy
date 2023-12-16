@@ -1,6 +1,6 @@
 import { compute } from '../_public';
 
-import { createController, declareController } from './controller';
+import { declareController } from './controller';
 import { withControllers } from './withControllers';
 
 describe('withControllers()', () => {
@@ -28,7 +28,7 @@ describe('withControllers()', () => {
         };
       });
 
-    const controller = createController(TestController);
+    const controller = TestController();
     expect(controller.result()).toBe(1);
 
     controller.incrementStep();

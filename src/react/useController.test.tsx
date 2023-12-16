@@ -124,7 +124,7 @@ describe('useController() and withView() extension', () => {
   it('should not recreate the controller if a dependency is changed', () => {
     const destroy = jest.fn();
 
-    const VestController = declareController
+    const ViewController = declareController
       .extend(withView(viewProps<{ value: number }>()))
       .apply(({ view }) => ({
         value: view.props.value,
@@ -132,7 +132,7 @@ describe('useController() and withView() extension', () => {
       }));
 
     const { result, rerender, unmount } = renderHook(
-      ({ value }) => useController(VestController, { value }),
+      ({ value }) => useController(ViewController, { value }),
       { initialProps: { value: 1 } },
     );
 

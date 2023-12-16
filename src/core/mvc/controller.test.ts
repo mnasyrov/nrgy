@@ -1,6 +1,7 @@
+import { compute } from '../_public';
+
 import {
   BaseControllerContext,
-  createController,
   declareController,
   ExtensionFn,
   ExtensionParams,
@@ -90,17 +91,28 @@ describe('declareController()', () => {
     expect(controller.value()).toBe(1);
   });
 
-  it('should declare a controller with a simple extension', () => {
-    function withInitialValue(initialValue: number) {
-      return (context: BaseControllerContext) => ({ ...context, initialValue });
-    }
-
+  it('should declare a simple controller with parameters', () => {
     const TestController = declareController
-      .extend(withInitialValue(2))
-      .apply(({ scope, initialValue }) => scope.atom(initialValue));
+      .params<{ a: number; b: number }>()
+      .apply(({ scope, params }) => {
+        const { a, b } = params;
 
-    const controller = new TestController({ initialValue: 3 });
-    expect(controller()).toBe(3);
+        const x = scope.atom(0);
+
+        return {
+          x,
+          y: compute(() => a * x() + b),
+        };
+      });
+
+    const controller = new TestController({ a: 2, b: 3 });
+    expect(controller.y()).toBe(3);
+
+    controller.x.set(1);
+    expect(controller.y()).toBe(5);
+
+    controller.x.set(2);
+    expect(controller.y()).toBe(7);
   });
 
   it('should supplement a controller with an extension', () => {
@@ -112,7 +124,7 @@ describe('declareController()', () => {
       .extend(withInitialValue(2))
       .apply(({ scope, initialValue }) => scope.atom(initialValue));
 
-    const controller = createController(TestController);
+    const controller = new TestController();
     expect(controller()).toBe(2);
   });
 
@@ -128,6 +140,7 @@ describe('declareController()', () => {
       .extend(withEnvValue('a'))
       .apply(({ value }) => ({ value }));
 
-    expect(createController(TestController, { a: 3 }).value).toBe(3);
+    const controller = new TestController(undefined, { a: 3 });
+    expect(controller.value).toBe(3);
   });
 });
