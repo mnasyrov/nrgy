@@ -15,10 +15,11 @@ export type BaseService = object | ((...args: any[]) => any);
  * }>;
  * ```
  */
-export type Controller<TService extends BaseService> = TService & {
-  /** Dispose the controller and clean its resources */
-  destroy: () => void;
-};
+export type Controller<TService extends BaseService = BaseService> =
+  TService & {
+    /** Dispose the controller and clean its resources */
+    destroy: () => void;
+  };
 
 type PartialController<TService extends BaseService> = TService & {
   /** Dispose the controller and clean its resources */
