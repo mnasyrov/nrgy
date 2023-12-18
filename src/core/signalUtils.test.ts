@@ -1,4 +1,4 @@
-import { keepLastValue, signal } from './_public';
+import { keepLastValue, signal } from './index';
 
 describe('keepSignalValue()', () => {
   it('should return an atom which remembers the last emitter value', () => {

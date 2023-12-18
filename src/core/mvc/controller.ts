@@ -1,4 +1,4 @@
-import { createScope, Scope } from '../_public';
+import { createScope, Scope } from '../index';
 
 export type BaseService = object | ((...args: any[]) => any);
 

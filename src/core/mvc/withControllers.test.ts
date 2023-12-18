@@ -1,4 +1,4 @@
-import { compute } from '../_public';
+import { compute } from '../index';
 
 import { declareController } from './controller';
 import { withControllers } from './withControllers';

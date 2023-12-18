@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Atom, effect } from '../core/_public';
+import { Atom, effect } from '../core';
 
 /**
  * Returns a value which is provided by the atom.

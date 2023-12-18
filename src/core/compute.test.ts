@@ -1,4 +1,4 @@
-import { observe } from '../rxjs/_public';
+import { observe } from '../rxjs';
 import {
   collectChanges,
   collectHistory,

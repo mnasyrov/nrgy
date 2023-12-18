@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { atom } from '../core/_public';
+import { atom } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { useAtom } from './useAtom';

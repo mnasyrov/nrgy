@@ -1,6 +1,6 @@
 import React, { FC, useEffect } from 'react';
 
-import { useConst, useObservable, useQuery } from '../src/react/_public';
+import { useConst, useObservable, useQuery } from '../src/react';
 
 import { createPizzaShopController } from './pizzaShop';
 

@@ -9,7 +9,7 @@ import {
   provideView,
   ViewProxy,
   withExtensionParams,
-} from '../core/mvc/_public';
+} from '../core/mvc';
 import { InferViewControllerProps } from '../core/mvc/withView';
 
 import { useNrgyReactExtensionContext } from './NrgyReactExtension';

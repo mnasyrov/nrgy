@@ -1,4 +1,4 @@
-import { compute } from '../_public';
+import { compute } from '../index';
 
 import { declareController, withExtensionParams } from './controller';
 import { createViewProxy, provideView, viewProps, withView } from './withView';

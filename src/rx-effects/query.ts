@@ -3,7 +3,7 @@ import { skip } from 'rxjs';
 
 import { AtomObservable } from '../core/atomSubject';
 import { Atom } from '../core/common';
-import { fromObservable, observe } from '../rxjs/_public';
+import { fromObservable, observe } from '../rxjs';
 
 export type AtomQuery<T> = Query<T> & {
   readonly source: Atom<T>;

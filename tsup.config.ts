@@ -19,7 +19,7 @@ const entries = [
 
 export default defineConfig({
   entry: entries.reduce(
-    (obj, { entry, source }) => ({ ...obj, [entry]: `${source}/_public.ts` }),
+    (obj, { entry, source }) => ({ ...obj, [entry]: `${source}/index.ts` }),
     {},
   ),
   clean: true,

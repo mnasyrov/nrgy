@@ -4,8 +4,8 @@ import { renderHook } from '@testing-library/react';
 import { Container, token } from 'ditox';
 import { DependencyContainer } from 'ditox-react';
 
-import { declareController } from '../core/mvc/_public';
-import { withInjections } from '../ditox/_public';
+import { declareController } from '../core/mvc';
+import { withInjections } from '../ditox';
 import { useController } from '../react/useController';
 
 import { DitoxNrgyReactExtension } from './DitoxNrgyReactExtension';

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { Observable } from 'rxjs';
 
-import { defaultEquals } from '../core/_public';
+import { defaultEquals } from '../core';
 
 /**
  * Returns a value provided by `source$`.

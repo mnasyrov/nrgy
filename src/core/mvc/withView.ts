@@ -1,4 +1,4 @@
-import { atom, Atom, signal, Signal, WritableAtom } from '../_public';
+import { atom, Atom, signal, Signal, WritableAtom } from '../index';
 
 import {
   BaseControllerContext,

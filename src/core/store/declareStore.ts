@@ -1,4 +1,4 @@
-import { AtomOptions } from '../_public';
+import { AtomOptions } from '../index';
 
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
