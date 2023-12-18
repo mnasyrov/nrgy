@@ -26,10 +26,20 @@ type PartialController<TService extends BaseService> = TService & {
   destroy?: () => void;
 };
 
-export type ControllerParams = Record<string, any>;
+export type ControllerParams = Record<string, unknown>;
 export type ExtensionParams = Record<string, any>;
 
 export type BaseControllerContext = { scope: Scope; params?: unknown };
+
+export type ControllerParamsContext<TParams extends ControllerParams> =
+  BaseControllerContext & { params: TParams };
+
+export type InferContextParams<
+  TContext extends BaseControllerContext,
+  ElseType,
+> = TContext extends ControllerParamsContext<infer InferredParams>
+  ? InferredParams
+  : ElseType;
 
 /**
  * An error thrown when a controller is failed to be created
@@ -137,7 +147,7 @@ function createBaseControllerDeclaration<TService extends BaseService>(
 
 type DeclareControllerFn = typeof createBaseControllerDeclaration & {
   params: <TParams extends ControllerParams>() => Builder<
-    BaseControllerContext & { params: TParams }
+    ControllerParamsContext<TParams>
   >;
 
   extend: Builder<BaseControllerContext>['extend'];
@@ -147,7 +157,7 @@ export const declareController: DeclareControllerFn = Object.assign(
   createBaseControllerDeclaration,
   {
     params<TParams extends ControllerParams>() {
-      return createBuilder<BaseControllerContext & { params: TParams }>([]);
+      return createBuilder<ControllerParamsContext<TParams>>([]);
     },
 
     extend<TResultContext extends BaseControllerContext>(

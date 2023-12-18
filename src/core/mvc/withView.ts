@@ -9,9 +9,7 @@ import {
 
 const NRGY_EXTENSION_VIEW_KEY = 'nrgy.view';
 
-export type ViewProps = {
-  [key: string]: unknown;
-};
+export type ViewProps = Record<string, unknown>;
 
 export type ViewPropAtoms<TProps extends ViewProps> = Readonly<{
   [K in keyof TProps]: Atom<TProps[K]>;
@@ -37,6 +35,13 @@ export function viewProps<TProps extends ViewProps>(): TProps | undefined {
 
 export type ViewControllerContext<TProps extends ViewProps> =
   BaseControllerContext & { view: ViewBinding<TProps> };
+
+export type InferViewControllerProps<
+  TContext extends BaseControllerContext,
+  ElseType,
+> = TContext extends ViewControllerContext<infer InferredProps>
+  ? InferredProps
+  : ElseType;
 
 /**
  * This extension provides a view presentation to the controller.

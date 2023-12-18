@@ -5,6 +5,7 @@ export type {
   ControllerDeclaration,
   ControllerFactory,
   ControllerParams,
+  ControllerParamsContext,
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,

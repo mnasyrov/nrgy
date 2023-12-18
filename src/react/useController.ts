@@ -7,10 +7,10 @@ import {
   ControllerDeclaration,
   createViewProxy,
   provideView,
-  ViewControllerContext,
   ViewProxy,
   withExtensionParams,
 } from '../core/mvc/_public';
+import { InferViewControllerProps } from '../core/mvc/withView';
 
 import { useNrgyReactExtensionContext } from './NrgyReactExtension';
 
@@ -22,9 +22,7 @@ export function useController<
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-  TProps extends TContext extends ViewControllerContext<infer InferredProps>
-    ? InferredProps
-    : never,
+  TProps extends InferViewControllerProps<TContext, never>,
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   props: TProps,
@@ -33,9 +31,7 @@ export function useController<
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-  TProps extends TContext extends ViewControllerContext<infer InferredProps>
-    ? InferredProps
-    : undefined,
+  TProps extends InferViewControllerProps<TContext, undefined>,
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   props?: TProps,
@@ -63,7 +59,7 @@ export function useController<
       provideView(view),
       ...extensionParamsProviders,
     );
-    const controller = declaration(undefined, extensionParams);
+    const controller = declaration(props, extensionParams);
 
     hookContextRef.current = { controller, view };
   }
