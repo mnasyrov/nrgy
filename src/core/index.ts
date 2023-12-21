@@ -7,6 +7,8 @@ export { defaultEquals, objectEquals } from './common';
 export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';
 
+export { mapAtom, mergeAtoms } from './computeUtils';
+
 export type { EffectFn, EffectSubscription } from './effect';
 export { effect, syncEffect } from './effect';
 
