@@ -1,7 +1,8 @@
 import { compute } from '../index';
 
-import { declareController } from './controller';
+import { declareController, withExtensionParams } from './controller';
 import { withControllers } from './withControllers';
+import { createViewProxy, provideView, viewProps, withView } from './withView';
 
 describe('withControllers()', () => {
   it('should construct and provides child controllers', () => {
@@ -33,5 +34,40 @@ describe('withControllers()', () => {
 
     controller.incrementStep();
     expect(controller.result()).toBe(2);
+  });
+
+  it('should share the same context to child controllers', () => {
+    type TestProps = { a: number };
+
+    const StepController = declareController
+      .extend(withView(viewProps<TestProps>()))
+      .apply(({ view }) => {
+        const result = view.props.a;
+
+        return { result };
+      });
+
+    const TestController = declareController
+      .extend(withView(viewProps<TestProps>()))
+      .extend(withControllers({ stepController: StepController }))
+      .apply(({ controllers, view }) => {
+        const { stepController } = controllers;
+        const { a } = view.props;
+
+        const result = compute(() => a() * stepController.result());
+
+        return { result };
+      });
+
+    const testView = createViewProxy<TestProps>({ a: 2 });
+
+    const controller = TestController(
+      undefined,
+      withExtensionParams(provideView(testView)),
+    );
+    expect(controller.result()).toBe(4);
+
+    testView.update({ a: 3 });
+    expect(controller.result()).toBe(9);
   });
 });

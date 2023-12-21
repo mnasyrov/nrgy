@@ -21,7 +21,7 @@ export type ControllerCompositionContext<
 export function withControllers<
   TSourceContext extends BaseControllerContext,
   TDeclarations extends {
-    [key: string]: ControllerDeclaration<any, any>;
+    [key: string]: ControllerDeclaration<TSourceContext, any>;
   },
 >(
   declarations: TDeclarations,
