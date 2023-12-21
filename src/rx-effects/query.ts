@@ -1,9 +1,20 @@
-import { Query } from 'rx-effects';
-import { skip } from 'rxjs';
+import { Observable, skip } from 'rxjs';
 
-import { AtomObservable } from '../core/atomSubject';
-import { Atom } from '../core/common';
+import { Atom, AtomObservable } from '../core';
 import { fromObservable, observe } from '../rxjs';
+
+// NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
+
+/**
+ * Provider for a value of a state.
+ */
+type Query<T> = Readonly<{
+  /** Returns the value of a state */
+  get: () => T;
+
+  /** `Observable` for value changes.  */
+  value$: Observable<T>;
+}>;
 
 export type AtomQuery<T> = Query<T> & {
   readonly source: Atom<T>;
