@@ -1,24 +1,32 @@
-import React, { FC, useEffect } from 'react';
+import { FC, useState } from 'react';
 
-import { useConst, useObservable, useQuery } from '../src/react';
+import {
+  FUTURE_RESULT_INITIAL,
+  FutureResult,
+} from '../src/core/futures/futureOperation';
+import { useAtom, useController } from '../src/react';
 
-import { createPizzaShopController } from './pizzaShop';
+import { PizzaShopController } from './pizzaShop';
 
 export const PizzaShopComponent: FC = () => {
-  // Creates the controller and destroy it on unmounting the component
-  const controller = useConst(() => createPizzaShopController());
-  useEffect(() => controller.destroy, [controller]);
-
-  // The same creation can be achieved by using `useController()` helper:
-  // const controller = useController(createPizzaShopController);
+  const controller = useController(PizzaShopController);
 
   // Using the controller
-  const { orders, addPizza, removePizza, submitCart, submitState } = controller;
+  const { orders, addPizza, removePizza, submitCart } = controller;
 
   // Subscribing to state data and the effect stata
-  const orders = useQuery(orders);
-  const isPending = useQuery(submitState.pending);
-  const submitError = useObservable(submitState.error$, undefined);
+  const ordersValue = useAtom(orders);
+  const [submitState, setSubmitState] = useState<FutureResult<Array<string>>>(
+    FUTURE_RESULT_INITIAL,
+  );
+
+  const isPending = submitState.type === 'initial';
+  const isError = submitState.type === 'error';
+
+  function submitForm() {
+    const state = submitCart();
+    setSubmitState(state);
+  }
 
   return (
     <>
@@ -43,7 +51,7 @@ export const PizzaShopComponent: FC = () => {
 
       <h2>Cart</h2>
       <ul>
-        {orders.map((name) => (
+        {ordersValue.map((name) => (
           <li>
             {name}
             <button disabled={isPending} onClick={() => removePizza(name)}>
@@ -53,11 +61,14 @@ export const PizzaShopComponent: FC = () => {
         ))}
       </ul>
 
-      <button disabled={isPending || orders.length === 0} onClick={submitCart}>
+      <button
+        disabled={isPending || ordersValue.length === 0}
+        onClick={submitForm}
+      >
         Submit
       </button>
 
-      {submitError && <div>Failed to submit the cart</div>}
+      {isError && <div>Failed to submit the cart</div>}
     </>
   );
 };

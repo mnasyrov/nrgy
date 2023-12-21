@@ -2,8 +2,7 @@ import { FC } from 'react';
 
 import { declareController } from '../src/core/mvc';
 import { declareStore } from '../src/core/store';
-import { useAtom } from '../src/react';
-import { useController } from '../src/react/useController';
+import { useAtom, useController } from '../src/react';
 
 const CounterStore = declareStore({
   initialState: 0,
