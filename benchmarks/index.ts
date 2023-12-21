@@ -1,7 +1,7 @@
 import * as REF_CORE from 'nrgy-reference';
 import { Bench } from 'tinybench';
 
-import * as DEV_CORE from '../dist/core';
+import * as DEV_CORE from '../dist';
 import { createLatch } from '../src/utils/latch';
 
 const ITERATION_COUNT = 200;
