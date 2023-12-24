@@ -92,9 +92,12 @@ export type ReactiveNode = Readonly<{
   destroy: () => void;
 }>;
 
-export type AtomNode = ReactiveNode;
+export type AtomNode<T> = ReactiveNode &
+  Readonly<{
+    get: () => T;
+  }>;
 
-export type ComputedNode<T> = AtomNode &
+export type ComputedNode<T> = AtomNode<T> &
   Readonly<{
     clock: number | undefined;
     version: number;

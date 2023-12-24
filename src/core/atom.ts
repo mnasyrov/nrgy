@@ -21,8 +21,8 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
   );
 }
 
-export function getAtomNode<T>(value: Atom<T>): AtomNode {
-  return value[ATOM_SYMBOL] as AtomNode;
+export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
+  return value[ATOM_SYMBOL] as AtomNode<T>;
 }
 
 /**
@@ -118,7 +118,7 @@ export type AtomOptions<T> = {
   onDestroy?: () => void;
 };
 
-class WritableAtomImpl<T> implements AtomNode {
+class WritableAtomImpl<T> implements AtomNode<T> {
   private readonlyAtom: Atom<T> | undefined;
 
   private readonly name?: string;
