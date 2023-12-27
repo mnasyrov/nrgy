@@ -467,6 +467,8 @@ describe('compute()', () => {
 
     subscription1?.unsubscribe();
 
+    await flushMicrotasks();
+
     // Expect that the runtime in empty
     expect(ENERGY_RUNTIME.getTrackedEffects().length).toBe(0);
     expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);

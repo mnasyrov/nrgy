@@ -110,7 +110,10 @@ export type AtomEffectNode = ReactiveNode &
     ref: WeakRef<AtomEffectNode>;
     isDestroyed: boolean;
     dirty: boolean;
-    next: Signal<any>;
+
+    onResult: Signal<any>;
+    onError: Signal<unknown>;
+    onDestroy: Signal<void>;
 
     /**
      * Monotonically increasing counter representing a version of this `Consumer`'s
@@ -119,6 +122,7 @@ export type AtomEffectNode = ReactiveNode &
     clock: number;
 
     notify: () => void;
+    notifyDestroy: () => void;
   }>;
 
 export type SignalNode<T> = ReactiveNode &
@@ -134,5 +138,10 @@ export type SignalEffectNode<T> = ReactiveNode &
     ref: WeakRef<SignalEffectNode<T>>;
     isDestroyed: boolean;
 
+    onResult: Signal<any>;
+    onError: Signal<unknown>;
+    onDestroy: Signal<void>;
+
     notify: (value: T) => void;
+    notifyDestroy: () => void;
   }>;

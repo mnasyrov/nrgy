@@ -1,4 +1,4 @@
-import { collectChanges } from '../test/testUtils';
+import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import { atom } from './atom';
 
@@ -81,10 +81,13 @@ describe('Atom', () => {
     it('should complete an internal store', async () => {
       const store = atom<number>(1);
 
-      const changes = await collectChanges(store, () => {
+      const changes = await collectChanges(store, async () => {
         store.set(2);
-        store.destroy();
+        await flushMicrotasks();
+
         store.set(3);
+        store.destroy();
+        store.set(4);
       });
 
       expect(changes).toEqual([1, 2]);

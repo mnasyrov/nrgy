@@ -58,8 +58,11 @@ class SignalImpl<T> implements SignalNode<T> {
       return;
     }
 
-    this.consumerEffects.clear();
     this.isDestroyed = true;
+
+    this.producerDestroyed();
+
+    this.consumerEffects.clear();
     this.onDestroy?.();
     this.onDestroy = undefined;
   }
@@ -81,6 +84,22 @@ class SignalImpl<T> implements SignalNode<T> {
       }
 
       effect.notify(value);
+    }
+  }
+
+  /**
+   * Notify all consumers of this producer that it is destroyed
+   */
+  protected producerDestroyed(): void {
+    for (const effectRef of this.consumerEffects) {
+      const effect = effectRef.deref();
+
+      if (!effect || effect.isDestroyed) {
+        this.consumerEffects.delete(effectRef);
+        continue;
+      }
+
+      effect.notifyDestroy();
     }
   }
 }

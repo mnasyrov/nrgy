@@ -202,8 +202,11 @@ class WritableAtomImpl<T> implements AtomNode<T> {
       return;
     }
 
-    this.consumerEffects.clear();
     this.isDestroyed = true;
+
+    this.producerDestroyed();
+
+    this.consumerEffects.clear();
     this.onDestroy?.();
     this.onDestroy = undefined;
   }
@@ -227,6 +230,22 @@ class WritableAtomImpl<T> implements AtomNode<T> {
       }
 
       effect.notify();
+    }
+  }
+
+  /**
+   * Notify all consumers of this producer that it is destroyed
+   */
+  protected producerDestroyed(): void {
+    for (const [effectRef] of this.consumerEffects) {
+      const effect = effectRef.deref();
+
+      if (!effect || effect.isDestroyed) {
+        this.consumerEffects.delete(effectRef);
+        continue;
+      }
+
+      effect.notifyDestroy();
     }
   }
 

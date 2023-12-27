@@ -21,11 +21,12 @@ export function collectHistory<T>(
 
   const history: HistoryEvent<T>[] = [];
   const scope = createScope();
-  scope.effect(
-    source,
-    (value) => history.push({ type: 'value', value }),
-    (error) => history.push({ type: 'error', error }),
+
+  const fx = scope.effect(source, (value) =>
+    history.push({ type: 'value', value }),
   );
+  scope.effect(fx.onError, (error) => history.push({ type: 'error', error }));
+  scope.effect(fx.onDestroy, () => scope.destroy());
 
   const timeoutId = setTimeout(() => {
     reject(new Error('Timeout is occurred'));

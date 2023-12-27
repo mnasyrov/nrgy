@@ -41,10 +41,15 @@ export function observe<T>(
       ? ENERGY_RUNTIME.syncScheduler
       : ENERGY_RUNTIME.asyncScheduler;
 
-    const subscription = effectFn<T, unknown>(
-      source as Atom<T>,
-      (value) => scheduler.schedule(() => subscriber.next(value)),
-      (error) => scheduler.schedule(() => subscriber.error(error)),
+    const subscription = effectFn<T, unknown>(source as Atom<T>, (value) =>
+      scheduler.schedule(() => subscriber.next(value)),
+    );
+
+    effectFn(subscription.onError, (error) =>
+      scheduler.schedule(() => subscriber.error(error)),
+    );
+    syncEffect(subscription.onDestroy, () =>
+      scheduler.schedule(() => subscriber.complete()),
     );
 
     return () => subscription.destroy();

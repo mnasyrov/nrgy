@@ -8,29 +8,29 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
   readonly ref: WeakRef<SignalEffectNode<T>> = createWeakRef(this);
 
   isDestroyed = false;
-  next = signal<any>();
+
+  readonly onResult = signal<any>();
+  readonly onError = signal<unknown>();
+  readonly onDestroy = signal<void>();
 
   private scheduler?: TaskScheduler;
   private callback?: (value: T) => unknown;
-  private onError: undefined | ((error: unknown) => unknown);
 
-  constructor(
-    scheduler: TaskScheduler,
-    callback: (value: T) => unknown,
-    onError?: (error: unknown) => unknown,
-  ) {
+  constructor(scheduler: TaskScheduler, callback: (value: T) => unknown) {
     this.scheduler = scheduler;
     this.callback = callback;
-    this.onError = onError;
   }
 
   destroy(): void {
     this.isDestroyed = true;
     this.scheduler = undefined;
     this.callback = undefined;
-    this.onError = undefined;
 
-    destroySignal(this.next);
+    this.onDestroy();
+
+    destroySignal(this.onResult);
+    destroySignal(this.onError);
+    destroySignal(this.onDestroy);
   }
 
   notify(value: T): void {
@@ -41,6 +41,14 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
     this.scheduler?.schedule(() => this.run(value));
   }
 
+  notifyDestroy(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    this.destroy();
+  }
+
   run(value: T): void {
     if (this.isDestroyed || !this.callback) {
       return;
@@ -48,11 +56,9 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
 
     try {
       const result = this.callback(value);
-      this.next(result);
+      this.onResult(result);
     } catch (error) {
-      if (this.onError) {
-        this.onError(error);
-      }
+      this.onError(error);
     }
   }
 }

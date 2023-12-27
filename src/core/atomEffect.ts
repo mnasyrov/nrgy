@@ -19,32 +19,32 @@ export class AtomEffect implements AtomEffectNode {
 
   dirty = false;
   isDestroyed = false;
-  next = signal<any>();
+
+  readonly onResult = signal<any>();
+  readonly onError = signal<unknown>();
+  readonly onDestroy = signal<void>();
 
   private scheduler?: TaskScheduler;
   private action: undefined | (() => void);
-  private onError: undefined | ((error: unknown) => unknown);
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  constructor(
-    scheduler: TaskScheduler,
-    action: () => void,
-    onError?: (error: unknown) => unknown,
-  ) {
+  constructor(scheduler: TaskScheduler, action: () => void) {
     this.scheduler = scheduler;
     this.action = action;
-    this.onError = onError;
   }
 
   destroy(): void {
     this.isDestroyed = true;
     this.scheduler = undefined;
     this.action = undefined;
-    this.onError = undefined;
     this.seenComputedNodes = undefined;
 
-    destroySignal(this.next);
+    this.onDestroy();
+
+    destroySignal(this.onResult);
+    destroySignal(this.onError);
+    destroySignal(this.onDestroy);
   }
 
   notify(): void {
@@ -59,6 +59,14 @@ export class AtomEffect implements AtomEffectNode {
     if (needsSchedule) {
       this.scheduler?.schedule(() => this.run());
     }
+  }
+
+  notifyDestroy(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    this.destroy();
   }
 
   /**
@@ -96,7 +104,7 @@ export class AtomEffect implements AtomEffectNode {
     let errorRef: undefined | { error: unknown };
     try {
       const result = this.action();
-      this.next(result);
+      this.onResult(result);
     } catch (error) {
       errorRef = { error };
     } finally {
@@ -108,7 +116,7 @@ export class AtomEffect implements AtomEffectNode {
         ENERGY_RUNTIME.resetVisitedComputedNodes();
       }
 
-      if (errorRef && this.onError) {
+      if (errorRef) {
         this.onError(errorRef.error);
       }
     }
