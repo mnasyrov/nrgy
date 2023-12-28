@@ -6,8 +6,9 @@ import {
 } from './controller';
 
 export type ControllerCompositionContext<
+  TSourceContext extends BaseControllerContext,
   TDeclarations extends {
-    [key: string]: ControllerDeclaration<any, any>;
+    [key: string]: ControllerDeclaration<TSourceContext, any>;
   },
 > = BaseControllerContext & {
   controllers: {
@@ -27,13 +28,15 @@ export function withControllers<
   declarations: TDeclarations,
 ): ExtensionFn<
   TSourceContext,
-  TSourceContext & ControllerCompositionContext<TDeclarations>
+  TSourceContext & ControllerCompositionContext<TSourceContext, TDeclarations>
 > {
   return (sourceContext, extensionParams) => {
     const { scope } = sourceContext;
 
     const entries = Object.entries(declarations).map(([key, declaration]) => {
-      const controller = scope.add(declaration(undefined, extensionParams));
+      const controller = scope.add(
+        declaration.withExtensionParams(extensionParams).create(),
+      );
 
       return [key, controller];
     });

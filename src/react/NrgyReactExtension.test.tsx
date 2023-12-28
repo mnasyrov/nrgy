@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { render } from '@testing-library/react';
 
-import { ExtensionParamsProvider, withExtensionParams } from '../core/mvc';
+import { ExtensionParamsProvider } from '../core/mvc';
 
 import {
   NrgyReactExtension,
@@ -20,10 +20,10 @@ describe('NrgyReactExtension', () => {
       test2: 'value2',
     });
 
-    let result: any;
+    let providers: undefined | ReadonlyArray<ExtensionParamsProvider>;
 
     const TestComponent: FC = () => {
-      result = useNrgyReactExtensionContext();
+      providers = useNrgyReactExtensionContext();
       return null;
     };
 
@@ -35,9 +35,12 @@ describe('NrgyReactExtension', () => {
       </NrgyReactExtension>,
     );
 
-    expect(result).toEqual([value1Provider, value2Provider]);
+    expect(providers).toEqual([value1Provider, value2Provider]);
 
-    const extensionParams = withExtensionParams(...result);
+    const extensionParams = providers?.reduce(
+      (params, provider) => provider(params),
+      {},
+    );
     expect(extensionParams).toEqual({
       test1: 'value1',
       test2: 'value2',

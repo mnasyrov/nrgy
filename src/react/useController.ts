@@ -8,7 +8,6 @@ import {
   createViewProxy,
   provideView,
   ViewProxy,
-  withExtensionParams,
 } from '../core/mvc';
 import { InferViewControllerProps } from '../core/mvc/withView';
 
@@ -55,11 +54,8 @@ export function useController<
       (props ?? {}) as ViewProxyProps,
     );
 
-    const extensionParams = withExtensionParams(
-      provideView(view),
-      ...extensionParamsProviders,
-    );
-    const controller = declaration(props, extensionParams);
+    const providers = [...extensionParamsProviders, provideView(view)];
+    const controller = declaration.withProviders(providers).create();
 
     hookContextRef.current = { controller, view };
   }

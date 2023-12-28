@@ -1,6 +1,6 @@
 import { compute } from '../index';
 
-import { declareController, withExtensionParams } from './controller';
+import { declareController } from './controller';
 import { createViewProxy, provideView, viewProps, withView } from './withView';
 
 describe('withView()', () => {
@@ -18,10 +18,9 @@ describe('withView()', () => {
       });
 
     const view = createViewProxy<Props>({ input: 2 });
-    const controller = new TestController(
-      undefined,
-      withExtensionParams(provideView(view)),
-    );
+    const controller = TestController.withProviders([
+      provideView(view),
+    ]).create();
     expect(controller.result()).toBe(4);
 
     view.update({ input: 3 });

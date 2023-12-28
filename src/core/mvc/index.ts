@@ -12,11 +12,7 @@ export type {
   InferredService,
 } from './controller';
 
-export {
-  ControllerConstructorError,
-  declareController,
-  withExtensionParams,
-} from './controller';
+export { ControllerConstructorError, declareController } from './controller';
 
 export type { ControllerCompositionContext } from './withControllers';
 

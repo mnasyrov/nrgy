@@ -62,32 +62,56 @@ export type ExtensionFn<
 export type ControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-> = TContext extends { params: infer TParams }
+> = TContext extends ControllerParamsContext<infer TParams>
   ? {
       (
         params: TParams,
-        extensionParams?: ExtensionParams,
+        providers?: ReadonlyArray<ExtensionParamsProvider>,
       ): Controller<TService>;
       new (
         params: TParams,
-        extensionParams?: ExtensionParams,
+        providers?: ReadonlyArray<ExtensionParamsProvider>,
       ): Controller<TService>;
 
       /** @internal Keep the type for inference */
-      _contextType?: TContext;
+      readonly _contextType?: TContext;
+
+      withProviders(
+        providers: ReadonlyArray<ExtensionParamsProvider>,
+      ): Readonly<{
+        create(params: TParams): Controller<TService>;
+      }>;
+
+      withExtensionParams(
+        extensionParams: ExtensionParams | undefined,
+      ): Readonly<{
+        create(params: TParams): Controller<TService>;
+      }>;
     }
   : {
       (
         params?: undefined,
-        extensionParams?: ExtensionParams,
+        providers?: ReadonlyArray<ExtensionParamsProvider>,
       ): Controller<TService>;
       new (
         params?: undefined,
-        extensionParams?: ExtensionParams,
+        providers?: ReadonlyArray<ExtensionParamsProvider>,
       ): Controller<TService>;
 
       /** @internal Keep the type for inference */
-      _contextType?: TContext;
+      readonly _contextType?: TContext;
+
+      withProviders(
+        providers: ReadonlyArray<ExtensionParamsProvider>,
+      ): Readonly<{
+        create(): Controller<TService>;
+      }>;
+
+      withExtensionParams(
+        extensionParams: ExtensionParams | undefined,
+      ): Readonly<{
+        create(): Controller<TService>;
+      }>;
     };
 
 export type InferredService<
@@ -177,15 +201,41 @@ function createControllerDeclaration<
 ): ControllerDeclaration<TContext, TService> {
   function constructorFn(
     params: TContext['params'],
-    extensionParams?: ExtensionParams,
+    providers?: ReadonlyArray<ExtensionParamsProvider>,
   ): Controller<TService> {
     return controllerConstructor<TContext, TService>(
       factory,
-      params,
       extensions,
-      extensionParams,
+      params,
+      providers,
     );
   }
+
+  constructorFn.withProviders = (
+    providers?: ReadonlyArray<ExtensionParamsProvider>,
+  ) => ({
+    create(params: TContext['params']) {
+      return controllerConstructor<TContext, TService>(
+        factory,
+        extensions,
+        params,
+        providers,
+      );
+    },
+  });
+
+  constructorFn.withExtensionParams = (
+    extensionParams: ExtensionParams | undefined,
+  ) => ({
+    create(params: TContext['params']) {
+      return controllerConstructor<TContext, TService>(
+        factory,
+        extensions,
+        params,
+        extensionParams ? [() => extensionParams] : undefined,
+      );
+    },
+  });
 
   return constructorFn as unknown as ControllerDeclaration<TContext, TService>;
 }
@@ -195,12 +245,17 @@ function controllerConstructor<
   TService extends BaseService,
 >(
   factory: ControllerFactory<TContext, TService>,
-  params: TContext['params'],
   extensions: ReadonlyArray<ExtensionFn<any, any>>,
-  extensionParams?: ExtensionParams,
+  params: TContext['params'],
+  providers?: ReadonlyArray<ExtensionParamsProvider>,
 ): Controller<TService> {
   const scope = createScope();
+
   const baseContext: BaseControllerContext = { scope, params: params ?? {} };
+
+  const extensionParams = Array.isArray(providers)
+    ? createExtensionParams(providers)
+    : undefined;
 
   const context: TContext = extensions.reduce(
     (prevContext, extension) => extension(prevContext, extensionParams),
@@ -223,8 +278,8 @@ export type ExtensionParamsProvider = (
   params: ExtensionParams,
 ) => ExtensionParams;
 
-export function withExtensionParams(
-  ...providers: ExtensionParamsProvider[]
+function createExtensionParams(
+  providers: ReadonlyArray<ExtensionParamsProvider>,
 ): ExtensionParams {
   return providers.reduce((params, provider) => provider(params), {});
 }
