@@ -48,6 +48,7 @@ async function main() {
 
 async function compile() {
   await tsup.build({
+    splitting: true,
     entry: entries.reduce(
       (obj, { entry, source }) => ({ ...obj, [entry]: `${source}/index.ts` }),
       {},
