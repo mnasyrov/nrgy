@@ -1,9 +1,8 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
+import { compute, isAtom, isSignal } from '../core';
 import { Atom, Signal } from '../core/common';
 import { effect, syncEffect } from '../core/effect';
-import { ENERGY_RUNTIME } from '../core/runtime';
-import { isSignal } from '../core/signal';
 
 export type SignalObserveOptions = {
   sync?: boolean;
@@ -37,20 +36,16 @@ export function observe<T>(
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
     const effectFn = options?.sync ? syncEffect : effect;
-    const scheduler = options?.sync
-      ? ENERGY_RUNTIME.syncScheduler
-      : ENERGY_RUNTIME.asyncScheduler;
 
-    const subscription = effectFn<T, unknown>(source as Atom<T>, (value) =>
-      scheduler.schedule(() => subscriber.next(value)),
-    );
+    const subscription = isAtom(source)
+      ? effectFn(
+          compute(() => source()),
+          (value) => subscriber.next(value),
+        )
+      : effectFn(source, (value) => subscriber.next(value));
 
-    effectFn(subscription.onError, (error) =>
-      scheduler.schedule(() => subscriber.error(error)),
-    );
-    syncEffect(subscription.onDestroy, () =>
-      scheduler.schedule(() => subscriber.complete()),
-    );
+    effectFn(subscription.onError, (error) => subscriber.error(error));
+    effectFn(subscription.onDestroy, () => subscriber.complete());
 
     return () => subscription.destroy();
   });

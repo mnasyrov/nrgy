@@ -38,3 +38,24 @@ export function keepLastValue<T>(
 
   return subject.asObservable();
 }
+
+/**
+ * @internal @experiment
+ * Utility for unit tests in compute.test.ts
+ */
+export function signalChanges<T>(source: Atom<T>): Signal<T> {
+  const scope = createScope();
+
+  const s = scope.signal<T>();
+  let first = true;
+
+  scope.effect(source, (value) => {
+    if (first) {
+      first = false;
+    } else {
+      s(value);
+    }
+  });
+
+  return s;
+}

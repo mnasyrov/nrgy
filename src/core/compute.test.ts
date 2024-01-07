@@ -1,4 +1,3 @@
-import { observe } from '../rxjs';
 import {
   collectChanges,
   collectHistory,
@@ -11,6 +10,7 @@ import { Atom, defaultEquals } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
 import { ENERGY_RUNTIME } from './runtime';
+import { signalChanges } from './signalUtils';
 
 describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {
@@ -365,7 +365,7 @@ describe('compute()', () => {
     const sum = compute(() => v1() + v2());
 
     const onSumChanged = jest.fn();
-    observe(sum).subscribe(onSumChanged);
+    effect(sum, onSumChanged);
 
     await flushMicrotasks();
 
@@ -375,9 +375,7 @@ describe('compute()', () => {
     onSumChanged.mockClear();
 
     const storeChanges = await collectChanges(store, () => {
-      observe(sum).subscribe((sum) =>
-        store.update((state) => ({ ...state, sum })),
-      );
+      effect(sum, (sum) => store.update((state) => ({ ...state, sum })));
     });
 
     expect(storeChanges).toEqual([
@@ -394,9 +392,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = observe(nextResult, {
-      onlyChanges: true,
-    }).subscribe((result) => {
+    const subscription = effect(signalChanges(nextResult), (result) => {
       store.update((state) => ({ ...state, result }));
     });
 
@@ -410,7 +406,7 @@ describe('compute()', () => {
       await flushMicrotasks();
     });
 
-    subscription?.unsubscribe();
+    subscription?.destroy();
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
@@ -427,9 +423,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = observe(nextResult, {
-      onlyChanges: true,
-    }).subscribe((result) => {
+    const subscription = effect(signalChanges(nextResult), (result) => {
       store.update((state) => ({ ...state, result }));
     });
 
@@ -441,7 +435,7 @@ describe('compute()', () => {
       await flushMicrotasks();
     });
 
-    subscription?.unsubscribe();
+    subscription?.destroy();
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
@@ -457,7 +451,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription1 = observe(nextResult1, {}).subscribe((result) => {
+    const subscription1 = effect(nextResult1, (result) => {
       store1.update((state) => ({ ...state, result }));
     });
 
@@ -465,7 +459,7 @@ describe('compute()', () => {
       store1.update((state) => ({ ...state, a: 1 }));
     });
 
-    subscription1?.unsubscribe();
+    subscription1?.destroy();
 
     await flushMicrotasks();
 
@@ -482,9 +476,7 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = observe(nextResult, {
-      onlyChanges: true,
-    }).subscribe((result) => {
+    const subscription = effect(signalChanges(nextResult), (result) => {
       store.update((state) => ({ ...state, result }));
     });
 
@@ -493,7 +485,7 @@ describe('compute()', () => {
       store.update((state) => ({ ...state, a: 1 }));
     });
 
-    subscription?.unsubscribe();
+    subscription?.destroy();
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
@@ -538,12 +530,13 @@ describe('compute()', () => {
       return { value: counter() };
     });
 
-    const result$ = observe(result, { sync: true });
-
-    const subscription = result$.subscribe();
+    const callback = jest.fn();
+    const subscription = syncEffect(result, callback);
     expect(readCount).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
 
     counter.set(1);
+    expect(callback).toHaveBeenCalledTimes(2);
     expect(readCount).toBe(2);
 
     // Should not do extra computing here
@@ -551,7 +544,7 @@ describe('compute()', () => {
     expect(readCount).toBe(2);
 
     // Tear down the only subscription.
-    subscription.unsubscribe();
+    subscription.destroy();
   });
 });
 

@@ -1,7 +1,6 @@
 import { defer, finalize, MonoTypeOperatorFunction, noop } from 'rxjs';
 
-import { Atom } from '../core/common';
-import { createScope } from '../core/scope';
+import { Atom, createScope } from '../core';
 import { createLatch } from '../utils/latch';
 
 export function flushMicrotasks(interval = 0): Promise<void> {
