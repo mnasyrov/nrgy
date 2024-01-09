@@ -10,8 +10,8 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
   isDestroyed = false;
 
   readonly onResult = signal<any>();
-  readonly onError = signal<unknown>();
-  readonly onDestroy = signal<void>();
+  readonly onError = signal<unknown>({ sync: true });
+  readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
   private callback?: (value: T) => unknown;

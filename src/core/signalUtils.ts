@@ -1,6 +1,7 @@
 import { AtomObservable, createAtomSubject } from './atomSubject';
 import { Atom, Signal } from './common';
 import { createScope } from './scope';
+import { SignalOptions } from './signal';
 
 type KeepLastValueOptions = {
   sync?: boolean;
@@ -39,14 +40,21 @@ export function keepLastValue<T>(
   return subject.asObservable();
 }
 
-/**
- * @internal @experiment
- * Utility for unit tests in compute.test.ts
- */
-export function signalChanges<T>(source: Atom<T>): Signal<T> {
+export function signalChanges<T>(
+  source: Atom<T>,
+  options?: SignalOptions,
+): Signal<T> {
   const scope = createScope();
 
-  const s = scope.signal<T>();
+  if (options?.onDestroy) {
+    scope.onDestroy(options.onDestroy);
+  }
+
+  const s = scope.signal<T>({
+    ...options,
+    onDestroy: () => scope.destroy(),
+  });
+
   let first = true;
 
   scope.effect(source, (value) => {

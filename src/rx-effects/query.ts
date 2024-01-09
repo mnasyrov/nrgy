@@ -9,7 +9,7 @@ import { fromObservable, observe } from '../rxjs';
 /**
  * Provider for a value of a state.
  */
-type Query<T> = Readonly<{
+export type Query<T> = Readonly<{
   /** Returns the value of a state */
   get: () => T;
 

@@ -21,8 +21,8 @@ export class AtomEffect implements AtomEffectNode {
   isDestroyed = false;
 
   readonly onResult = signal<any>();
-  readonly onError = signal<unknown>();
-  readonly onDestroy = signal<void>();
+  readonly onError = signal<unknown>({ sync: true });
+  readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
   private action: undefined | (() => void);

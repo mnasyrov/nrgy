@@ -8,7 +8,7 @@ import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
 
 /**
- * A global reactive effect, which can be manually destroyed.
+ * A reactive effect, which can be manually destroyed.
  */
 export type EffectSubscription<R> = Readonly<{
   onResult: Signal<R>;
@@ -23,11 +23,6 @@ export type EffectSubscription<R> = Readonly<{
 
 type SideEffectFn<R> = () => R;
 type ValueCallbackFn<T, R> = (value: T) => R;
-
-/*
-TODO
-- put "onError" and "sync: boolean" to options as the last argument
- */
 
 export interface EffectFn {
   <T, R>(
@@ -56,11 +51,14 @@ export const effect: EffectFn = <
   source: Source,
   callback?: Callback,
 ) => {
-  return effectFactory<T, R, Source, Callback>(
-    ENERGY_RUNTIME.asyncScheduler,
-    source,
-    callback,
-  );
+  const isForcedSyncSource =
+    isSignal<T>(source) && getSignalNode<T>(source)?.sync;
+
+  const scheduler = isForcedSyncSource
+    ? ENERGY_RUNTIME.syncScheduler
+    : ENERGY_RUNTIME.asyncScheduler;
+
+  return effectFactory<T, R, Source, Callback>(scheduler, source, callback);
 };
 
 export const syncEffect: EffectFn = <

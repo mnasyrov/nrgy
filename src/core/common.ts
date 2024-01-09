@@ -127,6 +127,7 @@ export type AtomEffectNode = ReactiveNode &
 
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
+    sync?: boolean;
     isDestroyed: boolean;
 
     emit: (value: T) => void;

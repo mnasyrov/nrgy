@@ -105,6 +105,33 @@ describe('effect()', () => {
     await flushMicrotasks();
     expect(results).toEqual([0, 2, 4]);
   });
+
+  it('should be destroyed when a source atom is destroyed', async () => {
+    const source = atom(1);
+    const fx = effect(source, (value) => value * value);
+
+    const onResult = jest.fn();
+    const syncOnDestroy = jest.fn();
+    const asyncOnDestroy = jest.fn();
+
+    effect(fx.onResult, onResult);
+    syncEffect(fx.onDestroy, syncOnDestroy);
+    effect(fx.onDestroy, asyncOnDestroy);
+
+    await flushMicrotasks();
+
+    expect(onResult).toHaveBeenLastCalledWith(1);
+    expect(onResult).toHaveBeenCalledTimes(1);
+    expect(syncOnDestroy).toHaveBeenCalledTimes(0);
+    expect(asyncOnDestroy).toHaveBeenCalledTimes(0);
+
+    source.destroy();
+    expect(onResult).toHaveBeenCalledTimes(1);
+    expect(syncOnDestroy).toHaveBeenCalledTimes(1);
+
+    // onDestory is a signal which is forced to be synchronous
+    expect(asyncOnDestroy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('syncEffect()', () => {

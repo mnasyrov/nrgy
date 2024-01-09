@@ -29,4 +29,4 @@ export { atom, isAtom } from './atom';
 export type { AtomSubject, AtomObservable } from './atomSubject';
 export { createAtomSubject } from './atomSubject';
 
-export { keepLastValue } from './signalUtils';
+export { keepLastValue, signalChanges } from './signalUtils';

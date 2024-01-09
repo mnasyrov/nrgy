@@ -1,10 +1,13 @@
+import { useEffect, useState } from 'react';
+
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { firstValueFrom, NEVER } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom } from '../core';
+import { atom, compute } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
-import { isAtomQuery, toQuery } from './query';
+import { isAtomQuery, Query, toQuery } from './query';
 
 describe('isAtomQuery()', () => {
   it('should return "true" in case a query is AtomQuery object', () => {
@@ -45,4 +48,38 @@ describe('toQuery()', () => {
     const history = await historyPromise;
     expect(history).toEqual([1, 2, 3]);
   });
+
+  it('should render with a current value of computed expression', async () => {
+    const x = atom(1);
+    const y = compute(() => x() * x());
+    const $y = toQuery(y);
+
+    const { result, unmount } = renderHook(() => useQuery($y));
+
+    expect(result.current).toBe(1);
+
+    act(() => x.set(2));
+    await waitFor(() => expect(result.current).toBe(4));
+
+    act(() => x.set(3));
+    await waitFor(() => expect(result.current).toBe(9));
+
+    unmount();
+    act(() => x.set(4));
+    await waitFor(() => expect(result.current).toBe(9));
+  });
 });
+
+function useQuery<T>(query: Query<T>): T {
+  const [value, setValue] = useState<T>(query.get);
+
+  useEffect(() => {
+    const subscription = query.value$.subscribe((nextValue) => {
+      setValue(nextValue);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [query.value$]);
+
+  return value;
+}

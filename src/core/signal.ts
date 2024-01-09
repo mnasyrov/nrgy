@@ -9,6 +9,8 @@ export type SignalOptions = {
    */
   name?: string;
 
+  sync?: boolean;
+
   /**
    * Callback is called when the signal is destroyed.
    */
@@ -35,11 +37,15 @@ class SignalImpl<T> implements SignalNode<T> {
   private onDestroy?: () => void;
   private readonly consumerEffects = new Set<WeakRef<SignalEffectNode<T>>>();
 
+  readonly sync?: boolean;
   isDestroyed = false;
 
   constructor(options?: SignalOptions) {
-    this.name = options?.name;
-    this.onDestroy = options?.onDestroy;
+    if (options) {
+      this.name = options.name;
+      this.sync = options.sync;
+      this.onDestroy = options.onDestroy;
+    }
   }
 
   /**
