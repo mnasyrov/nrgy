@@ -1,4 +1,4 @@
-import { createQueue } from './queue';
+import { createQueue } from './utils/queue';
 
 const reportError =
   'queueMicrotask' in globalThis && typeof globalThis.reportError === 'function'

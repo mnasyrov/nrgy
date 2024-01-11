@@ -1,9 +1,9 @@
 import { AtomEffectNode, ComputedNode } from './common';
 import { ENERGY_RUNTIME } from './runtime';
+import { TaskScheduler } from './schedulers';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { nextSafeInteger } from './utils/nextSafeInteger';
-import { TaskScheduler } from './utils/schedulers';
 
 /**
  * Watches a reactive expression and allows it to be scheduled to re-run

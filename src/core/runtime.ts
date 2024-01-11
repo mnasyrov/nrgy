@@ -1,9 +1,9 @@
 import { AtomEffectNode, ComputedNode } from './common';
-import { nextSafeInteger } from './utils/nextSafeInteger';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from './utils/schedulers';
+} from './schedulers';
+import { nextSafeInteger } from './utils/nextSafeInteger';
 
 export class EnergyRuntime {
   private currentEffect: AtomEffectNode | undefined = undefined;
