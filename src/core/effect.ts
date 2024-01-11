@@ -1,10 +1,15 @@
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
-import { Atom, Signal } from './common';
+import { AnyFunction, Atom, Signal } from './common';
 import { ENERGY_RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
+
+export type EffectOptions = {
+  sync?: boolean;
+  scheduler?: TaskScheduler;
+};
 
 /**
  * A reactive effect, which can be manually destroyed.
@@ -27,78 +32,42 @@ export interface EffectFn {
   <T, R>(
     source: Signal<T>,
     callback: ValueCallbackFn<T, R>,
+    options?: EffectOptions,
   ): EffectSubscription<R>;
 
   <T, R>(
     source: Atom<T>,
     callback: ValueCallbackFn<T, R>,
+    options?: EffectOptions,
   ): EffectSubscription<R>;
 
-  <R>(action: SideEffectFn<R>): EffectSubscription<R>;
+  <R>(action: SideEffectFn<R>, options?: EffectOptions): EffectSubscription<R>;
 }
 
-export const effect: EffectFn = <
-  T,
-  R,
-  Source extends Signal<T> | Atom<T> | SideEffectFn<R>,
-  Callback extends Source extends Signal<T>
-    ? ValueCallbackFn<T, R>
-    : Source extends Atom<T>
-      ? ValueCallbackFn<T, R>
-      : never,
->(
-  source: Source,
-  callback?: Callback,
+export const effect: EffectFn = <T, R>(
+  source: Signal<T> | Atom<T> | SideEffectFn<R>,
+  callback?: ValueCallbackFn<T, R> | EffectOptions,
+  options?: EffectOptions,
 ) => {
-  const isForcedSyncSource =
-    isSignal<T>(source) && getSignalNode<T>(source)?.sync;
+  const isCallbackFunction = typeof callback === 'function';
 
-  const scheduler = isForcedSyncSource
-    ? ENERGY_RUNTIME.syncScheduler
-    : ENERGY_RUNTIME.asyncScheduler;
+  const inferredOptions: EffectOptions | undefined = options
+    ? options
+    : isCallbackFunction
+      ? undefined
+      : callback;
 
-  return effectFactory<T, R, Source, Callback>(scheduler, source, callback);
-};
+  const inferredCallback: ValueCallbackFn<T, R> | undefined = isCallbackFunction
+    ? callback
+    : undefined;
 
-export const syncEffect: EffectFn = <
-  T,
-  R,
-  Source extends Signal<T> | Atom<T> | SideEffectFn<R>,
-  Callback extends Source extends Signal<T>
-    ? ValueCallbackFn<T, R>
-    : Source extends Atom<T>
-      ? ValueCallbackFn<T, R>
-      : never,
->(
-  source: Source,
-  callback?: Callback,
-) => {
-  return effectFactory<T, R, Source, Callback>(
-    ENERGY_RUNTIME.syncScheduler,
-    source,
-    callback,
-  );
-};
+  const scheduler = selectScheduler(source, inferredOptions);
 
-function effectFactory<
-  T,
-  R,
-  Source extends Signal<T> | Atom<T> | SideEffectFn<R>,
-  Callback extends Source extends Signal<T>
-    ? ValueCallbackFn<T, R>
-    : Source extends Atom<T>
-      ? ValueCallbackFn<T, R>
-      : never,
->(
-  scheduler: TaskScheduler,
-  source: Source,
-  callback?: Callback,
-): EffectSubscription<R> {
   if (isSignal<T>(source)) {
-    if (!callback) throw new Error('callback is missed');
+    if (!inferredCallback) throw new Error('callback is missed');
     const node = getSignalNode<T>(source);
 
-    const signalEffect = new SignalEffect<T>(scheduler, callback);
+    const signalEffect = new SignalEffect<T>(scheduler, inferredCallback);
     node.subscribe(signalEffect.ref);
 
     return {
@@ -112,9 +81,9 @@ function effectFactory<
 
   let sideEffectFn: SideEffectFn<R>;
   if (isAtom<T>(source)) {
-    if (!callback) throw new Error('callback is missed');
+    if (!inferredCallback) throw new Error('callback is missed');
     sideEffectFn = function () {
-      return callback(source());
+      return inferredCallback(source());
     };
   } else {
     sideEffectFn = source as SideEffectFn<R>;
@@ -132,4 +101,50 @@ function effectFactory<
 
     destroy: () => atomEffect.destroy(),
   };
+};
+
+function selectScheduler(
+  source: unknown,
+  options: EffectOptions | undefined,
+): TaskScheduler {
+  if (options?.scheduler) {
+    return options.scheduler;
+  }
+
+  if (options?.sync) {
+    return ENERGY_RUNTIME.syncScheduler;
+  }
+
+  return isForcedSyncSource(source)
+    ? ENERGY_RUNTIME.syncScheduler
+    : ENERGY_RUNTIME.asyncScheduler;
 }
+
+function isForcedSyncSource(source: unknown): boolean {
+  return (
+    isSignal<unknown>(source) && getSignalNode<unknown>(source)?.sync === true
+  );
+}
+
+export interface SyncEffectFn {
+  <T, R>(
+    source: Signal<T>,
+    callback: ValueCallbackFn<T, R>,
+  ): EffectSubscription<R>;
+
+  <T, R>(
+    source: Atom<T>,
+    callback: ValueCallbackFn<T, R>,
+  ): EffectSubscription<R>;
+
+  <R>(action: SideEffectFn<R>): EffectSubscription<R>;
+}
+
+export const syncEffect: SyncEffectFn = <T, R>(
+  source: Signal<T> | Atom<T> | SideEffectFn<R>,
+  callback?: ValueCallbackFn<T, R>,
+) => {
+  const options: EffectOptions = { scheduler: ENERGY_RUNTIME.syncScheduler };
+
+  return (effect as AnyFunction)(source, callback, options);
+};

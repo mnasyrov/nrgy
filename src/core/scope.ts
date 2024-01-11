@@ -1,5 +1,6 @@
 import { atom } from './atom';
-import { effect, EffectFn, syncEffect } from './effect';
+import { AnyFunction } from './common';
+import { effect, EffectFn, syncEffect, SyncEffectFn } from './effect';
 import { destroySignal, signal } from './signal';
 
 export interface Unsubscribable {
@@ -27,7 +28,7 @@ export type Scope = Readonly<
     atom: typeof atom;
     signal: typeof signal;
     effect: EffectFn;
-    syncEffect: EffectFn;
+    syncEffect: SyncEffectFn;
   }
 >;
 
@@ -111,13 +112,13 @@ class ScopeImpl implements Scope {
     return this.add(atom(...args));
   }
 
-  effect(...args: Parameters<EffectFn>) {
-    return this.add(effect(...args));
-  }
+  effect: EffectFn = (...args: any[]) => {
+    return this.add((effect as AnyFunction)(...args));
+  };
 
-  syncEffect(...args: Parameters<EffectFn>) {
-    return this.add(syncEffect(...args));
-  }
+  syncEffect: SyncEffectFn = (...args: any[]) => {
+    return this.add((syncEffect as AnyFunction)(...args));
+  };
 }
 
 /**

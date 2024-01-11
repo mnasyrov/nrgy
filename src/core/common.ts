@@ -1,4 +1,5 @@
 export type AnyObject = Record<string, any>;
+export type AnyFunction = (...args: any[]) => any;
 
 /**
  * Symbol used to tell `Atom`s apart from other functions.

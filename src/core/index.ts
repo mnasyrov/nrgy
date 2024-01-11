@@ -9,10 +9,12 @@ export { compute } from './compute';
 
 export { mapAtom, mergeAtoms } from './computeUtils';
 
-export type { EffectFn, EffectSubscription } from './effect';
+export type { EffectOptions, EffectSubscription } from './effect';
 export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
+
+export type { TaskScheduler } from './schedulers';
 
 export type {
   Scope,
