@@ -1,11 +1,10 @@
-import { TaskScheduler } from '../utils/schedulers';
-
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
 import { Atom, Signal } from './common';
 import { ENERGY_RUNTIME } from './runtime';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
+import { TaskScheduler } from './utils/schedulers';
 
 /**
  * A reactive effect, which can be manually destroyed.

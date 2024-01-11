@@ -1,5 +1,3 @@
-import { nextSafeInteger } from '../utils/nextSafeInteger';
-
 import { createAtomFromFunction } from './atom';
 import {
   Atom,
@@ -9,6 +7,7 @@ import {
   ValueEqualityFn,
 } from './common';
 import { ENERGY_RUNTIME } from './runtime';
+import { nextSafeInteger } from './utils/nextSafeInteger';
 
 export type Computation<T> = () => T;
 

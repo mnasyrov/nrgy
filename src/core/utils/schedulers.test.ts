@@ -1,4 +1,4 @@
-import { flushMicrotasks } from '../test/testUtils';
+import { flushMicrotasks } from '../../test/testUtils';
 
 import {
   createMicrotaskScheduler,
