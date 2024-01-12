@@ -12,11 +12,11 @@ async function main() {
   const bench = new Bench();
 
   bench.add('DEV: compute + syncEffect', () => {
-    return createDevComputeTest(DEV_CORE, DEV_CORE.syncEffect);
+    return createDevComputeTest(DEV_CORE, { sync: true });
   });
 
   bench.add('DEV: compute + effect    ', () => {
-    return createDevComputeTest(DEV_CORE, DEV_CORE.effect);
+    return createDevComputeTest(DEV_CORE, { sync: false });
   });
 
   bench.add('REF: compute + syncEffect', () => {
@@ -36,9 +36,11 @@ async function main() {
 
 function createDevComputeTest(
   core: typeof DEV_CORE,
-  effectFactory: DEV_CORE.EffectFn,
+  params: { sync: boolean },
 ) {
+  const { sync } = params;
   const atom = core.atom;
+
   const { compute } = core;
 
   const entry = atom(0);
@@ -56,15 +58,18 @@ function createDevComputeTest(
 
   let i = 0;
 
-  effectFactory(() => {
-    h();
+  DEV_CORE.effect(
+    () => {
+      h();
 
-    if (i < ITERATION_COUNT) {
-      entry.set(++i);
-    } else {
-      latch.resolve();
-    }
-  });
+      if (i < ITERATION_COUNT) {
+        entry.set(++i);
+      } else {
+        latch.resolve();
+      }
+    },
+    { sync },
+  );
 
   return latch.promise;
 }
