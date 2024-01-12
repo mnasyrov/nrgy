@@ -6,7 +6,7 @@ import { DependencyContainer } from 'ditox-react';
 
 import { declareController } from '../core/mvc';
 import { withInjections } from '../ditox';
-import { useController } from '../react/useController';
+import { useController } from '../react';
 
 import { DitoxNrgyReactExtension } from './DitoxNrgyReactExtension';
 
@@ -23,7 +23,7 @@ describe('DitoxNrgyReactExtension', () => {
       renderHook(() => useController(TestController), {
         wrapper: DependencyContainer,
       }),
-    ).toThrow(new Error('DI container is not provided'));
+    ).toThrow(new Error('Dependency injection container is not provided'));
     expect(factory).toHaveBeenCalledTimes(0);
   });
 
@@ -39,7 +39,7 @@ describe('DitoxNrgyReactExtension', () => {
       renderHook(() => useController(TestController), {
         wrapper: DitoxNrgyReactExtension,
       }),
-    ).toThrow(new Error('DI container is not provided'));
+    ).toThrow(new Error('Dependency injection container is not provided'));
     expect(factory).toHaveBeenCalledTimes(0);
   });
 

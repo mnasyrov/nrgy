@@ -32,7 +32,9 @@ export function withInjections<
       | Container
       | undefined;
     if (!container) {
-      throw new ControllerConstructorError('DI container is not provided');
+      throw new ControllerConstructorError(
+        'Dependency injection container is not provided',
+      );
     }
 
     const deps = resolveValues(container, tokens)[0] as Dependencies;

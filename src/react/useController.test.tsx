@@ -7,8 +7,9 @@ import {
   declareController,
   ExtensionFn,
   ExtensionParamsProvider,
-} from '../core/mvc/controller';
-import { viewProps, withView } from '../core/mvc/withView';
+  viewProps,
+  withView,
+} from '../core/mvc';
 
 import { NrgyReactExtension } from './NrgyReactExtension';
 import { useController } from './useController';
