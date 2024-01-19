@@ -14,6 +14,8 @@ export type {
 
 export { ControllerConstructorError, declareController } from './controller';
 
+export type { BaseViewModel, ViewModel } from './viewModel';
+
 export type { ControllerCompositionContext } from './withControllers';
 
 export { withControllers } from './withControllers';
@@ -26,4 +28,4 @@ export type {
   ViewProxy,
 } from './withView';
 
-export { createViewProxy, viewProps, withView, provideView } from './withView';
+export { createViewProxy, withView, provideView } from './withView';

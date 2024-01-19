@@ -1,6 +1,6 @@
 import { createScope, Scope } from '../index';
 
-export type BaseService = object | ((...args: any[]) => any);
+export type BaseService = Record<string, unknown> | ((...args: any[]) => any);
 
 /**
  * Effects and business logic controller.
@@ -53,11 +53,11 @@ export class ControllerConstructorError extends Error {
 
 export type ExtensionFn<
   TSourceContext extends BaseControllerContext,
-  TResultContext extends TSourceContext,
+  TContextExtension extends BaseControllerContext,
 > = (
   sourceContext: TSourceContext,
   extensionParams?: ExtensionParams,
-) => TResultContext;
+) => TSourceContext & TContextExtension;
 
 export type ControllerDeclaration<
   TContext extends BaseControllerContext,

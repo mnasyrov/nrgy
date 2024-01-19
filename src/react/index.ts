@@ -1,6 +1,10 @@
-export { useAtom } from './useAtom';
+export { NrgyReactExtension } from './NrgyReactExtension';
 
-export { createReactComponent } from './createReactComponent';
+export { useAtom } from './useAtom';
+export { useAtoms } from './useAtoms';
+
 export { useController } from './useController';
 
-export { NrgyReactExtension } from './NrgyReactExtension';
+export { withViewController } from './withViewController';
+
+export { withViewPresenter } from './withViewPresenter';

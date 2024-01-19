@@ -29,11 +29,7 @@ export type ViewProxy<TProps extends ViewProps> = ViewBinding<TProps> & {
   readonly unmount: () => void;
 };
 
-export function viewProps<TProps extends ViewProps>(): TProps | undefined {
-  return undefined;
-}
-
-export type ViewControllerContext<TProps extends ViewProps> =
+export type ViewControllerContext<TProps extends ViewProps = ViewProps> =
   BaseControllerContext & { view: ViewBinding<TProps> };
 
 export type InferViewControllerProps<
@@ -46,13 +42,10 @@ export type InferViewControllerProps<
 /**
  * This extension provides a view presentation to the controller.
  */
-export function withView<
-  TSourceContext extends BaseControllerContext,
-  TProps extends ViewProps,
->(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _sample?: TProps,
-): ExtensionFn<TSourceContext, TSourceContext & ViewControllerContext<TProps>> {
+export function withView<TProps extends ViewProps = ViewProps>(): ExtensionFn<
+  BaseControllerContext,
+  ViewControllerContext<TProps>
+> {
   return (sourceContext, extensionParams) => {
     const view = extensionParams?.[NRGY_EXTENSION_VIEW_KEY] as
       | ViewBinding<TProps>

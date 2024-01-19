@@ -2,12 +2,12 @@ import React, { FC } from 'react';
 
 import { render, renderHook } from '@testing-library/react';
 
+import { effect } from '../core';
 import {
   BaseControllerContext,
   declareController,
   ExtensionFn,
   ExtensionParamsProvider,
-  viewProps,
   withView,
 } from '../core/mvc';
 
@@ -63,8 +63,10 @@ describe('useController() and withView() extension', () => {
     const unmountCallback = jest.fn();
 
     const ViewController = declareController
-      .extend(withView(viewProps<{ value: number }>()))
-      .apply(({ scope, view: { onMount, onUnmount, onUpdate } }) => {
+      .extend(withView<{ value: number }>())
+      .apply(({ scope, view: { onMount, onUnmount, onUpdate, props } }) => {
+        effect(props.value, () => {});
+
         scope.syncEffect(onMount, mountCallback);
         scope.syncEffect(onUpdate, updateCallback);
         scope.syncEffect(onUnmount, unmountCallback);
@@ -105,7 +107,7 @@ describe('useController() and withView() extension', () => {
 
   it('should provide props as atoms to the controller', () => {
     const ViewController = declareController
-      .extend(withView(viewProps<{ value: number }>()))
+      .extend(withView<{ value: number }>())
       .apply(({ view: { props } }) => props);
 
     const { result, rerender, unmount } = renderHook(
@@ -126,7 +128,7 @@ describe('useController() and withView() extension', () => {
     const destroy = jest.fn();
 
     const ViewController = declareController
-      .extend(withView(viewProps<{ value: number }>()))
+      .extend(withView<{ value: number }>())
       .apply(({ view }) => ({
         value: view.props.value,
         destroy,

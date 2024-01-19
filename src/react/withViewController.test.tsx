@@ -6,12 +6,12 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 
 import { Atom } from '../core';
-import { declareController, viewProps, withView } from '../core/mvc';
+import { declareController, withView } from '../core/mvc';
 
-import { createReactComponent } from './createReactComponent';
 import { useAtom } from './useAtom';
+import { withViewController } from './withViewController';
 
-describe('ViewController HOC', () => {
+describe('withViewController()', () => {
   type BaseCounterController = {
     $value: Atom<number>;
     increase(): void;
@@ -20,6 +20,7 @@ describe('ViewController HOC', () => {
 
   const CounterView: FC<{
     controller: BaseCounterController;
+    initialValue: number;
     label: string;
   }> = (props) => {
     const { controller, label } = props;
@@ -32,15 +33,15 @@ describe('ViewController HOC', () => {
         <span data-testid="label">{label}</span>
         <span data-testid="value">{value}</span>
         <button data-testid="increase" onClick={increase} />
-        <button data-testid="descrease" onClick={decrease} />
+        <button data-testid="decrease" onClick={decrease} />
       </>
     );
   };
 
   const CounterController = declareController
-    .extend(withView(viewProps<{ initialValue: number }>()))
-    .apply(({ scope, view }) => {
-      const { initialValue } = view.props;
+    .extend(withView<{ initialValue: number; label: string }>())
+    .apply<BaseCounterController>(({ scope, view }) => {
+      const { initialValue, label } = view.props;
 
       const $value = scope.atom(initialValue());
 
@@ -49,16 +50,19 @@ describe('ViewController HOC', () => {
       }
 
       return {
+        props: { label },
+
         $value: $value.asReadonly(),
+
         increase: () => update(1),
         decrease: () => update(-1),
       };
     });
 
-  it('should combine a view controller and a react component to HOC component', async () => {
+  it('should return HOC with applied controlelr', async () => {
     const user = userEvent.setup();
 
-    const TestCounter = createReactComponent(CounterController, CounterView);
+    const TestCounter = withViewController(CounterView, CounterController);
 
     render(<TestCounter initialValue={5} label="TestLabel" />);
 
@@ -68,8 +72,8 @@ describe('ViewController HOC', () => {
     await user.click(screen.getByTestId('increase'));
     expect(screen.getByTestId('value')).toHaveTextContent('6');
 
-    await user.click(screen.getByTestId('descrease'));
-    await user.click(screen.getByTestId('descrease'));
+    await user.click(screen.getByTestId('decrease'));
+    await user.click(screen.getByTestId('decrease'));
     expect(screen.getByTestId('value')).toHaveTextContent('4');
   });
 });

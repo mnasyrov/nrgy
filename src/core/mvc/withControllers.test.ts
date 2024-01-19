@@ -2,7 +2,7 @@ import { compute } from '../index';
 
 import { declareController } from './controller';
 import { withControllers } from './withControllers';
-import { createViewProxy, provideView, viewProps, withView } from './withView';
+import { createViewProxy, provideView, withView } from './withView';
 
 describe('withControllers()', () => {
   it('should construct and provides child controllers', () => {
@@ -40,7 +40,7 @@ describe('withControllers()', () => {
     type TestProps = { a: number };
 
     const StepController = declareController
-      .extend(withView(viewProps<TestProps>()))
+      .extend(withView<TestProps>())
       .apply(({ view }) => {
         const result = view.props.a;
 
@@ -48,7 +48,7 @@ describe('withControllers()', () => {
       });
 
     const TestController = declareController
-      .extend(withView(viewProps<TestProps>()))
+      .extend(withView<TestProps>())
       .extend(withControllers({ stepController: StepController }))
       .apply(({ controllers, view }) => {
         const { stepController } = controllers;
