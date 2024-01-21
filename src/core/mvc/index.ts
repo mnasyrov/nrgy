@@ -14,7 +14,8 @@ export type {
 
 export { ControllerConstructorError, declareController } from './controller';
 
-export type { BaseViewModel, ViewModel } from './viewModel';
+export type { BaseViewModel, ViewModel, ViewModelFactory } from './viewModel';
+export { declareViewModel } from './viewModel';
 
 export type { ControllerCompositionContext } from './withControllers';
 

@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
@@ -6,15 +6,19 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 
 import { Atom } from '../core';
-import { declareController, ViewModel, withView } from '../core/mvc';
+import { ViewModel } from '../core/mvc';
+import { declareViewModel } from '../core/mvc/viewModel';
 
 import { useAtoms } from './useAtoms';
-import { withViewPresenter } from './withViewPresenter';
+import { withViewModel } from './withViewModel';
 
-describe('withViewPresenter()', () => {
-  type CounterViewModel = ViewModel<{
+describe('withViewModel()', () => {
+  type CounterViewModelType = ViewModel<{
+    props: {
+      initialValue: Atom<number>;
+    };
+
     state: {
-      label: Atom<string>;
       value: Atom<number>;
     };
 
@@ -22,51 +26,58 @@ describe('withViewPresenter()', () => {
     decrease(): void;
   }>;
 
-  const CounterView: FC<{ viewModel: CounterViewModel }> = ({ viewModel }) => {
+  const CounterView: FC<
+    PropsWithChildren<{ viewModel: CounterViewModelType; label: string }>
+  > = ({ children, viewModel, label }) => {
     const { state, increase, decrease } = viewModel;
-    const { value, label } = useAtoms(state);
+    const { value } = useAtoms(state);
 
     return (
       <>
         <span data-testid="label">{label}</span>
+
         <span data-testid="value">{value}</span>
         <button data-testid="increase" onClick={increase} />
         <button data-testid="decrease" onClick={decrease} />
+
+        <div data-testid="content">{children}</div>
       </>
     );
   };
 
-  const CounterPresenter = declareController
-    .extend(withView<{ initialValue: number; label: string }>())
-    .apply<CounterViewModel>(({ scope, view }) => {
-      const { initialValue, label } = view.props;
+  const CounterViewModel = declareViewModel<CounterViewModelType>(
+    ({ scope, view }) => {
+      const { initialValue } = view.props;
 
-      const $value = scope.atom(initialValue());
+      const value = scope.atom(initialValue());
 
       function update(delta: number) {
-        $value.update((prev) => prev + delta);
+        value.update((prev) => prev + delta);
       }
 
       return {
-        state: {
-          label,
-          value: $value,
-        },
+        state: { value },
 
         increase: () => update(1),
         decrease: () => update(-1),
       };
-    });
+    },
+  );
 
-  it('should return HOC with applied Presenter', async () => {
+  const CounterComponent = withViewModel(CounterView, CounterViewModel);
+
+  it('should return HOC with applied ViewModel', async () => {
     const user = userEvent.setup();
 
-    const TestCounter = withViewPresenter(CounterView, CounterPresenter);
-
-    render(<TestCounter initialValue={5} label="TestLabel" />);
+    render(
+      <CounterComponent initialValue={5} label="TestLabel">
+        <span>inner-content</span>
+      </CounterComponent>,
+    );
 
     expect(screen.getByTestId('label')).toHaveTextContent('TestLabel');
     expect(screen.getByTestId('value')).toHaveTextContent('5');
+    expect(screen.getByTestId('content')).toHaveTextContent('inner-content');
 
     await user.click(screen.getByTestId('increase'));
     expect(screen.getByTestId('value')).toHaveTextContent('6');

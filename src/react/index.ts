@@ -7,4 +7,4 @@ export { useController } from './useController';
 
 export { withViewController } from './withViewController';
 
-export { withViewPresenter } from './withViewPresenter';
+export { withViewModel } from './withViewModel';
