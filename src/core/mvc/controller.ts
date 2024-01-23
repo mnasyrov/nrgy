@@ -128,73 +128,55 @@ export type ControllerFactory<
   TService extends BaseService,
 > = (context: TContext) => PartialController<TService> | undefined | void;
 
-export type ControllerDeclarationBuilder<
+export class ControllerDeclarationBuilder<
   TContext extends BaseControllerContext,
-> = {
-  extend: <TResultContext extends TContext>(
+> {
+  readonly extensions: Array<ExtensionFn<any, any>>;
+
+  constructor(extensions: Array<ExtensionFn<any, any>> = []) {
+    this.extensions = extensions;
+  }
+
+  params<TParams extends ControllerParams>() {
+    return this as unknown as ControllerDeclarationBuilder<
+      ControllerParamsContext<TParams>
+    >;
+  }
+
+  extend<TResultContext extends TContext>(
     extension: ExtensionFn<TContext, TResultContext>,
-  ) => ControllerDeclarationBuilder<TResultContext>;
+  ): ControllerDeclarationBuilder<TResultContext> {
+    this.extensions.push(extension);
 
-  apply: <TService extends BaseService>(
+    return this as unknown as ControllerDeclarationBuilder<TResultContext>;
+  }
+
+  apply<TService extends BaseService>(
     factory: ControllerFactory<TContext, TService>,
-  ) => ControllerDeclaration<TContext, TService>;
-};
-
-function createBuilder<TContext extends BaseControllerContext>(
-  extensions: Array<ExtensionFn<any, any>>,
-): ControllerDeclarationBuilder<TContext> {
-  return {
-    extend<TResultContext extends TContext>(
-      extension: ExtensionFn<TContext, TResultContext>,
-    ): ControllerDeclarationBuilder<TResultContext> {
-      const nextExtensions = extensions
-        ? [...extensions, extension]
-        : [extension];
-
-      return createBuilder<TResultContext>(nextExtensions);
-    },
-
-    apply<TService extends BaseService>(
-      factory: ControllerFactory<TContext, TService>,
-    ): ControllerDeclaration<TContext, TService> {
-      return createControllerDeclaration<TContext, TService>(
-        factory,
-        extensions,
-      );
-    },
-  };
+  ): ControllerDeclaration<TContext, TService> {
+    return createControllerDeclaration<TContext, TService>(
+      factory,
+      this.extensions,
+    );
+  }
 }
 
-function createBaseControllerDeclaration<TService extends BaseService>(
+export function declareController<TService extends BaseService>(
   factory: ControllerFactory<BaseControllerContext, TService>,
-): ControllerDeclaration<BaseControllerContext, TService> {
-  return createControllerDeclaration(factory, []);
+): ControllerDeclaration<BaseControllerContext, TService>;
+
+export function declareController(): ControllerDeclarationBuilder<BaseControllerContext>;
+
+/**
+ * @internal
+ */
+export function declareController(factory?: ControllerFactory<any, any>): any {
+  const builder = new ControllerDeclarationBuilder();
+
+  return factory ? builder.apply(factory) : builder;
 }
 
-type DeclareControllerFn = typeof createBaseControllerDeclaration & {
-  params: <TParams extends ControllerParams>() => ControllerDeclarationBuilder<
-    ControllerParamsContext<TParams>
-  >;
-
-  extend: ControllerDeclarationBuilder<BaseControllerContext>['extend'];
-};
-
-export const declareController: DeclareControllerFn = Object.assign(
-  createBaseControllerDeclaration,
-  {
-    params<TParams extends ControllerParams>() {
-      return createBuilder<ControllerParamsContext<TParams>>([]);
-    },
-
-    extend<TResultContext extends BaseControllerContext>(
-      extension: ExtensionFn<BaseControllerContext, TResultContext>,
-    ) {
-      return createBuilder<TResultContext>([extension]);
-    },
-  },
-);
-
-function createControllerDeclaration<
+export function createControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
 >(

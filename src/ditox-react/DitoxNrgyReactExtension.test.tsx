@@ -15,7 +15,7 @@ describe('DitoxNrgyReactExtension', () => {
     const VALUE_TOKEN = token<number>();
     const factory = jest.fn();
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInjections({ value: VALUE_TOKEN }))
       .apply(factory);
 
@@ -31,7 +31,7 @@ describe('DitoxNrgyReactExtension', () => {
     const VALUE_TOKEN = token<number>();
     const factory = jest.fn();
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInjections({ value: VALUE_TOKEN }))
       .apply(factory);
 
@@ -49,7 +49,7 @@ describe('DitoxNrgyReactExtension', () => {
       container.bindValue(VALUE_TOKEN, 1);
     };
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInjections({ value: VALUE_TOKEN }))
       .apply(({ deps: { value } }) => ({
         getValue: () => value * 10,
@@ -72,7 +72,7 @@ describe('DitoxNrgyReactExtension', () => {
       container.bindValue(VALUE_TOKEN, 1);
     };
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInjections({ value: VALUE_TOKEN }))
       .apply(({ deps: { value } }) => ({
         getValue: () => value * 10,

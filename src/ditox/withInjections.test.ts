@@ -8,7 +8,7 @@ describe('withInjections()', () => {
   it('should provide a value from DI container to the controller', () => {
     const VALUE_TOKEN = token<number>();
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInjections({ value: VALUE_TOKEN }))
       .apply((context) => {
         return { value: context.deps.value };

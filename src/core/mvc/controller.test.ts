@@ -92,7 +92,7 @@ describe('declareController()', () => {
   });
 
   it('should declare a simple controller with parameters', () => {
-    const TestController = declareController
+    const TestController = declareController()
       .params<{ a: number; b: number }>()
       .apply(({ scope, params }) => {
         const { a, b } = params;
@@ -120,7 +120,7 @@ describe('declareController()', () => {
       return (context: BaseControllerContext) => ({ ...context, initialValue });
     }
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withInitialValue(2))
       .apply(({ scope, initialValue }) => scope.atom(initialValue));
 
@@ -136,7 +136,7 @@ describe('declareController()', () => {
         value: env?.[key],
       });
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withEnvValue('a'))
       .apply(({ value }) => ({ value }));
 

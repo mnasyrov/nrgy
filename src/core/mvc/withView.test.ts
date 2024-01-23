@@ -7,7 +7,7 @@ describe('withView()', () => {
   it('should provide binding of a view from UI to the controller', () => {
     type Props = { input: number };
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withView<Props>())
       .apply(({ view }) => {
         const { input } = view.props;

@@ -1,4 +1,4 @@
-import { AtomOptions } from '../index';
+import { AtomOptions } from '../atom';
 
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
@@ -112,8 +112,8 @@ export function declareStore<
       customInitialState === undefined
         ? initialState
         : typeof customInitialState === 'function'
-        ? (customInitialState as StateMutation<State>)(initialState)
-        : customInitialState;
+          ? (customInitialState as StateMutation<State>)(initialState)
+          : customInitialState;
 
     const store = createStore(state, { ...options, ...customOptions, updates });
 

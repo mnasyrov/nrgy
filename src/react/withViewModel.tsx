@@ -23,7 +23,11 @@ export function withViewModel<
     TViewModel
   >,
 ): THocComponent {
-  const HOC = (props: PropsWithChildren<TComponentProps & TViewModelProps>) => {
+  const HOC = (
+    props: PropsWithChildren<
+      Omit<TComponentProps, 'viewModel'> & TViewModelProps
+    >,
+  ) => {
     const { children, ...restProps } = props;
 
     const viewModel = useController(

@@ -38,7 +38,7 @@ describe('withViewController()', () => {
     );
   };
 
-  const CounterController = declareController
+  const CounterController = declareController()
     .extend(withView<{ initialValue: number; label: string }>())
     .apply<BaseCounterController>(({ scope, view }) => {
       const { initialValue, label } = view.props;

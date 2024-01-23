@@ -4,10 +4,14 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 // eslint-disable-next-line import/no-named-as-default
 import userEvent from '@testing-library/user-event';
+import { createContainer, token } from 'ditox';
+import { CustomDependencyContainer } from 'ditox-react';
 
 import { Atom } from '../core';
-import { ViewModel } from '../core/mvc';
-import { declareViewModel } from '../core/mvc/viewModel';
+import { declareViewModel, ViewModel } from '../core/mvc';
+import { declareStore } from '../core/store';
+import { withInjections } from '../ditox';
+import { DitoxNrgyReactExtension } from '../ditox-react';
 
 import { useAtoms } from './useAtoms';
 import { withViewModel } from './withViewModel';
@@ -45,29 +49,33 @@ describe('withViewModel()', () => {
     );
   };
 
+  const CounterStore = declareStore<number>({
+    initialState: 0,
+    updates: {
+      increase: () => (state) => state + 1,
+      decrease: () => (state) => state - 1,
+    },
+  });
+
   const CounterViewModel = declareViewModel<CounterViewModelType>(
     ({ scope, view }) => {
       const { initialValue } = view.props;
 
-      const value = scope.atom(initialValue());
-
-      function update(delta: number) {
-        value.update((prev) => prev + delta);
-      }
+      const store = scope.add(new CounterStore(initialValue()));
 
       return {
-        state: { value },
+        state: { value: store.asReadonly() },
 
-        increase: () => update(1),
-        decrease: () => update(-1),
+        increase: store.updates.increase,
+        decrease: store.updates.decrease,
       };
     },
   );
 
-  const CounterComponent = withViewModel(CounterView, CounterViewModel);
-
   it('should return HOC with applied ViewModel', async () => {
     const user = userEvent.setup();
+
+    const CounterComponent = withViewModel(CounterView, CounterViewModel);
 
     render(
       <CounterComponent initialValue={5} label="TestLabel">
@@ -85,5 +93,56 @@ describe('withViewModel()', () => {
     await user.click(screen.getByTestId('decrease'));
     await user.click(screen.getByTestId('decrease'));
     expect(screen.getByTestId('value')).toHaveTextContent('4');
+  });
+
+  it('should return HOC with applied ViewModel and injected values', async () => {
+    const user = userEvent.setup();
+
+    const EXTRA_VALUE_TOKEN = token<number>();
+
+    const CounterViewModelWithInjections = declareViewModel()
+      .extend(withInjections({ extraValue: EXTRA_VALUE_TOKEN }))
+      .apply<CounterViewModelType>(({ scope, view, deps }) => {
+        const { initialValue } = view.props;
+        const { extraValue } = deps;
+
+        const store = scope.add(new CounterStore(initialValue() + extraValue));
+
+        return {
+          state: { value: store.asReadonly() },
+
+          increase: store.updates.increase,
+          decrease: store.updates.decrease,
+        };
+      });
+
+    const CounterComponent = withViewModel(
+      CounterView,
+      CounterViewModelWithInjections,
+    );
+
+    const container = createContainer();
+    container.bindValue(EXTRA_VALUE_TOKEN, 3);
+
+    render(
+      <DitoxNrgyReactExtension>
+        <CustomDependencyContainer container={container}>
+          <CounterComponent initialValue={5} label="TestLabel">
+            <span>inner-content</span>
+          </CounterComponent>
+        </CustomDependencyContainer>
+      </DitoxNrgyReactExtension>,
+    );
+
+    expect(screen.getByTestId('label')).toHaveTextContent('TestLabel');
+    expect(screen.getByTestId('value')).toHaveTextContent('8');
+    expect(screen.getByTestId('content')).toHaveTextContent('inner-content');
+
+    await user.click(screen.getByTestId('increase'));
+    expect(screen.getByTestId('value')).toHaveTextContent('9');
+
+    await user.click(screen.getByTestId('decrease'));
+    await user.click(screen.getByTestId('decrease'));
+    expect(screen.getByTestId('value')).toHaveTextContent('7');
   });
 });

@@ -62,7 +62,7 @@ describe('useController() and withView() extension', () => {
     const updateCallback = jest.fn();
     const unmountCallback = jest.fn();
 
-    const ViewController = declareController
+    const ViewController = declareController()
       .extend(withView<{ value: number }>())
       .apply(({ scope, view: { onMount, onUnmount, onUpdate, props } }) => {
         effect(props.value, () => {});
@@ -106,7 +106,7 @@ describe('useController() and withView() extension', () => {
   });
 
   it('should provide props as atoms to the controller', () => {
-    const ViewController = declareController
+    const ViewController = declareController()
       .extend(withView<{ value: number }>())
       .apply(({ view: { props } }) => props);
 
@@ -127,7 +127,7 @@ describe('useController() and withView() extension', () => {
   it('should not recreate the controller if a dependency is changed', () => {
     const destroy = jest.fn();
 
-    const ViewController = declareController
+    const ViewController = declareController()
       .extend(withView<{ value: number }>())
       .apply(({ view }) => ({
         value: view.props.value,
@@ -171,7 +171,7 @@ describe('useController() and a custom extension', () => {
       });
     }
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withCustomExtension())
       .apply(({ customValue }) => ({ customValue }));
 

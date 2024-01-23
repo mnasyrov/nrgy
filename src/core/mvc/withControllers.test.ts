@@ -15,7 +15,7 @@ describe('withControllers()', () => {
       };
     });
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withControllers({ stepController: StepController }))
       .apply(({ scope, controllers }) => {
         const { stepController } = controllers;
@@ -39,7 +39,7 @@ describe('withControllers()', () => {
   it('should share the same context to child controllers', () => {
     type TestProps = { a: number };
 
-    const StepController = declareController
+    const StepController = declareController()
       .extend(withView<TestProps>())
       .apply(({ view }) => {
         const result = view.props.a;
@@ -47,7 +47,7 @@ describe('withControllers()', () => {
         return { result };
       });
 
-    const TestController = declareController
+    const TestController = declareController()
       .extend(withView<TestProps>())
       .extend(withControllers({ stepController: StepController }))
       .apply(({ controllers, view }) => {
