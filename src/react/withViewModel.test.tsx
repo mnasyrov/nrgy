@@ -13,7 +13,9 @@ import { declareStore } from '../core/store';
 import { withInjections } from '../ditox';
 import { DitoxNrgyReactExtension } from '../ditox-react';
 
+import { useAtom } from './useAtom';
 import { useAtoms } from './useAtoms';
+import { useProvidedViewController } from './ViewControllerProvider';
 import { withViewModel } from './withViewModel';
 
 describe('withViewModel()', () => {
@@ -93,6 +95,33 @@ describe('withViewModel()', () => {
     await user.click(screen.getByTestId('decrease'));
     await user.click(screen.getByTestId('decrease'));
     expect(screen.getByTestId('value')).toHaveTextContent('4');
+  });
+
+  it('should provide the view model to children', async () => {
+    const user = userEvent.setup();
+
+    const CounterComponent = withViewModel(CounterView, CounterViewModel);
+
+    const ChildComponent: FC = () => {
+      const viewModel = useProvidedViewController(CounterViewModel);
+
+      const result = useAtom(viewModel.state.value) * 10;
+
+      return <>Child value: {result}</>;
+    };
+
+    render(
+      <CounterComponent initialValue={5} label="TestLabel">
+        <ChildComponent />
+      </CounterComponent>,
+    );
+
+    expect(screen.getByTestId('value')).toHaveTextContent('5');
+    expect(screen.getByTestId('content')).toHaveTextContent('Child value: 50');
+
+    await user.click(screen.getByTestId('increase'));
+    expect(screen.getByTestId('value')).toHaveTextContent('6');
+    expect(screen.getByTestId('content')).toHaveTextContent('Child value: 60');
   });
 
   it('should return HOC with applied ViewModel and injected values', async () => {

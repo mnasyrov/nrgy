@@ -8,6 +8,7 @@ import {
 import { InferredViewModelProps } from '../core/mvc/viewModel';
 
 import { useController } from './useController';
+import { ViewControllerProvider } from './ViewControllerProvider';
 
 export function withViewModel<
   TViewModel extends BaseViewModel,
@@ -36,11 +37,16 @@ export function withViewModel<
     );
 
     return (
-      <ViewComponent
-        {...(restProps as any as TComponentProps)}
-        viewModel={viewModel}
-        children={children}
-      />
+      <ViewControllerProvider
+        declaration={viewModelDeclaration}
+        controller={viewModel}
+      >
+        <ViewComponent
+          {...(restProps as any as TComponentProps)}
+          viewModel={viewModel}
+          children={children}
+        />
+      </ViewControllerProvider>
     );
   };
 

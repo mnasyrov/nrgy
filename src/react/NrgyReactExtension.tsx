@@ -19,7 +19,7 @@ export function useNrgyReactExtensionContext(): NrgyReactExtensionContextType {
 }
 
 export const NrgyReactExtension: FC<
-  PropsWithChildren & { provider: ExtensionParamsProvider }
+  PropsWithChildren<{ provider: ExtensionParamsProvider }>
 > = ({ children, provider }) => {
   const parentProviders = useContext(NrgyReactExtensionContext);
 
