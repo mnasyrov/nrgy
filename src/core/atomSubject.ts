@@ -1,4 +1,4 @@
-import { atom, AtomOptions } from './atom';
+import { atom, AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
 import { Atom } from './common';
 import { compute } from './compute';
 
@@ -58,16 +58,29 @@ export function createAtomSubject<T>(
     },
   );
 
+  const destroy = () => state.destroy();
+  const asReadonly = () => result;
+
+  let observableAtom: AtomObservable<T> | undefined;
+
   Object.assign(result, {
     next: (value: T) => state.set({ type: StateType.value, value }),
     error: (error: unknown) => state.set({ type: StateType.error, error }),
 
-    destroy: () => state.destroy(),
+    destroy,
 
-    // TODO
-    asObservable: () => result,
-    // TODO
-    asReadonly: () => result,
+    asObservable: () => {
+      if (!observableAtom) {
+        const node = getAtomNode(result);
+        observableAtom = createAtomFromFunction(node, () => result(), {
+          destroy,
+          asReadonly,
+        });
+      }
+      return observableAtom;
+    },
+
+    asReadonly,
   });
 
   return result as AtomSubject<T>;

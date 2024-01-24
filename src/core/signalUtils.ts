@@ -7,7 +7,9 @@ type KeepLastValueOptions = {
   sync?: boolean;
 };
 
-export function keepLastValue<T>(source: Signal<T>): Atom<T | undefined>;
+export function keepLastValue<T>(
+  source: Signal<T>,
+): AtomObservable<T | undefined>;
 
 export function keepLastValue<T>(
   source: Signal<T>,
