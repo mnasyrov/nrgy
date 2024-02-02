@@ -12,7 +12,12 @@ export type {
   InferredService,
 } from './controller';
 
-export { ControllerConstructorError, declareController } from './controller';
+export {
+  ControllerConstructorError,
+  declareController,
+  provideExtensionParams,
+  provideControllerParams,
+} from './controller';
 
 export type { BaseViewModel, ViewModel, ViewModelFactory } from './viewModel';
 export { declareViewModel } from './viewModel';

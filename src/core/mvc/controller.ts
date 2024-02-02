@@ -64,12 +64,6 @@ export type ExtensionParamsProvider = (
   params: ExtensionParams,
 ) => ExtensionParams;
 
-export function provideExtensionParams(
-  extensionParams: ExtensionParams,
-): ExtensionParamsProvider[] {
-  return [() => extensionParams];
-}
-
 export type ControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
@@ -85,7 +79,7 @@ export type ControllerDeclaration<
       ): Controller<TService>;
 
       /** @internal Keep the type for inference */
-      readonly _contextType?: TContext;
+      readonly __contextType?: TContext;
     }
   : {
       (
@@ -98,7 +92,7 @@ export type ControllerDeclaration<
       ): Controller<TService>;
 
       /** @internal Keep the type for inference */
-      readonly _contextType?: TContext;
+      readonly __contextType?: TContext;
     };
 
 export type InferredService<
@@ -163,6 +157,9 @@ export function declareController(factory?: ControllerFactory<any, any>): any {
   return factory ? builder.apply(factory) : builder;
 }
 
+/**
+ * @internal
+ */
 export function createControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
@@ -223,4 +220,30 @@ function createExtensionParams(
   providers: ReadonlyArray<ExtensionParamsProvider>,
 ): ExtensionParams {
   return providers.reduce((params, provider) => provider(params), {});
+}
+
+export function provideControllerParams<
+  TDeclaration extends ControllerDeclaration<any, any>,
+  TContext extends TDeclaration extends ControllerDeclaration<
+    infer InferredContext,
+    any
+  >
+    ? InferredContext
+    : never,
+>(
+  declaration: TDeclaration,
+  params: TContext['params'],
+): ExtensionParamsProvider {
+  return function (extensionParams) {
+    extensionParams['params'] = params;
+    return extensionParams;
+  };
+}
+
+export function provideExtensionParams(
+  params: ExtensionParams,
+): ExtensionParamsProvider {
+  return function (extensionParams) {
+    return { ...extensionParams, ...params };
+  };
 }
