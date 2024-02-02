@@ -69,30 +69,28 @@ export type ControllerDeclaration<
   TService extends BaseService,
 > = TContext extends ControllerParamsContext<infer TParams>
   ? {
-      (
-        params: TParams,
-        providers?: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-      new (
-        params: TParams,
-        providers?: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
+
+      (params: TParams): Controller<TService>;
+      (providers: ReadonlyArray<ExtensionParamsProvider>): Controller<TService>;
+
+      new (params: TParams): Controller<TService>;
+      new (
+        providers: ReadonlyArray<ExtensionParamsProvider>,
+      ): Controller<TService>;
     }
   : {
-      (
-        params?: undefined,
-        providers?: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-      new (
-        params?: undefined,
-        providers?: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
+
+      (): Controller<TService>;
+      (providers: ReadonlyArray<ExtensionParamsProvider>): Controller<TService>;
+
+      new (): Controller<TService>;
+      new (
+        providers: ReadonlyArray<ExtensionParamsProvider>,
+      ): Controller<TService>;
     };
 
 export type InferredService<
@@ -168,14 +166,14 @@ export function createControllerDeclaration<
   extensions: ExtensionFn<any, any>[],
 ): ControllerDeclaration<TContext, TService> {
   function constructorFn(
-    params: TContext['params'],
-    providers?: ReadonlyArray<ExtensionParamsProvider>,
+    paramsOrProviders:
+      | TContext['params']
+      | ReadonlyArray<ExtensionParamsProvider>,
   ): Controller<TService> {
     return controllerConstructor<TContext, TService>(
       factory,
+      paramsOrProviders,
       extensions,
-      params,
-      providers,
     );
   }
 
@@ -187,21 +185,35 @@ function controllerConstructor<
   TService extends BaseService,
 >(
   factory: ControllerFactory<TContext, TService>,
-  extensions: ReadonlyArray<ExtensionFn<any, any>>,
-  params: TContext['params'],
-  providers?: ReadonlyArray<ExtensionParamsProvider>,
+  paramsOrProviders?:
+    | TContext['params']
+    | ReadonlyArray<ExtensionParamsProvider>,
+  extensions?: ReadonlyArray<ExtensionFn<any, any>>,
 ): Controller<TService> {
   const scope = createScope();
 
-  const baseContext: BaseControllerContext = { scope, params: params ?? {} };
+  let params: TContext['params'] | undefined;
+  let providers: ReadonlyArray<ExtensionParamsProvider> | undefined;
 
-  const extensionParams = Array.isArray(providers)
+  if (Array.isArray(paramsOrProviders)) {
+    providers = paramsOrProviders;
+  } else {
+    params = paramsOrProviders;
+  }
+
+  const extensionParams = providers
     ? createExtensionParams(providers)
     : undefined;
 
-  const context: TContext = extensions.reduce(
-    (prevContext, extension) => extension(prevContext, extensionParams),
-    baseContext,
+  const baseContext: BaseControllerContext = { scope, params: params ?? {} };
+
+  const context: TContext = (
+    extensions
+      ? extensions.reduce(
+          (prevContext, extension) => extension(prevContext, extensionParams),
+          baseContext,
+        )
+      : baseContext
   ) as TContext;
 
   const result = factory(context) ?? { destroy: undefined };

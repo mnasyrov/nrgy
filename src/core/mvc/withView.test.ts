@@ -19,7 +19,7 @@ describe('withView()', () => {
 
     const view = createViewProxy<Props>({ input: 2 });
 
-    const controller = new TestController(undefined, [provideView(view)]);
+    const controller = new TestController([provideView(view)]);
 
     expect(controller.result()).toBe(4);
 

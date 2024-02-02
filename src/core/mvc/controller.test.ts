@@ -141,9 +141,7 @@ describe('declareController()', () => {
       .extend(withEnvValue('a'))
       .apply(({ value }) => ({ value }));
 
-    const controller = new TestController(undefined, [
-      provideExtensionParams({ a: 3 }),
-    ]);
+    const controller = new TestController([provideExtensionParams({ a: 3 })]);
     expect(controller.value).toBe(3);
   });
 });

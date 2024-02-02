@@ -33,14 +33,10 @@ export function withControllers<
   return (sourceContext, extensionParams) => {
     const { scope } = sourceContext;
 
-    const extensionParamsProvider = extensionParams
-      ? [() => extensionParams]
-      : undefined;
+    const providers = extensionParams ? [() => extensionParams] : [];
 
     const entries = Object.entries(declarations).map(([key, declaration]) => {
-      const controller = scope.add(
-        new declaration(undefined, extensionParamsProvider),
-      );
+      const controller = scope.add(new declaration(providers));
 
       return [key, controller];
     });
