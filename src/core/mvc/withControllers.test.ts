@@ -61,9 +61,7 @@ describe('withControllers()', () => {
 
     const testView = createViewProxy<TestProps>({ a: 2 });
 
-    const controller = TestController.withProviders([
-      provideView(testView),
-    ]).create();
+    const controller = new TestController(undefined, [provideView(testView)]);
     expect(controller.result()).toBe(4);
 
     testView.update({ a: 3 });

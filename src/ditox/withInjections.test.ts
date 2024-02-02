@@ -17,9 +17,9 @@ describe('withInjections()', () => {
     const container = createContainer();
     container.bindValue(VALUE_TOKEN, 1);
 
-    const controller = TestController.withProviders([
+    const controller = new TestController(undefined, [
       provideDependencyContainer(container),
-    ]).create();
+    ]);
     expect(controller.value).toBe(1);
   });
 });

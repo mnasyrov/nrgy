@@ -55,7 +55,7 @@ export function useController<
     );
 
     const providers = [...extensionParamsProviders, provideView(view)];
-    const controller = declaration.withProviders(providers).create();
+    const controller = new declaration(undefined, providers);
 
     hookContextRef.current = { controller, view };
   }

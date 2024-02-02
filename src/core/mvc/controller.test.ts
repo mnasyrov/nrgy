@@ -5,6 +5,7 @@ import {
   declareController,
   ExtensionFn,
   ExtensionParams,
+  provideExtensionParams,
 } from './controller';
 
 describe('declareController()', () => {
@@ -130,7 +131,7 @@ describe('declareController()', () => {
 
   it('should supplement a controller with an extension and its initializer', () => {
     const withEnvValue =
-      (key: string): ExtensionFn<any, any> =>
+      (key: string): ExtensionFn<any, BaseControllerContext & { value: any }> =>
       (context: BaseControllerContext, env?: ExtensionParams) => ({
         ...context,
         value: env?.[key],
@@ -140,7 +141,10 @@ describe('declareController()', () => {
       .extend(withEnvValue('a'))
       .apply(({ value }) => ({ value }));
 
-    const controller = TestController.withExtensionParams({ a: 3 }).create({});
+    const controller = new TestController(
+      undefined,
+      provideExtensionParams({ a: 3 }),
+    );
     expect(controller.value).toBe(3);
   });
 });

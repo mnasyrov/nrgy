@@ -27,7 +27,6 @@ type PartialController<TService extends BaseService> = TService & {
 };
 
 export type ControllerParams = Record<string, unknown>;
-export type ExtensionParams = Record<string, any>;
 
 export type BaseControllerContext = { scope: Scope; params?: unknown };
 
@@ -51,6 +50,8 @@ export class ControllerConstructorError extends Error {
   }
 }
 
+export type ExtensionParams = Record<string, any>;
+
 export type ExtensionFn<
   TSourceContext extends BaseControllerContext,
   TContextExtension extends BaseControllerContext,
@@ -58,6 +59,16 @@ export type ExtensionFn<
   sourceContext: TSourceContext,
   extensionParams?: ExtensionParams,
 ) => TSourceContext & TContextExtension;
+
+export type ExtensionParamsProvider = (
+  params: ExtensionParams,
+) => ExtensionParams;
+
+export function provideExtensionParams(
+  extensionParams: ExtensionParams,
+): ExtensionParamsProvider[] {
+  return [() => extensionParams];
+}
 
 export type ControllerDeclaration<
   TContext extends BaseControllerContext,
@@ -75,18 +86,6 @@ export type ControllerDeclaration<
 
       /** @internal Keep the type for inference */
       readonly _contextType?: TContext;
-
-      withProviders(
-        providers: ReadonlyArray<ExtensionParamsProvider>,
-      ): Readonly<{
-        create(params: TParams): Controller<TService>;
-      }>;
-
-      withExtensionParams(
-        extensionParams: ExtensionParams | undefined,
-      ): Readonly<{
-        create(params: TParams): Controller<TService>;
-      }>;
     }
   : {
       (
@@ -100,18 +99,6 @@ export type ControllerDeclaration<
 
       /** @internal Keep the type for inference */
       readonly _contextType?: TContext;
-
-      withProviders(
-        providers: ReadonlyArray<ExtensionParamsProvider>,
-      ): Readonly<{
-        create(): Controller<TService>;
-      }>;
-
-      withExtensionParams(
-        extensionParams: ExtensionParams | undefined,
-      ): Readonly<{
-        create(): Controller<TService>;
-      }>;
     };
 
 export type InferredService<
@@ -195,32 +182,6 @@ export function createControllerDeclaration<
     );
   }
 
-  constructorFn.withProviders = (
-    providers?: ReadonlyArray<ExtensionParamsProvider>,
-  ) => ({
-    create(params: TContext['params']) {
-      return controllerConstructor<TContext, TService>(
-        factory,
-        extensions,
-        params,
-        providers,
-      );
-    },
-  });
-
-  constructorFn.withExtensionParams = (
-    extensionParams: ExtensionParams | undefined,
-  ) => ({
-    create(params: TContext['params']) {
-      return controllerConstructor<TContext, TService>(
-        factory,
-        extensions,
-        params,
-        extensionParams ? [() => extensionParams] : undefined,
-      );
-    },
-  });
-
   return constructorFn as unknown as ControllerDeclaration<TContext, TService>;
 }
 
@@ -257,10 +218,6 @@ function controllerConstructor<
     destroy: () => scope.destroy(),
   });
 }
-
-export type ExtensionParamsProvider = (
-  params: ExtensionParams,
-) => ExtensionParams;
 
 function createExtensionParams(
   providers: ReadonlyArray<ExtensionParamsProvider>,

@@ -18,6 +18,9 @@ export type DependencyTokenProps<Props extends DependencyProps> = {
   [K in keyof Props]: Token<Props[K]>;
 };
 
+export type DependencyContext<Dependencies extends DependencyProps> =
+  BaseControllerContext & { deps: Dependencies };
+
 /**
  * This extension provides values from DI container to the controller.
  */
