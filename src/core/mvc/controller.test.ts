@@ -1,6 +1,7 @@
 import { compute } from '../index';
 
 import {
+  BaseController,
   BaseControllerContext,
   declareController,
   ExtensionFn,
@@ -143,5 +144,54 @@ describe('declareController()', () => {
 
     const controller = new TestController([provideExtensionParams({ a: 3 })]);
     expect(controller.value).toBe(3);
+  });
+});
+
+describe('declareController() with classes', () => {
+  it('should create a controller class', () => {
+    const onCreateCallback = jest.fn();
+    const onDestroyCallback = jest.fn();
+
+    const BaseTestController = declareController()
+      .params<{ initialValue: number }>()
+      .getBaseClass();
+
+    class TestController extends BaseTestController {
+      // protected readonly context: TContext;
+      // protected readonly scope: Scope;
+      // protected readonly params: TContext['params'];
+
+      private store = this.scope.atom(this.context.params.initialValue);
+
+      readonly counter = this.store.asReadonly();
+
+      protected onCreate() {
+        onCreateCallback();
+      }
+
+      protected onDestroy() {
+        onDestroyCallback();
+      }
+
+      increase() {
+        this.store.update((value) => value + 1);
+      }
+    }
+
+    const controller = new TestController({ initialValue: 10 });
+
+    expect(controller).toBeInstanceOf(TestController);
+    expect(controller).toBeInstanceOf(BaseTestController);
+    expect(controller).toBeInstanceOf(BaseController);
+
+    expect(onCreateCallback).toHaveBeenCalled();
+
+    expect(controller.counter()).toBe(10);
+
+    controller.increase();
+    expect(controller.counter()).toBe(11);
+
+    controller.destroy();
+    expect(onDestroyCallback).toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@ import {
   BaseControllerContext,
   ControllerDeclaration,
   ExtensionFn,
-  InferredService,
+  InferService,
 } from './controller';
 
 export type ControllerCompositionContext<
@@ -12,7 +12,7 @@ export type ControllerCompositionContext<
   },
 > = BaseControllerContext & {
   controllers: {
-    [K in keyof TDeclarations]: InferredService<TDeclarations[K]>;
+    [K in keyof TDeclarations]: InferService<TDeclarations[K]>;
   };
 };
 
