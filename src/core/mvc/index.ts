@@ -3,13 +3,16 @@ export type {
   BaseService,
   Controller,
   ControllerDeclaration,
+  ControllerClassDeclaration,
   ControllerFactory,
   ControllerParams,
   ControllerParamsContext,
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,
-  InferredService,
+  InferContext,
+  InferContextParams,
+  InferService,
 } from './controller';
 
 export {

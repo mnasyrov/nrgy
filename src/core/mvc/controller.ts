@@ -33,13 +33,6 @@ export type BaseControllerContext = { scope: Scope; params?: unknown };
 export type ControllerParamsContext<TParams extends ControllerParams> =
   BaseControllerContext & { params: TParams };
 
-export type InferContextParams<
-  TContext extends BaseControllerContext,
-  ElseType,
-> = TContext extends ControllerParamsContext<infer InferredParams>
-  ? InferredParams
-  : ElseType;
-
 /**
  * An error thrown when a controller is failed to be created
  */
@@ -93,7 +86,65 @@ export type ControllerDeclaration<
       ): Controller<TService>;
     };
 
-export type InferredService<
+/**
+ * @internal
+ */
+export abstract class BaseController<TContext extends BaseControllerContext> {
+  protected readonly context: TContext;
+  protected readonly scope: Scope;
+  protected readonly params: TContext['params'];
+
+  protected constructor(
+    paramsOrProviders?:
+      | TContext['params']
+      | ReadonlyArray<ExtensionParamsProvider>,
+    extensions?: ReadonlyArray<ExtensionFn<any, any>>,
+  ) {
+    this.context = createControllerContext(paramsOrProviders, extensions);
+    this.scope = this.context.scope;
+    this.params = this.context.params;
+
+    this.scope.onDestroy(() => this.onDestroy());
+
+    this.onCreate();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected onCreate(): void {
+    // Do nothing
+  }
+
+  protected onDestroy(): void {
+    // Do nothing
+  }
+
+  destroy(): void {
+    this.scope.destroy();
+  }
+}
+
+export type ControllerClassDeclaration<TContext extends BaseControllerContext> =
+  TContext extends ControllerParamsContext<infer TParams>
+    ? {
+        /** @internal Keep the type for inference */
+        readonly __contextType?: TContext;
+
+        new (params: TParams): BaseController<TContext>;
+        new (
+          providers: ReadonlyArray<ExtensionParamsProvider>,
+        ): BaseController<TContext>;
+      }
+    : {
+        /** @internal Keep the type for inference */
+        readonly __contextType?: TContext;
+
+        new (): BaseController<TContext>;
+        new (
+          providers: ReadonlyArray<ExtensionParamsProvider>,
+        ): BaseController<TContext>;
+      };
+
+export type InferService<
   TDeclaration extends ControllerDeclaration<
     BaseControllerContext,
     BaseService
@@ -101,6 +152,19 @@ export type InferredService<
 > = TDeclaration extends ControllerDeclaration<any, infer Service>
   ? Service
   : never;
+
+export type InferContext<T> = T extends BaseController<infer R1>
+  ? R1
+  : T extends ControllerDeclaration<infer R2, any>
+    ? R2
+    : never;
+
+export type InferContextParams<
+  TContext extends BaseControllerContext,
+  ElseType,
+> = TContext extends ControllerParamsContext<infer InferredParams>
+  ? InferredParams
+  : ElseType;
 
 export type ControllerFactory<
   TContext extends BaseControllerContext,
@@ -137,6 +201,24 @@ export class ControllerDeclarationBuilder<
       factory,
       this.extensions,
     );
+  }
+
+  getBaseClass(): ControllerClassDeclaration<TContext> {
+    const extensions = this.extensions;
+
+    return class extends BaseController<TContext> {
+      constructor();
+      constructor(params: TContext['params']);
+      constructor(providers: ReadonlyArray<ExtensionParamsProvider>);
+
+      constructor(
+        paramsOrProviders?:
+          | TContext['params']
+          | ReadonlyArray<ExtensionParamsProvider>,
+      ) {
+        super(paramsOrProviders, extensions);
+      }
+    } as unknown as ControllerClassDeclaration<TContext>;
   }
 }
 
@@ -190,6 +272,31 @@ function controllerConstructor<
     | ReadonlyArray<ExtensionParamsProvider>,
   extensions?: ReadonlyArray<ExtensionFn<any, any>>,
 ): Controller<TService> {
+  const context: TContext = createControllerContext(
+    paramsOrProviders,
+    extensions,
+  );
+
+  const scope = context.scope;
+  const result = factory(context) ?? { destroy: undefined };
+
+  const originalDestroy = result.destroy;
+  if (originalDestroy) {
+    scope.onDestroy(() => originalDestroy.call(result));
+  }
+
+  return Object.assign(result, {
+    destroy: () => scope.destroy(),
+  });
+}
+
+export function createControllerContext<TContext extends BaseControllerContext>(
+  paramsOrProviders:
+    | TContext['params']
+    | ReadonlyArray<ExtensionParamsProvider>
+    | undefined,
+  extensions: ReadonlyArray<ExtensionFn<any, any>> | undefined,
+): TContext {
   const scope = createScope();
 
   let params: TContext['params'] | undefined;
@@ -216,16 +323,7 @@ function controllerConstructor<
       : baseContext
   ) as TContext;
 
-  const result = factory(context) ?? { destroy: undefined };
-
-  const originalDestroy = result.destroy;
-  if (originalDestroy) {
-    scope.onDestroy(() => originalDestroy.call(result));
-  }
-
-  return Object.assign(result, {
-    destroy: () => scope.destroy(),
-  });
+  return context;
 }
 
 function createExtensionParams(
