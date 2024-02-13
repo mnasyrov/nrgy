@@ -1,28 +1,46 @@
 import React, { FC, PropsWithChildren } from 'react';
 
+import { BaseViewModel, ViewControllerContext } from '../core/mvc';
 import {
-  BaseViewModel,
-  ControllerDeclaration,
-  ViewControllerContext,
-} from '../core/mvc';
-import { InferredViewModelProps } from '../core/mvc/viewModel';
+  InferViewModelProps,
+  ViewModelDeclaration,
+} from '../core/mvc/viewModel';
 
 import { useController } from './useController';
 import { ViewControllerProvider } from './ViewControllerProvider';
 
-export function withViewModel<
+type InferHocComponent<
   TViewModel extends BaseViewModel,
   TComponentProps extends { viewModel: TViewModel },
-  TViewModelProps = InferredViewModelProps<TViewModel>,
+  TViewModelProps = InferViewModelProps<TViewModel>,
+> = FC<PropsWithChildren<Omit<TComponentProps, 'viewModel'> & TViewModelProps>>;
+
+export function withViewModel<TViewModel extends BaseViewModel>(
+  viewModelDeclaration: ViewModelDeclaration<
+    TViewModel,
+    ViewControllerContext<InferViewModelProps<TViewModel>>
+  >,
+): <TComponentProps extends { viewModel: TViewModel }>(
+  ViewComponent: React.ComponentType<PropsWithChildren<TComponentProps>>,
+) => InferHocComponent<TViewModel, TComponentProps> {
+  return (ViewComponent) => {
+    return withViewModelImpl(viewModelDeclaration, ViewComponent);
+  };
+}
+
+export function withViewModelImpl<
+  TViewModel extends BaseViewModel,
+  TComponentProps extends { viewModel: TViewModel },
+  TViewModelProps = InferViewModelProps<TViewModel>,
   THocComponent = FC<
     PropsWithChildren<Omit<TComponentProps, 'viewModel'> & TViewModelProps>
   >,
 >(
-  ViewComponent: React.ComponentType<PropsWithChildren<TComponentProps>>,
-  viewModelDeclaration: ControllerDeclaration<
-    ViewControllerContext<InferredViewModelProps<TViewModel>>,
-    TViewModel
+  viewModelDeclaration: ViewModelDeclaration<
+    TViewModel,
+    ViewControllerContext<InferViewModelProps<TViewModel>>
   >,
+  ViewComponent: React.ComponentType<PropsWithChildren<TComponentProps>>,
 ): THocComponent {
   const HOC = (
     props: PropsWithChildren<
@@ -33,7 +51,7 @@ export function withViewModel<
 
     const viewModel = useController(
       viewModelDeclaration,
-      restProps as InferredViewModelProps<TViewModel>,
+      restProps as InferViewModelProps<TViewModel>,
     );
 
     return (

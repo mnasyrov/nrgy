@@ -1,4 +1,4 @@
-import { createScope, Scope } from '../index';
+import { createScope, Scope, signal } from '../index';
 
 export type BaseService = Record<string, unknown> | ((...args: any[]) => any);
 
@@ -65,9 +65,6 @@ export type ControllerDeclaration<
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
 
-      (params: TParams): Controller<TService>;
-      (providers: ReadonlyArray<ExtensionParamsProvider>): Controller<TService>;
-
       new (params: TParams): Controller<TService>;
       new (
         providers: ReadonlyArray<ExtensionParamsProvider>,
@@ -76,9 +73,6 @@ export type ControllerDeclaration<
   : {
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
-
-      (): Controller<TService>;
-      (providers: ReadonlyArray<ExtensionParamsProvider>): Controller<TService>;
 
       new (): Controller<TService>;
       new (
@@ -94,6 +88,9 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
   protected readonly scope: Scope;
   protected readonly params: TContext['params'];
 
+  protected readonly onCreateSignal = signal({ sync: false });
+  protected readonly onDestroySignal = signal({ sync: true });
+
   protected constructor(
     paramsOrProviders?:
       | TContext['params']
@@ -104,13 +101,15 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     this.scope = this.context.scope;
     this.params = this.context.params;
 
-    this.scope.onDestroy(() => this.onDestroy());
+    this.scope.onDestroy(() => this.onDestroySignal());
 
-    this.onCreate();
+    this.scope.effect(this.onCreateSignal, () => this.onCreated());
+    this.scope.effect(this.onDestroySignal, () => this.onDestroy());
+
+    this.onCreateSignal();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected onCreate(): void {
+  protected onCreated(): void {
     // Do nothing
   }
 

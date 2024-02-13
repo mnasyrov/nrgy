@@ -29,7 +29,7 @@ describe('withControllers()', () => {
         };
       });
 
-    const controller = TestController();
+    const controller = new TestController();
     expect(controller.result()).toBe(1);
 
     controller.incrementStep();
