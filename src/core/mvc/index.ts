@@ -10,9 +10,6 @@ export type {
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,
-  InferContext,
-  InferContextParams,
-  InferService,
 } from './controller';
 
 export {
@@ -22,7 +19,13 @@ export {
   provideControllerParams,
 } from './controller';
 
-export type { BaseViewModel, ViewModel, ViewModelFactory } from './viewModel';
+export type {
+  BaseViewModel,
+  ViewModel,
+  ViewModelFactory,
+  ViewModelDeclaration,
+  ViewModelClassDeclaration,
+} from './viewModel';
 export { declareViewModel } from './viewModel';
 
 export type { ControllerCompositionContext } from './withControllers';
