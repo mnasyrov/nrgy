@@ -35,16 +35,15 @@ describe('withViewModel()', () => {
   const CounterView: FC<
     PropsWithChildren<{ viewModel: CounterViewModelType; label: string }>
   > = ({ children, viewModel, label }) => {
-    const { state, increase, decrease } = viewModel;
-    const { value } = useAtoms(state);
+    const { value } = useAtoms(viewModel.state);
 
     return (
       <>
         <span data-testid="label">{label}</span>
 
         <span data-testid="value">{value}</span>
-        <button data-testid="increase" onClick={increase} />
-        <button data-testid="decrease" onClick={decrease} />
+        <button data-testid="increase" onClick={() => viewModel.increase()} />
+        <button data-testid="decrease" onClick={() => viewModel.decrease()} />
 
         <div data-testid="content">{children}</div>
       </>
@@ -77,7 +76,7 @@ describe('withViewModel()', () => {
   it('should return HOC with applied ViewModel', async () => {
     const user = userEvent.setup();
 
-    const CounterComponent = withViewModel(CounterView, CounterViewModel);
+    const CounterComponent = withViewModel(CounterViewModel)(CounterView);
 
     render(
       <CounterComponent initialValue={5} label="TestLabel">
@@ -100,7 +99,7 @@ describe('withViewModel()', () => {
   it('should provide the view model to children', async () => {
     const user = userEvent.setup();
 
-    const CounterComponent = withViewModel(CounterView, CounterViewModel);
+    const CounterComponent = withViewModel(CounterViewModel)(CounterView);
 
     const ChildComponent: FC = () => {
       const viewModel = useProvidedViewController(CounterViewModel);
@@ -145,10 +144,65 @@ describe('withViewModel()', () => {
         };
       });
 
-    const CounterComponent = withViewModel(
+    const CounterComponent = withViewModel(CounterViewModelWithInjections)(
       CounterView,
-      CounterViewModelWithInjections,
     );
+
+    const container = createContainer();
+    container.bindValue(EXTRA_VALUE_TOKEN, 3);
+
+    render(
+      <DitoxNrgyReactExtension>
+        <CustomDependencyContainer container={container}>
+          <CounterComponent initialValue={5} label="TestLabel">
+            <span>inner-content</span>
+          </CounterComponent>
+        </CustomDependencyContainer>
+      </DitoxNrgyReactExtension>,
+    );
+
+    expect(screen.getByTestId('label')).toHaveTextContent('TestLabel');
+    expect(screen.getByTestId('value')).toHaveTextContent('8');
+    expect(screen.getByTestId('content')).toHaveTextContent('inner-content');
+
+    await user.click(screen.getByTestId('increase'));
+    expect(screen.getByTestId('value')).toHaveTextContent('9');
+
+    await user.click(screen.getByTestId('decrease'));
+    await user.click(screen.getByTestId('decrease'));
+    expect(screen.getByTestId('value')).toHaveTextContent('7');
+  });
+
+  it('should return HOC with applied class-based ViewModel', async () => {
+    const user = userEvent.setup();
+
+    const EXTRA_VALUE_TOKEN = token<number>();
+
+    const BaseCounterViewModel = declareViewModel()
+      .extend(withInjections({ extraValue: EXTRA_VALUE_TOKEN }))
+      .getBaseClass<CounterViewModelType>();
+
+    class CounterViewModel extends BaseCounterViewModel {
+      private store = this.scope.add(
+        new CounterStore(
+          this.view.props.initialValue() + this.context.deps.extraValue,
+        ),
+      );
+
+      readonly state = {
+        value: this.store.asReadonly(),
+      };
+
+      increase() {
+        this.store.updates.increase();
+      }
+
+      decrease() {
+        this.store.updates.decrease();
+      }
+    }
+
+    const CounterComponent = withViewModel(CounterViewModel)(CounterView);
 
     const container = createContainer();
     container.bindValue(EXTRA_VALUE_TOKEN, 3);

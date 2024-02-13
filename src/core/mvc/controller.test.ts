@@ -1,3 +1,4 @@
+import { flushMicrotasks } from '../../test/testUtils';
 import { compute } from '../index';
 
 import {
@@ -148,8 +149,8 @@ describe('declareController()', () => {
 });
 
 describe('declareController() with classes', () => {
-  it('should create a controller class', () => {
-    const onCreateCallback = jest.fn();
+  it('should create a controller class', async () => {
+    const onCreatedCallback = jest.fn();
     const onDestroyCallback = jest.fn();
 
     const BaseTestController = declareController()
@@ -157,16 +158,12 @@ describe('declareController() with classes', () => {
       .getBaseClass();
 
     class TestController extends BaseTestController {
-      // protected readonly context: TContext;
-      // protected readonly scope: Scope;
-      // protected readonly params: TContext['params'];
-
       private store = this.scope.atom(this.context.params.initialValue);
 
       readonly counter = this.store.asReadonly();
 
-      protected onCreate() {
-        onCreateCallback();
+      protected onCreated() {
+        onCreatedCallback();
       }
 
       protected onDestroy() {
@@ -184,7 +181,8 @@ describe('declareController() with classes', () => {
     expect(controller).toBeInstanceOf(BaseTestController);
     expect(controller).toBeInstanceOf(BaseController);
 
-    expect(onCreateCallback).toHaveBeenCalled();
+    await flushMicrotasks();
+    expect(onCreatedCallback).toHaveBeenCalled();
 
     expect(controller.counter()).toBe(10);
 

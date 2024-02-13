@@ -32,7 +32,7 @@ export type ViewProxy<TProps extends ViewProps> = ViewBinding<TProps> & {
 export type ViewControllerContext<TProps extends ViewProps = ViewProps> =
   BaseControllerContext & { view: ViewBinding<TProps> };
 
-export type InferViewControllerProps<
+export type InferViewPropsFromControllerContext<
   TContext extends BaseControllerContext,
   ElseType,
 > = TContext extends ViewControllerContext<infer InferredProps>

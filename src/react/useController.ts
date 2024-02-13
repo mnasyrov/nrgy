@@ -9,7 +9,7 @@ import {
   provideView,
   ViewProxy,
 } from '../core/mvc';
-import { InferViewControllerProps } from '../core/mvc/withView';
+import { InferViewPropsFromControllerContext } from '../core/mvc/withView';
 
 import { useNrgyReactExtensionContext } from './NrgyReactExtension';
 
@@ -21,7 +21,7 @@ export function useController<
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-  TProps extends InferViewControllerProps<TContext, never>,
+  TProps extends InferViewPropsFromControllerContext<TContext, never>,
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   props: TProps,
@@ -30,7 +30,7 @@ export function useController<
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-  TProps extends InferViewControllerProps<TContext, undefined>,
+  TProps extends InferViewPropsFromControllerContext<TContext, undefined>,
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   props?: TProps,
