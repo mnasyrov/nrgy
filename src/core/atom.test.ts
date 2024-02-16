@@ -1,6 +1,6 @@
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
-import { atom, getAtomNode, isAtom } from './atom';
+import { atom, getAtomNode, isAtom, WritableAtom } from './atom';
 import { compute } from './compute';
 import { syncEffect } from './effect';
 import { getSignalNode } from './signal';
@@ -207,6 +207,17 @@ describe('Atom', () => {
       // It should destroy once if called twice
       store.destroy();
       expect(onDestroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should allow `onDestroy` callback to change its value', async () => {
+      const store: WritableAtom<number> = atom<number>(1, {
+        onDestroy: () => store.set(0),
+      });
+
+      expect(store()).toBe(1);
+
+      store.destroy();
+      expect(store()).toBe(0);
     });
 
     it('should not notify destroyed effects', () => {

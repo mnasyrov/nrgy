@@ -204,13 +204,13 @@ class WritableAtomImpl<T> implements AtomNode<T> {
       return;
     }
 
-    this.isDestroyed = true;
-
     this.producerDestroyed();
 
     this.consumerEffects.clear();
     this.onDestroy?.();
     this.onDestroy = undefined;
+
+    this.isDestroyed = true;
   }
 
   /**
