@@ -21,15 +21,17 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
   );
 }
 
+/**
+ * Return `AtomNode` from the given Atom.
+ */
 export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
   return value[ATOM_SYMBOL] as AtomNode<T>;
 }
 
 /**
- * @deprecated
- *
  * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`).
  *
+ * @param node An internal node of computation graph
  * @param fn A zero-argument function which will be converted into a `Atom`.
  */
 export function createAtomFromFunction<T>(
@@ -38,11 +40,10 @@ export function createAtomFromFunction<T>(
 ): Atom<T>;
 
 /**
- * @deprecated
- *
  * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
  * potentially add some set of extra properties (passed as an object record `extraApi`).
  *
+ * @param node An internal node of computation graph
  * @param fn A zero-argument function which will be converted into a `Atom`.
  * @param extraApi An object whose properties will be copied onto `fn` in order to create a specific
  *     desired interface for the `Atom`.
@@ -54,8 +55,6 @@ export function createAtomFromFunction<T, U extends Record<string, unknown>>(
 ): Atom<T> & U;
 
 /**
- * @deprecated
- *
  * Converts `fn` into a marked get function (where `isAtom(fn)` will be `true`), and
  * potentially add some set of extra properties (passed as an object record `extraApi`).
  */
@@ -69,7 +68,7 @@ export function createAtomFromFunction<
 }
 
 /**
- * A `Atom` with a value that can be mutated via a setter interface.
+ * A writable `Atom` with a value that can be mutated via a setter interface.
  */
 export interface WritableAtom<T> extends Atom<T> {
   /**
@@ -85,7 +84,7 @@ export interface WritableAtom<T> extends Atom<T> {
 
   /**
    * Update the current value by mutating it in-place, and
-   * notify any dependents.
+   * unconditionally notify any dependents.
    */
   mutate(mutatorFn: (value: T) => void): void;
 
@@ -95,6 +94,9 @@ export interface WritableAtom<T> extends Atom<T> {
    */
   asReadonly(): Atom<T>;
 
+  /**
+   * Destroys the atom, notifies any dependents and calls `onDestroy` callback.
+   */
   destroy(): void;
 }
 

@@ -148,6 +148,39 @@ describe('Atom', () => {
     });
   });
 
+  describe('asReadonly()', () => {
+    it('should return a read-only representation of the writable Atom', () => {
+      const source = atom(1);
+      const readonly = source.asReadonly();
+
+      expect(readonly).toBeInstanceOf(Function);
+
+      expect(readonly).not.toEqual(
+        expect.objectContaining({
+          set: expect.any(Function),
+          update: expect.any(Function),
+          mutate: expect.any(Function),
+          asReadonly: expect.any(Function),
+          destroy: expect.any(Function),
+        }),
+      );
+
+      expect(readonly()).toEqual(1);
+
+      source.set(2);
+      expect(readonly()).toEqual(2);
+    });
+
+    test('Read-only atom should transmit "destroy" notification', () => {
+      const source = atom(1);
+      const readonly = source.asReadonly();
+      const fx = syncEffect(readonly, () => {});
+
+      source.destroy();
+      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+    });
+  });
+
   describe('destroy()', () => {
     it('should complete an internal store', async () => {
       const store = atom<number>(1);
