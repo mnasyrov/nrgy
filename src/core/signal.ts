@@ -28,12 +28,20 @@ export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {
   return value[SIGNAL_SYMBOL] as SignalNode<T>;
 }
 
+/**
+ * Returns a name of the given Atom.
+ */
+export function getSignalName(value: Signal<any>): string | undefined {
+  return getSignalNode(value).name;
+}
+
 export function destroySignal(emitter: Signal<any>): void {
   getSignalNode(emitter).destroy();
 }
 
 class SignalImpl<T> implements SignalNode<T> {
-  private readonly name?: string;
+  readonly name?: string;
+
   private onDestroy?: () => void;
   private readonly consumerEffects = new Set<WeakRef<SignalEffectNode<T>>>();
 
