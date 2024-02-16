@@ -95,10 +95,11 @@ export type ReactiveNode = Readonly<{
 
 export type AtomNode<T> = ReactiveNode &
   Readonly<{
+    name?: string;
     get: () => T;
   }>;
 
-export type ComputedNode<T> = AtomNode<T> &
+export type ComputedNode<T> = ReactiveNode &
   Readonly<{
     clock: number | undefined;
     version: number;

@@ -1,6 +1,6 @@
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
-import { atom, getAtomNode, isAtom, WritableAtom } from './atom';
+import { atom, getAtomName, getAtomNode, isAtom, WritableAtom } from './atom';
 import { compute } from './compute';
 import { syncEffect } from './effect';
 import { getSignalNode } from './signal';
@@ -25,6 +25,18 @@ describe('getAtomNode()', () => {
     expect(getAtomNode(atom(1))).toBeDefined();
     expect(getAtomNode(atom(1).asReadonly())).toBeDefined();
     expect(getAtomNode(compute(() => 1))).toBeDefined();
+  });
+});
+
+describe('getAtomName()', () => {
+  it('should return a name of writable and read-only atoms', () => {
+    const namelessAtom = atom(1);
+    expect(getAtomName(namelessAtom)).toBe(undefined);
+
+    const namedAtom = atom(1, { name: 'foo' });
+    expect(getAtomName(namedAtom)).toBe('foo');
+
+    expect(getAtomName(namedAtom.asReadonly())).toBe('foo');
   });
 });
 

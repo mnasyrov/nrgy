@@ -26,7 +26,7 @@ export type {
 export { createScope, ScopeDestructionError } from './scope';
 
 export type { AtomOptions, WritableAtom } from './atom';
-export { atom, isAtom } from './atom';
+export { atom, isAtom, getAtomName } from './atom';
 
 export type { AtomSubject, AtomObservable } from './atomSubject';
 export { createAtomSubject } from './atomSubject';

@@ -22,10 +22,17 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
 }
 
 /**
- * Return `AtomNode` from the given Atom.
+ * Returns `AtomNode` from the given Atom.
  */
 export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
   return value[ATOM_SYMBOL] as AtomNode<T>;
+}
+
+/**
+ * Returns a name of the given Atom.
+ */
+export function getAtomName(value: Atom<any>): string | undefined {
+  return getAtomNode(value).name;
 }
 
 /**
@@ -121,12 +128,12 @@ export type AtomOptions<T> = {
 };
 
 class WritableAtomImpl<T> implements AtomNode<T> {
-  private readonlyAtom: Atom<T> | undefined;
+  readonly name?: string;
 
-  private readonly name?: string;
+  private readonlyAtom: Atom<T> | undefined;
   private readonly equal: ValueEqualityFn<T>;
-  private onDestroy?: () => void;
   private readonly consumerEffects = new Map<WeakRef<AtomEffectNode>, number>();
+  private onDestroy?: () => void;
 
   private isDestroyed = false;
 
