@@ -242,12 +242,9 @@ class WritableAtomImpl<T> implements AtomNode<T> {
     for (const [effectRef] of this.consumerEffects) {
       const effect = effectRef.deref();
 
-      if (!effect || effect.isDestroyed) {
-        this.consumerEffects.delete(effectRef);
-        continue;
+      if (effect && !effect.isDestroyed) {
+        effect.notifyDestroy();
       }
-
-      effect.notifyDestroy();
     }
   }
 
