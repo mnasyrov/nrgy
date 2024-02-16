@@ -6,33 +6,52 @@ import { createWeakRef } from './utils/createWeakRef';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
 /**
- * Watches a reactive expression and allows it to be scheduled to re-run
+ * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
  * when any dependencies notify of a change.
  *
- * `Watch` doesn't run reactive expressions itself, but relies on a consumer-provided
- * scheduling operation to coordinate calling `Watch.run()`.
+ * `AtomEffect` doesn't run reactive expressions itself, but relies on a consumer-provided
+ * scheduling operation to coordinate calling `AtomEffect.run()`.
  */
-export class AtomEffect implements AtomEffectNode {
+export class AtomEffect<T> implements AtomEffectNode {
   readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
+
+  /** Monotonically increasing version of the effect */
   clock = 0;
 
+  /** Whether the effect needs to be re-run */
   dirty = false;
+
+  /** Whether the effect has been destroyed */
   isDestroyed = false;
 
-  readonly onResult = signal<any>();
+  /**
+   * Signals a result of the action function
+   */
+  readonly onResult = signal<T>();
+
+  /**
+   * Signals an error which occurred in the execution of the action function
+   */
   readonly onError = signal<unknown>({ sync: true });
+
+  /**
+   * Signals that the effect has been destroyed
+   */
   readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
-  private action: undefined | (() => void);
+  private action: undefined | (() => T);
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  constructor(scheduler: TaskScheduler, action: () => void) {
+  constructor(scheduler: TaskScheduler, action: () => T) {
     this.scheduler = scheduler;
     this.action = action;
   }
 
+  /**
+   * Destroys the effect
+   */
   destroy(): void {
     this.isDestroyed = true;
     this.scheduler = undefined;
@@ -46,6 +65,9 @@ export class AtomEffect implements AtomEffectNode {
     destroySignal(this.onDestroy);
   }
 
+  /**
+   * Schedule the effect to be re-run
+   */
   notify(): void {
     if (this.isDestroyed) {
       return;
@@ -60,6 +82,9 @@ export class AtomEffect implements AtomEffectNode {
     }
   }
 
+  /**
+   * Notify the effect that it must be destroyed
+   */
   notifyDestroy(): void {
     if (this.isDestroyed) {
       return;
@@ -69,10 +94,10 @@ export class AtomEffect implements AtomEffectNode {
   }
 
   /**
-   * Execute the reactive expression in the context of this `Watch` consumer.
+   * Execute the reactive expression in the context of this `AtomEffect`.
    *
    * Should be called by the user scheduling algorithm when the provided
-   * `schedule` hook is called by `Watch`.
+   * `scheduler` TaskScheduler is called.
    */
   run(): void {
     if (!this.dirty) {
@@ -122,7 +147,10 @@ export class AtomEffect implements AtomEffectNode {
   }
 }
 
-function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
+/**
+ * Checks if the computed nodes have changed
+ */
+export function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
   if (nodes.length === 0) {
     return true;
   }

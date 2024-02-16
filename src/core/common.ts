@@ -113,8 +113,19 @@ export type AtomEffectNode = ReactiveNode &
     isDestroyed: boolean;
     dirty: boolean;
 
+    /**
+     * Signals a result of the `AtomEffect`
+     */
     onResult: Signal<any>;
+
+    /**
+     * Signals an error of the `AtomEffect`
+     */
     onError: Signal<unknown>;
+
+    /**
+     * Signals that the `AtomEffect` has been destroyed
+     */
     onDestroy: Signal<void>;
 
     /**
