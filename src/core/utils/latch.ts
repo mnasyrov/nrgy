@@ -3,11 +3,11 @@
  *
  * It is implemented as a promise with exposed `resolve()` and `rejects()` functions.
  */
-export type Latch<T> = {
+export type Latch<T> = Readonly<{
   promise: Promise<T>;
   resolve: (value: T) => void;
   reject: (reason?: unknown) => void;
-};
+}>;
 
 export function createLatch<T = void>(): Latch<T> {
   const result = {} as any;
