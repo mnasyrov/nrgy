@@ -5,6 +5,7 @@ import {
   AtomEffectNode,
   AtomNode,
   defaultEquals,
+  DestroyableAtom,
   ReactiveNode,
   ValueEqualityFn,
 } from './common';
@@ -77,7 +78,7 @@ export function createAtomFromFunction<
 /**
  * A writable `Atom` with a value that can be mutated via a setter interface.
  */
-export interface WritableAtom<T> extends Atom<T> {
+export interface WritableAtom<T> extends DestroyableAtom<T> {
   /**
    * Directly set the atom to a new value, and notify any dependents.
    */

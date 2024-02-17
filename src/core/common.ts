@@ -23,6 +23,22 @@ export type Atom<T> = (() => T) & {
 };
 
 /**
+ * An Atom that can be destroyed
+ */
+export type DestroyableAtom<T> = Atom<T> &
+  Readonly<{
+    /**
+     * Returns a readonly version of this atom
+     */
+    asReadonly(): Atom<T>;
+
+    /**
+     * Destroys the atom, notifies any dependents and calls `onDestroy` callback.
+     */
+    destroy(): void;
+  }>;
+
+/**
  * Signal is an event emitter
  *
  * @param operator Optional transformation or handler for an event

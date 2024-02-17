@@ -1,5 +1,5 @@
 import { atom, AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
-import { Atom } from './common';
+import { DestroyableAtom } from './common';
 import { compute } from './compute';
 
 const enum StateType {
@@ -11,17 +11,11 @@ type State<T> =
   | { type: StateType.value; value: T }
   | { type: StateType.error; error: unknown };
 
-export type AtomObservable<T> = Atom<T> &
-  Readonly<{
-    destroy: () => void;
-    asReadonly(): Atom<T>;
-  }>;
-
-export type AtomSubject<T> = AtomObservable<T> &
+export type AtomSubject<T> = DestroyableAtom<T> &
   Readonly<{
     next: (value: T) => void;
     error: (error: unknown) => void;
-    asObservable(): AtomObservable<T>;
+    asDestroyable(): DestroyableAtom<T>;
   }>;
 
 export function createAtomSubject<T>(
@@ -61,7 +55,7 @@ export function createAtomSubject<T>(
   const destroy = () => state.destroy();
   const asReadonly = () => result;
 
-  let observableAtom: AtomObservable<T> | undefined;
+  let observableAtom: DestroyableAtom<T> | undefined;
 
   Object.assign(result, {
     next: (value: T) => state.set({ type: StateType.value, value }),
@@ -69,7 +63,7 @@ export function createAtomSubject<T>(
 
     destroy,
 
-    asObservable: () => {
+    asDestroyable: () => {
       if (!observableAtom) {
         const node = getAtomNode(result);
         observableAtom = createAtomFromFunction(node, () => result(), {

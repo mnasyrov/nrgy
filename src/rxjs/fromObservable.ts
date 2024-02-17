@@ -1,6 +1,7 @@
 import { Observable, Subscribable } from 'rxjs';
 
-import { AtomObservable, createAtomSubject } from '../core/atomSubject';
+import { DestroyableAtom } from '../core';
+import { createAtomSubject } from '../core/atomSubject';
 import { createScope } from '../core/scope';
 
 /**
@@ -13,7 +14,7 @@ import { createScope } from '../core/scope';
  */
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
-): AtomObservable<T | undefined>;
+): DestroyableAtom<T | undefined>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.
@@ -26,12 +27,12 @@ export function fromObservable<T>(
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   initialValue: T,
-): AtomObservable<T>;
+): DestroyableAtom<T>;
 
 export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   initialValue?: T | U,
-): AtomObservable<T | U> {
+): DestroyableAtom<T | U> {
   const scope = createScope();
 
   // Note: T is the Observable value type, and U is the initial value type. They don't have to be
@@ -46,5 +47,5 @@ export function fromObservable<T, U = undefined>(
     source.subscribe({ next: atomSubject.next, error: atomSubject.error }),
   );
 
-  return atomSubject.asObservable();
+  return atomSubject.asDestroyable();
 }

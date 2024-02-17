@@ -1,5 +1,5 @@
-import { AtomObservable, createAtomSubject } from './atomSubject';
-import { Atom, Signal } from './common';
+import { createAtomSubject } from './atomSubject';
+import { Atom, DestroyableAtom, Signal } from './common';
 import { createScope } from './scope';
 import { SignalOptions } from './signal';
 
@@ -9,25 +9,25 @@ type KeepLastValueOptions = {
 
 export function keepLastValue<T>(
   source: Signal<T>,
-): AtomObservable<T | undefined>;
+): DestroyableAtom<T | undefined>;
 
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue: T,
   options?: KeepLastValueOptions,
-): AtomObservable<T>;
+): DestroyableAtom<T>;
 
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue?: T,
   options?: KeepLastValueOptions,
-): AtomObservable<T | undefined>;
+): DestroyableAtom<T | undefined>;
 
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue?: T,
   options?: KeepLastValueOptions,
-): AtomObservable<T> {
+): DestroyableAtom<T> {
   const scope = createScope();
 
   const subject = createAtomSubject<T>(initialValue as T, {
@@ -39,7 +39,7 @@ export function keepLastValue<T>(
   effectFn(sub.onError, subject.error);
   effectFn(sub.onDestroy, subject.destroy);
 
-  return subject.asObservable();
+  return subject.asDestroyable();
 }
 
 export function signalChanges<T>(

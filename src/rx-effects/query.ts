@@ -1,6 +1,6 @@
 import { Observable, skip } from 'rxjs';
 
-import { Atom, AtomObservable, compute, isAtom } from '../core';
+import { Atom, compute, DestroyableAtom, isAtom } from '../core';
 import { createAtomFromFunction, getAtomNode } from '../core/atom';
 import { fromObservable, observe } from '../rxjs';
 
@@ -33,7 +33,7 @@ export function toQuery<T>(source: Atom<T>): AtomQuery<T> {
   };
 }
 
-export function fromQuery<T>(query: Query<T>): AtomObservable<T> {
+export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
   if (isAtomQuery(query)) {
     const { source } = query;
 

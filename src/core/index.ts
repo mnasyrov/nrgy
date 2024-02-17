@@ -1,7 +1,7 @@
 export type { SignalOptions } from './signal';
 export { signal, isSignal, destroySignal } from './signal';
 
-export type { Atom, Signal, ValueEqualityFn } from './common';
+export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
 export { defaultEquals, objectEquals } from './common';
 
 export type { Computation, ComputeOptions } from './compute';
@@ -28,7 +28,7 @@ export { createScope, ScopeDestructionError } from './scope';
 export type { AtomOptions, WritableAtom } from './atom';
 export { atom, isAtom, getAtomName } from './atom';
 
-export type { AtomSubject, AtomObservable } from './atomSubject';
+export type { AtomSubject } from './atomSubject';
 export { createAtomSubject } from './atomSubject';
 
 export { keepLastValue, signalChanges } from './signalUtils';
