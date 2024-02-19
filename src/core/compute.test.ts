@@ -6,7 +6,8 @@ import {
 
 import { atom } from './atom';
 import { createAtomSubject } from './atomSubject';
-import { Atom, defaultEquals } from './common';
+import { defaultEquals } from './atomUtils';
+import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
 import { ENERGY_RUNTIME } from './runtime';

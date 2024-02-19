@@ -1,10 +1,10 @@
+import { defaultEquals } from './atomUtils';
 import {
   AnyObject,
   Atom,
   ATOM_SYMBOL,
   AtomEffectNode,
   AtomNode,
-  defaultEquals,
   DestroyableAtom,
   ReactiveNode,
   ValueEqualityFn,

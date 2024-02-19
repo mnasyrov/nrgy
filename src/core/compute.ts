@@ -1,11 +1,6 @@
 import { createAtomFromFunction } from './atom';
-import {
-  Atom,
-  AtomEffectNode,
-  ComputedNode,
-  defaultEquals,
-  ValueEqualityFn,
-} from './common';
+import { defaultEquals } from './atomUtils';
+import { Atom, AtomEffectNode, ComputedNode, ValueEqualityFn } from './common';
 import { ENERGY_RUNTIME } from './runtime';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
