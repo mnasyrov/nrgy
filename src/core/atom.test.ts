@@ -166,6 +166,8 @@ describe('Atom', () => {
       const readonly = source.asReadonly();
 
       expect(readonly).toBeInstanceOf(Function);
+      expect(isAtom(readonly)).toBe(true);
+      expect(readonly()).toBe(1);
 
       expect(readonly).not.toEqual(
         expect.objectContaining({

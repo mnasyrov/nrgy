@@ -1,5 +1,5 @@
 import { atom, AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
-import { DestroyableAtom } from './common';
+import { Atom, DestroyableAtom } from './common';
 import { compute } from './compute';
 
 const enum StateType {
@@ -11,17 +11,33 @@ type State<T> =
   | { type: StateType.value; value: T }
   | { type: StateType.error; error: unknown };
 
+/**
+ * An atom that emits values and errors.
+ */
 export type AtomSubject<T> = DestroyableAtom<T> &
   Readonly<{
+    /** Emits a new value */
     next: (value: T) => void;
+
+    /** Emits an error */
     error: (error: unknown) => void;
+
+    /** Returns an atom that can be used to destroy the subject */
     asDestroyable(): DestroyableAtom<T>;
   }>;
 
+/**
+ * Creates an atom that emits values and errors.
+ *
+ * @param initialValue The initial value
+ * @param options AtomOptions
+ */
 export function createAtomSubject<T>(
   initialValue: T,
   options?: AtomOptions<T>,
 ): AtomSubject<T> {
+  let readonlyAtom: Atom<T> | undefined = undefined;
+
   const state = atom<State<T>>(
     {
       type: StateType.value,
@@ -53,11 +69,18 @@ export function createAtomSubject<T>(
   );
 
   const destroy = () => state.destroy();
-  const asReadonly = () => result;
 
+  const node = getAtomNode(result);
   let observableAtom: DestroyableAtom<T> | undefined;
 
-  Object.assign(result, {
+  const asReadonly = (): Atom<T> => {
+    if (readonlyAtom === undefined) {
+      readonlyAtom = createAtomFromFunction(node, () => result());
+    }
+    return readonlyAtom;
+  };
+
+  const resultAtom = createAtomFromFunction(node, () => result(), {
     next: (value: T) => state.set({ type: StateType.value, value }),
     error: (error: unknown) => state.set({ type: StateType.error, error }),
 
@@ -77,5 +100,5 @@ export function createAtomSubject<T>(
     asReadonly,
   });
 
-  return result as AtomSubject<T>;
+  return resultAtom;
 }
