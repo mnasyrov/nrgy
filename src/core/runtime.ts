@@ -13,21 +13,36 @@ export class EnergyRuntime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
-  /** @readonly */
+  /**
+   * @readonly
+   * The current global clock of changed atoms.
+   */
   clock = 0;
 
+  /**
+   * Updates the global clock of changed atoms
+   */
   updateAtomClock(): void {
     this.clock = nextSafeInteger(this.clock);
   }
 
+  /**
+   * Returns the current effect node
+   */
   getCurrentEffect(): AtomEffectNode | undefined {
     return this.currentEffect;
   }
 
+  /**
+   * Returns the list of tracked effects
+   */
   getTrackedEffects(): AtomEffectNode[] {
     return this.trackedEffects;
   }
 
+  /**
+   * Sets the current effect node and tracks effects until the current effect frame is not empty
+   */
   setCurrentEffect(
     effect: AtomEffectNode | undefined,
   ): AtomEffectNode | undefined {
@@ -43,14 +58,23 @@ export class EnergyRuntime {
     return prev;
   }
 
+  /**
+   * Returns the list of visited computed nodes
+   */
   getVisitedComputedNodes(): ComputedNode<any>[] {
     return this.visitedComputedNodes;
   }
 
+  /**
+   * Resets the list of visited computed nodes
+   */
   resetVisitedComputedNodes() {
     this.visitedComputedNodes = [];
   }
 
+  /**
+   * Visits a computed node if the current effect frame is not empty
+   */
   visitComputedNode(node: ComputedNode<any>) {
     if (this.currentEffect) {
       this.visitedComputedNodes.push(node);
@@ -58,8 +82,14 @@ export class EnergyRuntime {
   }
 }
 
+/**
+ * The energy runtime
+ */
 export const ENERGY_RUNTIME = new EnergyRuntime();
 
+/**
+ * Runs all effects which are scheduled for the next microtask
+ */
 export function runEffects(): void {
   ENERGY_RUNTIME.asyncScheduler.execute();
 }
