@@ -6,6 +6,9 @@ import { TaskScheduler } from './schedulers';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
 
+/**
+ * Options for an effect
+ */
 export type EffectOptions = {
   sync?: boolean;
   scheduler?: TaskScheduler;
@@ -15,8 +18,19 @@ export type EffectOptions = {
  * A reactive effect, which can be manually destroyed.
  */
 export type EffectSubscription<R> = Readonly<{
+  /**
+   * Signal that emits the result of the effect.
+   */
   onResult: Signal<R>;
+
+  /**
+   * Signal that emits the error of the effect.
+   */
   onError: Signal<unknown>;
+
+  /**
+   * Signal that emits when the effect is destroyed.
+   */
   onDestroy: Signal<void>;
 
   /**
@@ -28,22 +42,37 @@ export type EffectSubscription<R> = Readonly<{
 type SideEffectFn<R> = () => R;
 type ValueCallbackFn<T, R> = (value: T) => R;
 
+/**
+ * An effect function
+ */
 export interface EffectFn {
+  /**
+   * Creates a new effect for a signal
+   */
   <T, R>(
     source: Signal<T>,
     callback: ValueCallbackFn<T, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 
+  /**
+   * Creates a new effect for an atom
+   */
   <T, R>(
     source: Atom<T>,
     callback: ValueCallbackFn<T, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 
+  /**
+   * Creates a new effect for a side effect
+   */
   <R>(action: SideEffectFn<R>, options?: EffectOptions): EffectSubscription<R>;
 }
 
+/**
+ * Creates a new effect
+ */
 export const effect: EffectFn = <T, R>(
   source: Signal<T> | Atom<T> | SideEffectFn<R>,
   callback?: ValueCallbackFn<T, R> | EffectOptions,
