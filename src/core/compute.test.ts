@@ -596,4 +596,24 @@ describe('ComputedImpl()', () => {
     expect(result.isChanged()).toBe(false);
     expect(result.version).toBe(2);
   });
+
+  describe('destroy()', () => {
+    it('should reset a cached value and recalculate it on access', () => {
+      const source = atom('a');
+      const result = new ComputedImpl(() => source(), defaultEquals);
+
+      expect((result as any).value).not.toBe('a');
+      expect(result.get()).toBe('a');
+      expect((result as any).value).toBe('a');
+
+      const prevVersion = result.version;
+      result.destroy();
+
+      expect((result as any).value).not.toBe('a');
+      expect(result.get()).toBe('a');
+      expect((result as any).value).toBe('a');
+
+      expect(result.version).toBeGreaterThan(prevVersion);
+    });
+  });
 });

@@ -4,14 +4,26 @@ import { Atom, AtomEffectNode, ComputedNode, ValueEqualityFn } from './common';
 import { ENERGY_RUNTIME } from './runtime';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
+/**
+ * A pure function that returns a value.
+ */
 export type Computation<T> = () => T;
 
+/**
+ * Options for `compute`
+ */
 export type ComputeOptions<T> = {
+  /**
+   * A function to determine if two values are equal. Defaults to `Object.is`.
+   */
   equal?: ValueEqualityFn<T>;
 };
 
 /**
  * Create a computed `Atom` which derives a reactive value from an expression.
+ *
+ * @param computation A pure function that returns a value
+ * @param options ComputeOptions
  */
 export function compute<T>(
   computation: Computation<T>,
@@ -19,9 +31,7 @@ export function compute<T>(
 ): Atom<T> {
   const node = new ComputedImpl(computation, options?.equal ?? defaultEquals);
 
-  return createAtomFromFunction(node, node.get.bind(node), {
-    destroy: node.destroy.bind(node),
-  });
+  return createAtomFromFunction(node, node.get.bind(node));
 }
 
 /**
@@ -46,8 +56,6 @@ const ERRORED: any = Symbol('ERRORED');
 
 /**
  * A computation, which derives a value from a declarative reactive expression.
- *
- * `Computed`s are both producers and consumers of reactivity.
  */
 export class ComputedImpl<T> implements ComputedNode<T> {
   clock: number | undefined = undefined;
