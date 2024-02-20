@@ -1,10 +1,10 @@
 import { delay, firstValueFrom, of } from 'rxjs';
 
-import { Atom, compute, signal } from '../src/core';
 import {
   futureOperation,
   FutureResult,
-} from '../src/core/futures/futureOperation';
+} from '../experiments/futures/futureOperation';
+import { Atom, compute, signal } from '../src/core';
 import { declareController } from '../src/core/mvc';
 import { declareStore } from '../src/core/store';
 

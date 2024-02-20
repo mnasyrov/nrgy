@@ -1,6 +1,4 @@
-import { atom } from '../atom';
-import { Atom } from '../common';
-import { compute } from '../compute';
+import { atom, Atom, compute } from '../../src/core';
 
 export type FutureResult<Value, Error = unknown> =
   | { readonly type: 'initial' }

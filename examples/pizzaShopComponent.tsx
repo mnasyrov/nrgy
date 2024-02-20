@@ -3,7 +3,7 @@ import { FC, useState } from 'react';
 import {
   FUTURE_RESULT_INITIAL,
   FutureResult,
-} from '../src/core/futures/futureOperation';
+} from '../experiments/futures/futureOperation';
 import { useAtom, useController } from '../src/react';
 
 import { PizzaShopController } from './pizzaShop';
