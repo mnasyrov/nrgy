@@ -2,12 +2,13 @@ export type AnyObject = Record<string, any>;
 export type AnyFunction = (...args: any[]) => any;
 
 /**
- * Symbol used to tell `Atom`s apart from other functions.
- *
- * This can be used to auto-unwrap atom in various cases, or to auto-wrap non-atom values.
+ * Symbol used to indicate that an object is an Atom
  */
 export const ATOM_SYMBOL = Symbol.for('ngry.atom');
 
+/**
+ * Symbol used to indicate that an object is a Signal
+ */
 export const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
 
 /**
@@ -15,8 +16,6 @@ export const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
  *
  * Atoms are functions which returns their current value. To access the current value of an atom,
  * call it.
- *
- * Ordinary values can be turned into `Atom`s with the `get` function.
  */
 export type Atom<T> = (() => T) & {
   readonly [ATOM_SYMBOL]: unknown;
@@ -39,11 +38,7 @@ export type DestroyableAtom<T> = Atom<T> &
   }>;
 
 /**
- * Signal is an event emitter
- *
- * @param operator Optional transformation or handler for an event
- *
- * @field event$ - Observable for emitted events.
+ * Signal is an event emitter. It can be called to notify listeners of events.
  *
  * @example
  * ```ts
@@ -71,28 +66,71 @@ export type Signal<Event> = {
  */
 export type ValueEqualityFn<T> = (a: T, b: T) => boolean;
 
+/**
+ * A reactive node
+ */
 export type ReactiveNode = Readonly<{
+  /** Destroys the node */
   destroy: () => void;
 }>;
 
+/**
+ * An atom node
+ */
 export type AtomNode<T> = ReactiveNode &
   Readonly<{
+    /**
+     * The name of the atom
+     */
     name?: string;
+
+    /**
+     * Returns the current value
+     */
     get: () => T;
   }>;
 
+/**
+ * A computed node
+ */
 export type ComputedNode<T> = ReactiveNode &
   Readonly<{
+    /**
+     * The clock of the last computation
+     */
     clock: number | undefined;
+
+    /**
+     * The version of the cached value
+     */
     version: number;
+
+    /**
+     * Returns the current value
+     */
     get: () => T;
+
+    /**
+     * Returns true if the value has changed
+     */
     isChanged: () => boolean;
   }>;
 
 export type AtomEffectNode = ReactiveNode &
   Readonly<{
+    /**
+     * The reference to this effect node
+     */
     ref: WeakRef<AtomEffectNode>;
+
+    /**
+     * Indicates that the `AtomEffect` has been destroyed
+     */
     isDestroyed: boolean;
+
+    /**
+     * Indicates that the `AtomEffect` must be re-run
+     */
     dirty: boolean;
 
     /**
@@ -116,29 +154,82 @@ export type AtomEffectNode = ReactiveNode &
      */
     clock: number;
 
+    /**
+     * Schedule the effect to be re-run
+     */
     notify: () => void;
+
+    /**
+     * Notify the effect that it must be destroyed
+     */
     notifyDestroy: () => void;
   }>;
 
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
+    /**
+     * The name of the signal
+     */
     name?: string;
+
+    /**
+     * If true, the SyncScheduler will be forced to use to notify consumers.
+     */
     sync?: boolean;
+
+    /**
+     * Indicates that the `Signal` has been destroyed
+     */
     isDestroyed: boolean;
 
+    /**
+     * Emit a value to all consumers
+     */
     emit: (value: T) => void;
+
+    /**
+     * Subscribe to this signal
+     */
     subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
   }>;
 
+/**
+ * A signal effect node
+ */
 export type SignalEffectNode<T> = ReactiveNode &
   Readonly<{
+    /**
+     * The reference to this effect node
+     */
     ref: WeakRef<SignalEffectNode<T>>;
+
+    /**
+     * Indicates that the `SignalEffect` has been destroyed
+     */
     isDestroyed: boolean;
 
+    /**
+     * Signals a result of the action function
+     */
     onResult: Signal<any>;
+
+    /**
+     * Signals an error of the action function
+     */
     onError: Signal<unknown>;
+
+    /**
+     * Signals that the `SignalEffect` has been destroyed
+     */
     onDestroy: Signal<void>;
 
+    /**
+     * Schedule the effect to be re-run
+     */
     notify: (value: T) => void;
+
+    /**
+     * Notify the effect that it must be destroyed
+     */
     notifyDestroy: () => void;
   }>;
