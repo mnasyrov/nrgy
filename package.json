@@ -67,7 +67,7 @@
     "build": "tsx build.ts",
     "benchmarks": "npm run build -- --silent && tsx ./benchmarks",
     "pack": "npm run build && cd dist && npm pack",
-    "preversion": "npm run lint && npm run test && npm run build && git add --all",
+    "preversion": "npm run build && npm run lint && npm run test && git add --all",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "postversion": "npm run changelog && git add .",
     "publish": "npm run build && cd dist && npm publish"
