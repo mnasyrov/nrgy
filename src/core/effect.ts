@@ -103,7 +103,7 @@ export const effect: EffectFn = <T, R>(
   };
 };
 
-function selectScheduler(
+export function selectScheduler(
   source: unknown,
   options: EffectOptions | undefined,
 ): TaskScheduler {
@@ -120,7 +120,7 @@ function selectScheduler(
     : ENERGY_RUNTIME.asyncScheduler;
 }
 
-function isForcedSyncSource(source: unknown): boolean {
+export function isForcedSyncSource(source: unknown): boolean {
   return (
     isSignal<unknown>(source) && getSignalNode<unknown>(source)?.sync === true
   );
