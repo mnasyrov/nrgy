@@ -1,7 +1,7 @@
 import { flushMicrotasks } from '../test/testUtils';
 
-import { effect } from './effect';
-import { getSignalName, signal } from './signal';
+import { effect, syncEffect } from './effect';
+import { destroySignal, getSignalName, getSignalNode, signal } from './signal';
 
 describe('getSignalName()', () => {
   it('should return a name of writable and read-only atoms', () => {
@@ -34,5 +34,64 @@ describe('signal()', () => {
 
     await flushMicrotasks();
     expect(count).toBe(1);
+  });
+
+  it('should not emit a value if it is destroyed', () => {
+    const callback = jest.fn();
+
+    const a = signal<number>();
+    syncEffect(a, callback);
+
+    a(1);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith(1);
+
+    callback.mockClear();
+    destroySignal(a);
+    a(2);
+    expect(callback).toHaveBeenCalledTimes(0);
+  });
+
+  it('should not notify destroyed effects', () => {
+    const callback = jest.fn();
+
+    const a = signal<number>();
+    const fx = syncEffect(a, callback);
+    a(1);
+
+    callback.mockClear();
+    fx.destroy();
+    a(2);
+    expect(callback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('destroySignal()', () => {
+  it('should destroy a signal', () => {
+    const onDestroy = jest.fn();
+
+    const a = signal({ onDestroy });
+    destroySignal(a);
+
+    expect(getSignalNode(a).isDestroyed).toBe(true);
+    expect(onDestroy).toHaveBeenCalledTimes(1);
+
+    onDestroy.mockClear();
+    destroySignal(a);
+    expect(onDestroy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should not notify destroyed effects', () => {
+    const callback = jest.fn();
+
+    const a = signal<number>();
+    const fx = syncEffect(a, callback);
+    syncEffect(fx.onDestroy, callback);
+    a(1);
+
+    fx.destroy();
+    callback.mockClear();
+    destroySignal(a);
+    expect(callback).toHaveBeenCalledTimes(0);
   });
 });

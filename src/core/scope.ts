@@ -3,31 +3,61 @@ import { AnyFunction } from './common';
 import { effect, EffectFn, syncEffect, SyncEffectFn } from './effect';
 import { destroySignal, signal } from './signal';
 
+/**
+ * An object which can be unsubscribed from
+ */
 export interface Unsubscribable {
   unsubscribe(): void;
 }
 
+/**
+ * An object which can be destroyed
+ */
 export interface Destroyable {
   destroy(): void;
 }
 
+/**
+ * A resource which can be unsubscribed from or destroyed
+ */
 export type ScopeTeardown = Unsubscribable | Destroyable | (() => unknown);
 
 /**
- * A controller-like boundary for effects and business logic.
+ * A boundary for effects and business logic.
  *
  * `Scope` collects all subscriptions which are made by child entities and provides
  * `destroy()` method to unsubscribe from them.
  */
 export type Scope = Readonly<
   Destroyable & {
+    /**
+     * Registers a callback or unsubscribable resource which will be called when `destroy()` is called
+     */
     onDestroy: (teardown: ScopeTeardown) => void;
 
+    /**
+     * Registers an unsubscribable resource which will be called when `destroy()` is called
+     */
     add: <T extends Unsubscribable | Destroyable>(resource: T) => T;
 
+    /**
+     * Creates a new atom and registers it for later disposal
+     */
     atom: typeof atom;
+
+    /**
+     * Creates a new signal and registers it for later disposal
+     */
     signal: typeof signal;
+
+    /**
+     * Creates a new effect and registers it for later disposal
+     */
     effect: EffectFn;
+
+    /**
+     * Creates a new sync effect and registers it for later disposal
+     */
     syncEffect: SyncEffectFn;
   }
 >;
@@ -56,13 +86,6 @@ class ScopeImpl implements Scope {
 
   onDestroy(teardown: ScopeTeardown): void {
     this.subscriptions.push(teardown);
-  }
-
-  create<
-    T extends Unsubscribable | Destroyable,
-    Factory extends (...args: any[]) => T,
-  >(factory: Factory, ...args: Parameters<Factory>): T {
-    return this.add(factory(...args));
   }
 
   add<T extends Unsubscribable | Destroyable>(resource: T): T {

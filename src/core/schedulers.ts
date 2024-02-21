@@ -1,29 +1,27 @@
 import { createQueue } from './utils/queue';
 
 const reportError =
-  'queueMicrotask' in globalThis && typeof globalThis.reportError === 'function'
+  'reportError' in globalThis && typeof globalThis.reportError === 'function'
     ? globalThis.reportError
     : undefined;
 
-export type QueueMicrotaskFn = (callback: () => void) => void;
-
-export const queueMicrotaskPolyfill: QueueMicrotaskFn = (
-  callback: () => void,
-) => {
-  Promise.resolve().then(callback);
-};
-
-export const queueMicrotask: QueueMicrotaskFn =
-  'queueMicrotask' in globalThis
-    ? globalThis.queueMicrotask
-    : queueMicrotaskPolyfill;
-
+/**
+ * Task scheduler interface
+ */
 export type TaskScheduler = Readonly<{
+  /** Check if the execution queue is empty */
   isEmpty(): boolean;
+
+  /** Schedule a task */
   schedule(action: () => void): void;
+
+  /** Execute the queue */
   execute(): void;
 }>;
 
+/**
+ * Creates a microtask scheduler
+ */
 export function createMicrotaskScheduler(
   onError?: (error: unknown) => void,
 ): TaskScheduler {
@@ -61,6 +59,9 @@ export function createMicrotaskScheduler(
   };
 }
 
+/**
+ * Creates a synchronous task scheduler
+ */
 export function createSyncTaskScheduler(
   onError?: (error: unknown) => void,
 ): TaskScheduler {

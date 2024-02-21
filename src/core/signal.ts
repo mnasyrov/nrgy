@@ -9,6 +9,9 @@ export type SignalOptions = {
    */
   name?: string;
 
+  /**
+   * If true, the signal forces usage of "sync" scheduler.
+   */
   sync?: boolean;
 
   /**
@@ -24,6 +27,9 @@ export function isSignal<T>(value: unknown): value is Signal<T> {
   return typeof value === 'function' && SIGNAL_SYMBOL in value;
 }
 
+/**
+ * Returns `SignalNode` from the given Signal.
+ */
 export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {
   return value[SIGNAL_SYMBOL] as SignalNode<T>;
 }
@@ -35,6 +41,9 @@ export function getSignalName(value: Signal<any>): string | undefined {
   return getSignalNode(value).name;
 }
 
+/**
+ * Destroys the signal
+ */
 export function destroySignal(emitter: Signal<any>): void {
   getSignalNode(emitter).destroy();
 }
@@ -108,12 +117,9 @@ class SignalImpl<T> implements SignalNode<T> {
     for (const effectRef of this.consumerEffects) {
       const effect = effectRef.deref();
 
-      if (!effect || effect.isDestroyed) {
-        this.consumerEffects.delete(effectRef);
-        continue;
+      if (effect && !effect.isDestroyed) {
+        effect.notifyDestroy();
       }
-
-      effect.notifyDestroy();
     }
   }
 }
