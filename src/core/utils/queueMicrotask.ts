@@ -1,12 +1,12 @@
-export type ScheduleMicrotaskFn = (callback: () => void) => void;
+export type QueueMicrotaskFn = (callback: () => void) => void;
 
-export const queueMicrotaskPolyfill: ScheduleMicrotaskFn = (
+export const queueMicrotaskPolyfill: QueueMicrotaskFn = (
   callback: () => void,
 ) => {
   Promise.resolve().then(callback);
 };
 
-export const scheduleMicrotask: ScheduleMicrotaskFn =
+export const nrgyQueueMicrotask: QueueMicrotaskFn =
   'queueMicrotask' in globalThis && globalThis['queueMicrotask']
     ? globalThis.queueMicrotask
     : queueMicrotaskPolyfill;

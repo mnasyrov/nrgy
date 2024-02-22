@@ -53,11 +53,9 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
    * Schedule the effect to be run
    */
   notify(value: T): void {
-    if (this.isDestroyed) {
-      return;
+    if (!this.isDestroyed && this.scheduler) {
+      this.scheduler.schedule(() => this.run(value));
     }
-
-    this.scheduler?.schedule(() => this.run(value));
   }
 
   /**

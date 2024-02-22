@@ -5,6 +5,19 @@ import {
   createSyncTaskScheduler,
 } from './schedulers';
 
+jest.mock('./utils/reportError', () => {
+  (globalThis as any).reportError = (error: any) => {
+    (globalThis as any)?.onerror?.(error);
+  };
+
+  const originalModule = jest.requireActual('./utils/reportError');
+
+  return {
+    __esModule: true,
+    ...originalModule,
+  };
+});
+
 describe('MicrotaskScheduler', () => {
   describe('runnableAction argument', () => {
     it('should be used to for execution of tasks', async () => {
@@ -62,9 +75,34 @@ describe('MicrotaskScheduler', () => {
       expect(scheduler.isEmpty()).toBe(true);
     });
 
+    it('should do nothing if execute() is called multiple times by the scheduled task', async () => {
+      const onError = jest.fn();
+      const scheduler = createMicrotaskScheduler({ onError });
+
+      const task2 = jest.fn();
+
+      const task1 = jest.fn(() => {
+        scheduler.schedule(task2);
+        expect(scheduler.isEmpty()).toBe(false);
+
+        scheduler.execute();
+        scheduler.execute();
+        expect(scheduler.isEmpty()).toBe(false);
+      });
+
+      scheduler.schedule(task1);
+
+      await flushMicrotasks();
+
+      expect(scheduler.isEmpty()).toBe(true);
+      expect(task1).toBeCalledTimes(1);
+
+      expect(onError).toHaveBeenCalledTimes(0);
+    });
+
     it('should pass task errors to onError callback', async () => {
       const onError = jest.fn();
-      const scheduler = createMicrotaskScheduler(onError);
+      const scheduler = createMicrotaskScheduler({ onError });
       const results: number[] = [];
 
       const task1 = () => results.push(1);
@@ -86,6 +124,22 @@ describe('MicrotaskScheduler', () => {
       expect(scheduler.isEmpty()).toBe(true);
 
       expect(results).toEqual([1, 2, 3]);
+    });
+
+    it('should pass task errors to reportError() if onError is not provided', async () => {
+      const onError = jest.fn();
+      globalThis.onerror = onError;
+
+      const scheduler = createMicrotaskScheduler();
+
+      scheduler.schedule(() => {
+        throw 'error 1';
+      });
+
+      await flushMicrotasks();
+
+      expect(onError).toHaveBeenCalledWith('error 1');
+      expect(onError).toHaveBeenCalledTimes(1);
     });
   });
 });
@@ -144,9 +198,32 @@ describe('SyncTaskScheduler', () => {
       expect(scheduler.isEmpty()).toBe(true);
     });
 
+    it('should do nothing if execute() is called multiple times by the scheduled task', () => {
+      const onError = jest.fn();
+      const scheduler = createSyncTaskScheduler({ onError });
+
+      const task2 = jest.fn();
+
+      const task1 = jest.fn(() => {
+        scheduler.schedule(task2);
+        expect(scheduler.isEmpty()).toBe(false);
+
+        scheduler.execute();
+        scheduler.execute();
+        expect(scheduler.isEmpty()).toBe(false);
+      });
+
+      scheduler.schedule(task1);
+
+      expect(scheduler.isEmpty()).toBe(true);
+      expect(task1).toBeCalledTimes(1);
+
+      expect(onError).toHaveBeenCalledTimes(0);
+    });
+
     it('should pass task errors to onError callback', async () => {
       const onError = jest.fn();
-      const scheduler = createSyncTaskScheduler(onError);
+      const scheduler = createSyncTaskScheduler({ onError });
       const results: number[] = [];
 
       const task1 = () => results.push(1);
@@ -168,6 +245,20 @@ describe('SyncTaskScheduler', () => {
       expect(scheduler.isEmpty()).toBe(true);
 
       expect(results).toEqual([1, 2, 3]);
+    });
+
+    it('should pass task errors to reportError() if onError is not provided', () => {
+      const onError = jest.fn();
+      globalThis.onerror = onError;
+
+      const scheduler = createSyncTaskScheduler();
+
+      scheduler.schedule(() => {
+        throw 'error 1';
+      });
+
+      expect(onError).toHaveBeenCalledWith('error 1');
+      expect(onError).toHaveBeenCalledTimes(1);
     });
   });
 });

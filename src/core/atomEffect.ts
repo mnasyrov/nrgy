@@ -77,8 +77,8 @@ export class AtomEffect<T> implements AtomEffectNode {
     const needsSchedule = !this.dirty;
     this.dirty = true;
 
-    if (needsSchedule) {
-      this.scheduler?.schedule(() => this.run());
+    if (needsSchedule && this.scheduler) {
+      this.scheduler.schedule(() => this.run());
     }
   }
 

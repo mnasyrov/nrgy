@@ -93,7 +93,7 @@ export const effect: EffectFn = <T, R>(
   const scheduler = selectScheduler(source, inferredOptions);
 
   if (isSignal<T>(source)) {
-    if (!inferredCallback) throw new Error('callback is missed');
+    if (!inferredCallback) throw new Error('Callback is missed');
     const node = getSignalNode<T>(source);
 
     const signalEffect = new SignalEffect<T>(scheduler, inferredCallback);
@@ -110,7 +110,7 @@ export const effect: EffectFn = <T, R>(
 
   let sideEffectFn: SideEffectFn<R>;
   if (isAtom<T>(source)) {
-    if (!inferredCallback) throw new Error('callback is missed');
+    if (!inferredCallback) throw new Error('Callback is missed');
     sideEffectFn = function () {
       return inferredCallback(source());
     };
@@ -151,7 +151,7 @@ export function selectScheduler(
 
 export function isForcedSyncSource(source: unknown): boolean {
   return (
-    isSignal<unknown>(source) && getSignalNode<unknown>(source)?.sync === true
+    isSignal<unknown>(source) && getSignalNode<unknown>(source).sync === true
   );
 }
 

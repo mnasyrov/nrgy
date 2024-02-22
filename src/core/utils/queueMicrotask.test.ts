@@ -1,13 +1,13 @@
-import { queueMicrotaskPolyfill, scheduleMicrotask } from './scheduleMicrotask';
+import { nrgyQueueMicrotask, queueMicrotaskPolyfill } from './queueMicrotask';
 
-describe('scheduleMicrotask()', () => {
+describe('nrgyQueueMicrotask()', () => {
   it('should schedule a microtask to the event loop', async () => {
     const results: number[] = [];
 
     setTimeout(() => results.push(1), 0);
-    scheduleMicrotask(() => results.push(2));
+    nrgyQueueMicrotask(() => results.push(2));
     setTimeout(() => results.push(3), 20);
-    scheduleMicrotask(() => results.push(4));
+    nrgyQueueMicrotask(() => results.push(4));
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 

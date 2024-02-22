@@ -1,9 +1,5 @@
 import { createQueue } from './utils/queue';
-
-const reportError =
-  'reportError' in globalThis && typeof globalThis.reportError === 'function'
-    ? globalThis.reportError
-    : undefined;
+import { nrgyReportError } from './utils/reportError';
 
 /**
  * Task scheduler interface
@@ -20,11 +16,21 @@ export type TaskScheduler = Readonly<{
 }>;
 
 /**
+ * Task scheduler options
+ */
+export type TaskSchedulerOptions = {
+  /** An error handler */
+  onError?: (error: unknown) => void;
+};
+
+/**
  * Creates a microtask scheduler
  */
 export function createMicrotaskScheduler(
-  onError?: (error: unknown) => void,
+  options?: TaskSchedulerOptions,
 ): TaskScheduler {
+  const onError = options?.onError ?? nrgyReportError;
+
   const queue = createQueue<() => void>();
   let isActive = false;
 
@@ -38,7 +44,7 @@ export function createMicrotaskScheduler(
       try {
         action();
       } catch (error) {
-        (onError ?? reportError)?.(error);
+        onError(error);
       }
     }
 
@@ -63,8 +69,10 @@ export function createMicrotaskScheduler(
  * Creates a synchronous task scheduler
  */
 export function createSyncTaskScheduler(
-  onError?: (error: unknown) => void,
+  options?: TaskSchedulerOptions,
 ): TaskScheduler {
+  const onError = options?.onError ?? nrgyReportError;
+
   const queue = createQueue<() => void>();
   let isActive = false;
 
@@ -78,7 +86,7 @@ export function createSyncTaskScheduler(
       try {
         action();
       } catch (error) {
-        (onError ?? reportError)?.(error);
+        onError(error);
       }
     }
     isActive = false;

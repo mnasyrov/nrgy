@@ -1,11 +1,11 @@
-import * as mockedModule from './scheduleMicrotask';
-import { scheduleMicrotask } from './scheduleMicrotask';
+import * as mockedModule from './queueMicrotask';
+import { nrgyQueueMicrotask } from './queueMicrotask';
 
-jest.mock('./scheduleMicrotask', () => {
+jest.mock('./queueMicrotask', () => {
   const originalValue = (globalThis as any).queueMicrotask;
   (globalThis as any).queueMicrotask = undefined;
 
-  const originalModule = jest.requireActual('./scheduleMicrotask');
+  const originalModule = jest.requireActual('./queueMicrotask');
 
   return {
     __esModule: true,
@@ -14,16 +14,16 @@ jest.mock('./scheduleMicrotask', () => {
   };
 });
 
-describe('scheduleMicrotask() polyfill', () => {
+describe('nrgyQueueMicrotask() polyfill', () => {
   it('should schedule a microtask to the event loop', async () => {
-    expect(scheduleMicrotask).not.toBe((mockedModule as any).originalValue);
+    expect(nrgyQueueMicrotask).not.toBe((mockedModule as any).originalValue);
 
     const results: number[] = [];
 
     setTimeout(() => results.push(1), 0);
-    scheduleMicrotask(() => results.push(2));
+    nrgyQueueMicrotask(() => results.push(2));
     setTimeout(() => results.push(3), 20);
-    scheduleMicrotask(() => results.push(4));
+    nrgyQueueMicrotask(() => results.push(4));
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
