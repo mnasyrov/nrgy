@@ -5,6 +5,7 @@ import {
   BaseController,
   BaseControllerContext,
   ControllerConstructorError,
+  createControllerContext,
   declareController,
   ExtensionFn,
   ExtensionParams,
@@ -230,5 +231,72 @@ describe('provideControllerParams()', () => {
       provideControllerParams({ a: 2, b: 3 }),
     ]);
     expect(controller2()).toBe(5);
+  });
+});
+
+describe('createControllerContext', () => {
+  it('should create a base context without parameters, providers and extensions', () => {
+    const context = createControllerContext(undefined);
+
+    expect(context).toEqual(
+      expect.objectContaining({
+        scope: expect.any(Object),
+        params: {},
+      }),
+    );
+  });
+
+  it('should create a context with parameters', () => {
+    const context = createControllerContext({ foo: 'bar' });
+
+    expect(context).toEqual(
+      expect.objectContaining({
+        scope: expect.any(Object),
+        params: { foo: 'bar' },
+      }),
+    );
+  });
+
+  it('should create a context with provider parameters', () => {
+    const context = createControllerContext([
+      provideControllerParams({ foo: 'bar' }),
+    ]);
+
+    expect(context).toEqual(
+      expect.objectContaining({
+        scope: expect.any(Object),
+        params: { foo: 'bar' },
+      }),
+    );
+  });
+
+  it('should create a context with a custom extension and provider', () => {
+    function withCustomExtension(value: number) {
+      return (context: BaseControllerContext, env?: ExtensionParams) => ({
+        ...context,
+        value,
+        extParams: env,
+      });
+    }
+
+    const context = createControllerContext(
+      [
+        provideControllerParams({ foo: 'bar' }),
+        provideExtensionParams({ param: 'value' }),
+      ],
+      [withCustomExtension(3)],
+    );
+
+    expect(context).toEqual(
+      expect.objectContaining({
+        scope: expect.any(Object),
+        params: { foo: 'bar' },
+        extParams: {
+          controllerParams: { foo: 'bar' },
+          param: 'value',
+        },
+        value: 3,
+      }),
+    );
   });
 });

@@ -148,7 +148,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     paramsOrProviders?:
       | TContext['params']
       | ReadonlyArray<ExtensionParamsProvider>,
-    extensions: ReadonlyArray<ExtensionFn<any, any>> = [],
+    extensions?: ReadonlyArray<ExtensionFn<any, any>>,
   ) {
     this.context = createControllerContext(paramsOrProviders, extensions);
     this.scope = this.context.scope;
@@ -372,7 +372,7 @@ export function createControllerDeclaration<
   TService extends BaseService,
 >(
   factory: ControllerFactory<TContext, TService>,
-  extensions: ExtensionFn<any, any>[],
+  extensions: ExtensionFn<any, any>[] | undefined,
 ): ControllerDeclaration<TContext, TService> {
   function constructorFn(
     paramsOrProviders:
@@ -403,7 +403,7 @@ function controllerConstructor<
     | TContext['params']
     | ReadonlyArray<ExtensionParamsProvider>
     | undefined,
-  extensions: ReadonlyArray<ExtensionFn<any, any>>,
+  extensions: ReadonlyArray<ExtensionFn<any, any>> | undefined,
 ): Controller<TService> {
   const context: TContext = createControllerContext(
     paramsOrProviders,
@@ -429,11 +429,10 @@ function controllerConstructor<
  * Creates a new controller context with applied extensions and providers
  */
 export function createControllerContext<TContext extends BaseControllerContext>(
-  paramsOrProviders:
+  paramsOrProviders?:
     | TContext['params']
-    | ReadonlyArray<ExtensionParamsProvider>
-    | undefined,
-  extensions: ReadonlyArray<ExtensionFn<any, any>>,
+    | ReadonlyArray<ExtensionParamsProvider>,
+  extensions?: ReadonlyArray<ExtensionFn<any, any>>,
 ): TContext {
   const scope = createScope();
 
@@ -457,7 +456,7 @@ export function createControllerContext<TContext extends BaseControllerContext>(
   const baseContext: BaseControllerContext = { scope, params: params ?? {} };
 
   const context: TContext = (
-    extensions.length > 0
+    extensions
       ? extensions.reduce(
           (prevContext, extension) => extension(prevContext, extensionParams),
           baseContext,
