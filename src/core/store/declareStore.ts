@@ -2,6 +2,9 @@ import { AtomOptions } from '../atom';
 
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
+/**
+ * Options for declaring a store
+ */
 export type DeclareStoreOptions<
   State,
   Updates extends StateUpdates<State> = StateUpdates<State>,
@@ -11,10 +14,19 @@ export type DeclareStoreOptions<
   options?: AtomOptions<State>;
 }>;
 
+/**
+ * @internal
+ */
 type FactoryStateArg<State> =
   | (State extends (state: State) => State ? never : State)
   | StateMutation<State>;
 
+/**
+ * Factory function for creating a store
+ *
+ * @param initialState Initial state
+ * @param options Options for the store
+ */
 export type StoreFactory<State, Updates extends StateUpdates<State>> = {
   (
     initialState?: FactoryStateArg<State>,
@@ -26,7 +38,14 @@ export type StoreFactory<State, Updates extends StateUpdates<State>> = {
     options?: AtomOptions<State>,
   ): Store<State, Updates>;
 
+  /**
+   * Initial state
+   */
   readonly initialState: State;
+
+  /**
+   * State mutators
+   */
   readonly updates: Updates;
 };
 

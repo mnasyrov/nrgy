@@ -74,10 +74,14 @@ export function pipeStateMutations<State>(
     mutations.reduce((nextState, mutation) => mutation(nextState), state);
 }
 
-/** Function which changes a state of the store */
+/**
+ * Function which changes a state of the store
+ */
 export type StoreUpdate<Args extends unknown[]> = (...args: Args) => void;
 
-/** Record of store update functions */
+/**
+ * Record of store update functions
+ */
 export type StoreUpdates<
   State,
   Updates extends StateUpdates<State>,
@@ -123,7 +127,9 @@ export function createStore<
   return store;
 }
 
-/** Creates StateUpdates for updating the store by provided state mutations */
+/**
+ * Creates StateUpdates for updating the store by provided state mutations
+ */
 export function createStoreUpdates<State, Updates extends StateUpdates<State>>(
   atomUpdate: WritableAtom<State>['update'],
   stateUpdates: Updates,
