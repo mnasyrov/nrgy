@@ -5,7 +5,7 @@ import {
   ControllerDeclaration,
   ViewControllerContext,
   ViewProps,
-} from '../core/mvc';
+} from '../mvc';
 
 import { useController } from './useController';
 import { ViewControllerProvider } from './ViewControllerProvider';

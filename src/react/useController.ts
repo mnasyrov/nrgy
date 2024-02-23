@@ -6,10 +6,10 @@ import {
   Controller,
   ControllerDeclaration,
   createViewProxy,
+  InferViewPropsFromControllerContext,
   provideView,
   ViewProxy,
-} from '../core/mvc';
-import { InferViewPropsFromControllerContext } from '../core/mvc/withView';
+} from '../mvc';
 
 import { useNrgyReactExtensionContext } from './NrgyReactExtension';
 

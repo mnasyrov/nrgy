@@ -1,5 +1,5 @@
-import { flushMicrotasks } from '../../test/testUtils';
-import { compute } from '../index';
+import { compute } from '../core';
+import { flushMicrotasks } from '../test/testUtils';
 
 import {
   BaseController,

@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { render } from '@testing-library/react';
 
-import { ExtensionParamsProvider } from '../core/mvc';
+import { ExtensionParamsProvider } from '../mvc';
 
 import {
   NrgyReactExtension,

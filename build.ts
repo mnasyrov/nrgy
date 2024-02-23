@@ -6,8 +6,8 @@ import pkg from './package.json';
 const entries = [
   // Core libs
   { entry: 'index', source: 'src/core' },
-  { entry: 'mvc', source: 'src/core/mvc' },
-  { entry: 'store', source: 'src/core/store' },
+  { entry: 'mvc', source: 'src/mvc' },
+  { entry: 'store', source: 'src/store' },
 
   // Extensions
   { entry: 'ditox', source: 'src/ditox' },

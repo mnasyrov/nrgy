@@ -1,6 +1,6 @@
 import { createContainer, token } from 'ditox';
 
-import { declareController } from '../core/mvc';
+import { declareController } from '../mvc';
 
 import { provideDependencyContainer, withInjections } from './withInjections';
 

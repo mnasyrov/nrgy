@@ -9,7 +9,7 @@ import {
   ExtensionFn,
   ExtensionParamsProvider,
   withView,
-} from '../core/mvc';
+} from '../mvc';
 
 import { NrgyReactExtension } from './NrgyReactExtension';
 import { useController } from './useController';

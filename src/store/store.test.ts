@@ -1,5 +1,5 @@
-import { collectChanges, flushMicrotasks } from '../../test/testUtils';
-import { atom, compute, effect, objectEquals } from '../index';
+import { atom, compute, effect, objectEquals } from '../core';
+import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import {
   createStore,

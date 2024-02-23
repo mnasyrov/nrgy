@@ -1,4 +1,4 @@
-import { compute, syncEffect } from '../index';
+import { compute, syncEffect } from '../core';
 
 import { ControllerConstructorError, declareController } from './controller';
 import {

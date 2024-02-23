@@ -1,10 +1,7 @@
 import React, { FC, PropsWithChildren } from 'react';
 
-import { BaseViewModel, ViewControllerContext } from '../core/mvc';
-import {
-  InferViewModelProps,
-  ViewModelDeclaration,
-} from '../core/mvc/viewModel';
+import { BaseViewModel, ViewControllerContext } from '../mvc';
+import { InferViewModelProps, ViewModelDeclaration } from '../mvc/viewModel';
 
 import { useController } from './useController';
 import { ViewControllerProvider } from './ViewControllerProvider';

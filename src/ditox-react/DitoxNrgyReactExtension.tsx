@@ -2,8 +2,8 @@ import React, { FC, PropsWithChildren } from 'react';
 
 import { useDependencyContainer } from 'ditox-react';
 
-import { ExtensionParamsProvider } from '../core/mvc';
 import { setDependencyContainerToParams } from '../ditox/withInjections';
+import { ExtensionParamsProvider } from '../mvc';
 import { NrgyReactExtension } from '../react';
 
 const DitoxInjectionParamsProvider: ExtensionParamsProvider = (params) => {

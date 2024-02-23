@@ -6,7 +6,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 
 import { Atom } from '../core';
-import { declareController, withView } from '../core/mvc';
+import { declareController, withView } from '../mvc';
 
 import { useAtom } from './useAtom';
 import { withViewController } from './withViewController';

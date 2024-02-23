@@ -1,4 +1,4 @@
-import { Atom } from '../common';
+import { Atom } from '../core';
 
 import {
   BaseController,

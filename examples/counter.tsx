@@ -1,8 +1,8 @@
-import { FC } from 'react';
+import React, { FC } from 'react';
 
-import { declareController } from '../src/core/mvc';
-import { declareStore } from '../src/core/store';
+import { declareController } from '../src/mvc';
 import { useAtom, useController } from '../src/react';
+import { declareStore } from '../src/store';
 
 const CounterStore = declareStore({
   initialState: 0,

@@ -1,4 +1,4 @@
-import { compute } from '../index';
+import { compute } from '../core';
 
 import { declareController } from './controller';
 import { withControllers } from './withControllers';

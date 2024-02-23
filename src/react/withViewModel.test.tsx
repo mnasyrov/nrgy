@@ -8,10 +8,10 @@ import { createContainer, token } from 'ditox';
 import { CustomDependencyContainer } from 'ditox-react';
 
 import { Atom } from '../core';
-import { declareViewModel, ViewModel } from '../core/mvc';
-import { declareStore } from '../core/store';
 import { withInjections } from '../ditox';
 import { DitoxNrgyReactExtension } from '../ditox-react';
+import { declareViewModel, ViewModel } from '../mvc';
+import { declareStore } from '../store';
 
 import { useAtom } from './useAtom';
 import { useAtoms } from './useAtoms';

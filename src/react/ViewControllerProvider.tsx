@@ -1,6 +1,6 @@
 import React, { createContext, FC, PropsWithChildren, useContext } from 'react';
 
-import { BaseService, Controller, ControllerDeclaration } from '../core/mvc';
+import { BaseService, Controller, ControllerDeclaration } from '../mvc';
 
 const REACT_CONTEXTS = new Map<
   ControllerDeclaration<any, any>,

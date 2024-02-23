@@ -1,4 +1,4 @@
-import { atom, AtomOptions, WritableAtom } from '../index';
+import { atom, AtomOptions, WritableAtom } from '../core';
 
 /**
  * A function to update a state.

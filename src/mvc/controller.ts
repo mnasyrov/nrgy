@@ -1,4 +1,4 @@
-import { createScope, Scope, signal } from '../index';
+import { createScope, Scope, signal } from '../core';
 
 /**
  * Base service type which is implemented by controllers

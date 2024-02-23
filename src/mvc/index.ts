@@ -33,6 +33,7 @@ export type { ControllerCompositionContext } from './withControllers';
 export { withControllers } from './withControllers';
 
 export type {
+  InferViewPropsFromControllerContext,
   ViewBinding,
   ViewControllerContext,
   ViewPropAtoms,
