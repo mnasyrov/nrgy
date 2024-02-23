@@ -40,16 +40,17 @@ export function useController<
     : TProps;
 
   type HookContext = {
+    declaration: ControllerDeclaration<TContext, TService>;
     controller: Controller<TService>;
     view: ViewProxy<ViewProxyProps>;
+    isMounted: boolean;
   };
 
   const extensionParamsProviders = useNrgyControllerExtensionContext();
 
   const hookContextRef = useRef<HookContext>();
-  const isMountedRef = useRef(false);
 
-  if (!hookContextRef.current) {
+  if (hookContextRef.current?.declaration !== declaration) {
     const view = createViewProxy<ViewProxyProps>(
       (props ?? {}) as ViewProxyProps,
     );
@@ -57,24 +58,33 @@ export function useController<
     const providers = [...extensionParamsProviders, provideView(view)];
     const controller = new declaration(providers);
 
-    hookContextRef.current = { controller, view };
+    hookContextRef.current = {
+      declaration,
+      controller,
+      view,
+      isMounted: false,
+    };
   }
 
   useEffect(() => {
-    if (isMountedRef.current && hookContextRef.current) {
-      hookContextRef.current.view.update(props);
+    const context = hookContextRef.current!;
+
+    if (context.isMounted) {
+      context.view.update(props);
     }
   }, [props]);
 
   useEffect(() => {
-    hookContextRef.current?.view.mount();
-    isMountedRef.current = true;
+    const context = hookContextRef.current!;
+
+    context.isMounted = true;
+    context.view.mount();
 
     return () => {
-      hookContextRef.current?.view?.unmount();
-      hookContextRef.current?.controller?.destroy();
+      context.view.unmount();
+      context.controller.destroy();
     };
-  }, []);
+  }, [declaration]);
 
   return hookContextRef.current!.controller;
 }
