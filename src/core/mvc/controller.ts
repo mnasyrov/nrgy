@@ -1,5 +1,8 @@
 import { createScope, Scope, signal } from '../index';
 
+/**
+ * Base service type which is implemented by controllers
+ */
 export type BaseService = Record<string, unknown> | ((...args: any[]) => any);
 
 /**
@@ -21,15 +24,27 @@ export type Controller<TService extends BaseService = BaseService> =
     destroy: () => void;
   };
 
+/**
+ * @internal
+ */
 type PartialController<TService extends BaseService> = TService & {
   /** Dispose the controller and clean its resources */
   destroy?: () => void;
 };
 
+/**
+ * Parameters for a controller
+ */
 export type ControllerParams = Record<string, unknown>;
 
+/**
+ * Base context for a controller
+ */
 export type BaseControllerContext = { scope: Scope; params?: unknown };
 
+/**
+ * Context with parameters for a controller
+ */
 export type ControllerParamsContext<TParams extends ControllerParams> =
   BaseControllerContext & { params: TParams };
 
@@ -43,8 +58,21 @@ export class ControllerConstructorError extends Error {
   }
 }
 
+/**
+ * Parameters for an extension
+ */
 export type ExtensionParams = Record<string, any>;
 
+/**
+ * Extension function for a controller
+ *
+ * It extends a controller context with additional data
+ *
+ * @param sourceContext The source context
+ * @param extensionParams Additional parameters for the extension
+ *
+ * @returns The extended context
+ */
 export type ExtensionFn<
   TSourceContext extends BaseControllerContext,
   TContextExtension extends BaseControllerContext,
@@ -53,6 +81,12 @@ export type ExtensionFn<
   extensionParams?: ExtensionParams,
 ) => TSourceContext & TContextExtension;
 
+/**
+ * Provider for arbitrary extension parameters
+ *
+ * It extends extension parameters with additional data and returns them.
+ * An extension can use this data during creation of a controller context.
+ */
 export type ExtensionParamsProvider = (
   params: ExtensionParams,
 ) => ExtensionParams;
@@ -95,7 +129,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     paramsOrProviders?:
       | TContext['params']
       | ReadonlyArray<ExtensionParamsProvider>,
-    extensions?: ReadonlyArray<ExtensionFn<any, any>>,
+    extensions: ReadonlyArray<ExtensionFn<any, any>> = [],
   ) {
     this.context = createControllerContext(paramsOrProviders, extensions);
     this.scope = this.context.scope;
@@ -266,10 +300,11 @@ function controllerConstructor<
   TService extends BaseService,
 >(
   factory: ControllerFactory<TContext, TService>,
-  paramsOrProviders?:
+  paramsOrProviders:
     | TContext['params']
-    | ReadonlyArray<ExtensionParamsProvider>,
-  extensions?: ReadonlyArray<ExtensionFn<any, any>>,
+    | ReadonlyArray<ExtensionParamsProvider>
+    | undefined,
+  extensions: ReadonlyArray<ExtensionFn<any, any>>,
 ): Controller<TService> {
   const context: TContext = createControllerContext(
     paramsOrProviders,
@@ -294,7 +329,7 @@ export function createControllerContext<TContext extends BaseControllerContext>(
     | TContext['params']
     | ReadonlyArray<ExtensionParamsProvider>
     | undefined,
-  extensions: ReadonlyArray<ExtensionFn<any, any>> | undefined,
+  extensions: ReadonlyArray<ExtensionFn<any, any>>,
 ): TContext {
   const scope = createScope();
 
@@ -311,10 +346,14 @@ export function createControllerContext<TContext extends BaseControllerContext>(
     ? createExtensionParams(providers)
     : undefined;
 
+  if (!params && extensionParams?.controllerParams) {
+    params = extensionParams.controllerParams;
+  }
+
   const baseContext: BaseControllerContext = { scope, params: params ?? {} };
 
   const context: TContext = (
-    extensions
+    extensions.length > 0
       ? extensions.reduce(
           (prevContext, extension) => extension(prevContext, extensionParams),
           baseContext,
@@ -339,12 +378,9 @@ export function provideControllerParams<
   >
     ? InferredContext
     : never,
->(
-  declaration: TDeclaration,
-  params: TContext['params'],
-): ExtensionParamsProvider {
+>(params: TContext['params']): ExtensionParamsProvider {
   return function (extensionParams) {
-    extensionParams['params'] = params;
+    extensionParams['controllerParams'] = params;
     return extensionParams;
   };
 }

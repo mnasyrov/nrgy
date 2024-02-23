@@ -4,13 +4,30 @@ import { compute } from '../index';
 import {
   BaseController,
   BaseControllerContext,
+  ControllerConstructorError,
   declareController,
   ExtensionFn,
   ExtensionParams,
+  provideControllerParams,
   provideExtensionParams,
 } from './controller';
 
+describe('ControllerConstructorError', () => {
+  it('should has the right name and message', () => {
+    const error = new ControllerConstructorError('test');
+
+    expect(error.name).toBe('ControllerConstructorError');
+    expect(error.message).toBe('test');
+  });
+});
+
 describe('declareController()', () => {
+  it('should create a simple controller with no parameters', () => {
+    const TestController = declareController().apply(() => ({ value: 1 }));
+    const controller = new TestController();
+    expect(controller.value).toBe(1);
+  });
+
   it('should create a controller', () => {
     const onDestroy = jest.fn();
 
@@ -191,5 +208,27 @@ describe('declareController() with classes', () => {
 
     controller.destroy();
     expect(onDestroyCallback).toHaveBeenCalled();
+  });
+});
+
+describe('provideControllerParams()', () => {
+  it('should provide patameters to a controller by its context', () => {
+    const TestController = declareController()
+      .params<{
+        a: number;
+        b: number;
+      }>()
+      .apply(({ params }) => {
+        const { a, b } = params;
+        return () => a + b;
+      });
+
+    const controller1 = new TestController({ a: 2, b: 3 });
+    expect(controller1()).toBe(5);
+
+    const controller2 = new TestController([
+      provideControllerParams({ a: 2, b: 3 }),
+    ]);
+    expect(controller2()).toBe(5);
   });
 });
