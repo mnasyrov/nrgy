@@ -124,6 +124,7 @@ export function provideView(view: ViewBinding<any>): ExtensionParamsProvider {
   };
 }
 
+// TODO: Added a version of createViewProxy() to create a view proxy without props
 /**
  * Creates a view proxy that implements the view binding
  */

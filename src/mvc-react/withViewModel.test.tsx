@@ -9,12 +9,12 @@ import { CustomDependencyContainer } from 'ditox-react';
 
 import { Atom } from '../core';
 import { withInjections } from '../ditox';
-import { DitoxNrgyReactExtension } from '../ditox-react';
+import { DitoxNrgyExtension } from '../ditox-react';
 import { declareViewModel, ViewModel } from '../mvc';
+import { useAtom } from '../react/useAtom';
+import { useAtoms } from '../react/useAtoms';
 import { declareStore } from '../store';
 
-import { useAtom } from './useAtom';
-import { useAtoms } from './useAtoms';
 import { useProvidedViewController } from './ViewControllerProvider';
 import { withViewModel } from './withViewModel';
 
@@ -152,13 +152,13 @@ describe('withViewModel()', () => {
     container.bindValue(EXTRA_VALUE_TOKEN, 3);
 
     render(
-      <DitoxNrgyReactExtension>
+      <DitoxNrgyExtension>
         <CustomDependencyContainer container={container}>
           <CounterComponent initialValue={5} label="TestLabel">
             <span>inner-content</span>
           </CounterComponent>
         </CustomDependencyContainer>
-      </DitoxNrgyReactExtension>,
+      </DitoxNrgyExtension>,
     );
 
     expect(screen.getByTestId('label')).toHaveTextContent('TestLabel');
@@ -208,13 +208,13 @@ describe('withViewModel()', () => {
     container.bindValue(EXTRA_VALUE_TOKEN, 3);
 
     render(
-      <DitoxNrgyReactExtension>
+      <DitoxNrgyExtension>
         <CustomDependencyContainer container={container}>
           <CounterComponent initialValue={5} label="TestLabel">
             <span>inner-content</span>
           </CounterComponent>
         </CustomDependencyContainer>
-      </DitoxNrgyReactExtension>,
+      </DitoxNrgyExtension>,
     );
 
     expect(screen.getByTestId('label')).toHaveTextContent('TestLabel');

@@ -11,7 +11,7 @@ import {
   ViewProxy,
 } from '../mvc';
 
-import { useNrgyReactExtensionContext } from './NrgyReactExtension';
+import { useNrgyControllerExtensionContext } from './NrgyControllerExtension';
 
 export function useController<
   TContext extends BaseControllerContext,
@@ -44,7 +44,7 @@ export function useController<
     view: ViewProxy<ViewProxyProps>;
   };
 
-  const extensionParamsProviders = useNrgyReactExtensionContext();
+  const extensionParamsProviders = useNrgyControllerExtensionContext();
 
   const hookContextRef = useRef<HookContext>();
   const isMountedRef = useRef(false);
@@ -61,8 +61,8 @@ export function useController<
   }
 
   useEffect(() => {
-    if (isMountedRef.current) {
-      hookContextRef.current?.view.update(props);
+    if (isMountedRef.current && hookContextRef.current) {
+      hookContextRef.current.view.update(props);
     }
   }, [props]);
 

@@ -6,12 +6,12 @@ import { DependencyContainer } from 'ditox-react';
 
 import { withInjections } from '../ditox';
 import { declareController } from '../mvc';
-import { useController } from '../react';
+import { useController } from '../mvc-react';
 
-import { DitoxNrgyReactExtension } from './DitoxNrgyReactExtension';
+import { DitoxNrgyExtension } from './DitoxNrgyExtension';
 
-describe('DitoxNrgyReactExtension', () => {
-  it('should fail in case there is no DitoxNrgyReactExtension in the render tree', () => {
+describe('DitoxNrgyExtension', () => {
+  it('should fail in case there is no DitoxNrgyExtension in the render tree', () => {
     const VALUE_TOKEN = token<number>();
     const factory = jest.fn();
 
@@ -37,7 +37,7 @@ describe('DitoxNrgyReactExtension', () => {
 
     expect(() =>
       renderHook(() => useController(TestController), {
-        wrapper: DitoxNrgyReactExtension,
+        wrapper: DitoxNrgyExtension,
       }),
     ).toThrow(new Error('Dependency injection container is not provided'));
     expect(factory).toHaveBeenCalledTimes(0);
@@ -58,7 +58,7 @@ describe('DitoxNrgyReactExtension', () => {
     const { result } = renderHook(() => useController(TestController), {
       wrapper: ({ children }) => (
         <DependencyContainer binder={valueBinder}>
-          <DitoxNrgyReactExtension>{children}</DitoxNrgyReactExtension>
+          <DitoxNrgyExtension>{children}</DitoxNrgyExtension>
         </DependencyContainer>
       ),
     });
@@ -66,7 +66,7 @@ describe('DitoxNrgyReactExtension', () => {
     expect(result.current.getValue()).toBe(10);
   });
 
-  it('should injects dependencies DitoxNrgyReactExtension is used before DependencyContainer in the render tree', () => {
+  it('should injects dependencies DitoxNrgyExtension is used before DependencyContainer in the render tree', () => {
     const VALUE_TOKEN = token<number>();
     const valueBinder = (container: Container) => {
       container.bindValue(VALUE_TOKEN, 1);
@@ -80,11 +80,11 @@ describe('DitoxNrgyReactExtension', () => {
 
     const { result } = renderHook(() => useController(TestController), {
       wrapper: ({ children }) => (
-        <DitoxNrgyReactExtension>
+        <DitoxNrgyExtension>
           <DependencyContainer binder={valueBinder}>
             {children}
           </DependencyContainer>
-        </DitoxNrgyReactExtension>
+        </DitoxNrgyExtension>
       ),
     });
 

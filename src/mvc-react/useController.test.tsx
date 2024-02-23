@@ -11,7 +11,7 @@ import {
   withView,
 } from '../mvc';
 
-import { NrgyReactExtension } from './NrgyReactExtension';
+import { NrgyControllerExtension } from './NrgyControllerExtension';
 import { useController } from './useController';
 
 describe('useController()', () => {
@@ -158,7 +158,7 @@ describe('useController() and withView() extension', () => {
 });
 
 describe('useController() and a custom extension', () => {
-  it('should use an extension context provided by NrgyReactExtension', () => {
+  it('should use an extension context provided by NrgyControllerExtension', () => {
     function withCustomExtension<
       TSourceContext extends BaseControllerContext,
     >(): ExtensionFn<
@@ -188,9 +188,9 @@ describe('useController() and a custom extension', () => {
     });
 
     render(
-      <NrgyReactExtension provider={customValueProvider}>
+      <NrgyControllerExtension provider={customValueProvider}>
         <TestComponent />
-      </NrgyReactExtension>,
+      </NrgyControllerExtension>,
     );
 
     expect(result).toEqual({

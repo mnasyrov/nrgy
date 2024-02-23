@@ -1,1 +1,1 @@
-export { DitoxNrgyReactExtension } from './DitoxNrgyReactExtension';
+export { DitoxNrgyExtension } from './DitoxNrgyExtension';

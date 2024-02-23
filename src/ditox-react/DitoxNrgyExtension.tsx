@@ -4,7 +4,7 @@ import { useDependencyContainer } from 'ditox-react';
 
 import { setDependencyContainerToParams } from '../ditox/withInjections';
 import { ExtensionParamsProvider } from '../mvc';
-import { NrgyReactExtension } from '../react';
+import { NrgyControllerExtension } from '../mvc-react';
 
 const DitoxInjectionParamsProvider: ExtensionParamsProvider = (params) => {
   const container = useDependencyContainer();
@@ -12,12 +12,10 @@ const DitoxInjectionParamsProvider: ExtensionParamsProvider = (params) => {
   return params;
 };
 
-export const DitoxNrgyReactExtension: FC<PropsWithChildren> = ({
-  children,
-}) => {
+export const DitoxNrgyExtension: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <NrgyReactExtension provider={DitoxInjectionParamsProvider}>
+    <NrgyControllerExtension provider={DitoxInjectionParamsProvider}>
       {children}
-    </NrgyReactExtension>
+    </NrgyControllerExtension>
   );
 };

@@ -5,11 +5,11 @@ import { render } from '@testing-library/react';
 import { ExtensionParamsProvider } from '../mvc';
 
 import {
-  NrgyReactExtension,
-  useNrgyReactExtensionContext,
-} from './NrgyReactExtension';
+  NrgyControllerExtension,
+  useNrgyControllerExtensionContext,
+} from './NrgyControllerExtension';
 
-describe('NrgyReactExtension', () => {
+describe('NrgyControllerExtension', () => {
   it('should provide a value to the extension context', () => {
     const value1Provider: ExtensionParamsProvider = (params) => ({
       ...params,
@@ -23,16 +23,16 @@ describe('NrgyReactExtension', () => {
     let providers: undefined | ReadonlyArray<ExtensionParamsProvider>;
 
     const TestComponent: FC = () => {
-      providers = useNrgyReactExtensionContext();
+      providers = useNrgyControllerExtensionContext();
       return null;
     };
 
     render(
-      <NrgyReactExtension provider={value1Provider}>
-        <NrgyReactExtension provider={value2Provider}>
+      <NrgyControllerExtension provider={value1Provider}>
+        <NrgyControllerExtension provider={value2Provider}>
           <TestComponent />
-        </NrgyReactExtension>
-      </NrgyReactExtension>,
+        </NrgyControllerExtension>
+      </NrgyControllerExtension>,
     );
 
     expect(providers).toEqual([value1Provider, value2Provider]);

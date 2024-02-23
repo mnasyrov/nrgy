@@ -27,6 +27,10 @@
       "require": "./mvc.cjs",
       "default": "./mvc.js"
     },
+    "./mvc-react": {
+      "require": "./mvc-react.cjs",
+      "default": "./mvc-react.js"
+    },
     "./store": {
       "require": "./store.cjs",
       "default": "./store.js"
