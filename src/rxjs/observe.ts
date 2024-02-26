@@ -3,22 +3,43 @@ import { Observable, share, shareReplay, skip } from 'rxjs';
 import { Atom, effect, isAtom, isSignal, Signal, syncEffect } from '../core';
 import { ENERGY_RUNTIME } from '../core/runtime';
 
+/**
+ * Options for `observe`
+ */
 export type SignalObserveOptions = {
   sync?: boolean;
 };
 
+/**
+ * Options for `observe`
+ */
 export type AtomObserveOptions = {
   sync?: boolean;
   onlyChanges?: boolean;
 };
 
+/**
+ * @internal
+ *
+ * Options for `observe`
+ */
 type ObserveOptions = SignalObserveOptions & AtomObserveOptions;
 
+/**
+ * Exposes the value of an `Atom` as an RxJS `Observable`.
+ *
+ * The atom's value will be propagated into the `Observable`'s subscribers using an `effect`.
+ */
 export function observe<T>(
   source: Atom<T>,
   options?: AtomObserveOptions,
 ): Observable<T>;
 
+/**
+ * Exposes the value of an `Atom` as an RxJS `Observable`.
+ *
+ * The atom's value will be propagated into the `Observable`'s subscribers using an `effect`.
+ */
 export function observe<T>(
   source: Signal<T>,
   options?: SignalObserveOptions,

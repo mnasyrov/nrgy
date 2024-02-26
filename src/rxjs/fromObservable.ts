@@ -1,8 +1,6 @@
 import { Observable, Subscribable } from 'rxjs';
 
-import { DestroyableAtom } from '../core';
-import { createAtomSubject } from '../core/atomSubject';
-import { createScope } from '../core/scope';
+import { createAtomSubject, createScope, DestroyableAtom } from '../core';
 
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.

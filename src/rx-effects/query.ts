@@ -1,7 +1,6 @@
 import { Observable, skip } from 'rxjs';
 
-import { Atom, compute, DestroyableAtom, isAtom } from '../core';
-import { createAtomFromFunction, getAtomNode } from '../core/atom';
+import { Atom, DestroyableAtom } from '../core';
 import { fromObservable, observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
@@ -17,34 +16,19 @@ export type Query<T> = Readonly<{
   value$: Observable<T>;
 }>;
 
-export type AtomQuery<T> = Query<T> & {
-  readonly source: Atom<T>;
-};
-
-export function isAtomQuery<T>(query: Query<T>): query is AtomQuery<T> {
-  return 'source' in query && isAtom(query.source);
-}
-
-export function toQuery<T>(source: Atom<T>): AtomQuery<T> {
+/**
+ * Creates a Query for the given Atom
+ */
+export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
     get: () => source(),
     value$: observe(source),
-    source,
   };
 }
 
+/**
+ * Creates an Atom from a Query
+ */
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
-  if (isAtomQuery(query)) {
-    const { source } = query;
-
-    const proxy = compute(() => source());
-    const node = getAtomNode(proxy);
-
-    return createAtomFromFunction(node, node.get.bind(node), {
-      destroy: () => node.destroy(),
-      asReadonly: () => proxy,
-    });
-  }
-
   return fromObservable(query.value$.pipe(skip(1)), query.get());
 }
