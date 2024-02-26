@@ -59,10 +59,10 @@ describe('withViewController()', () => {
       };
     });
 
-  it('should return HOC with applied controlelr', async () => {
+  it('should return HOC with applied controller', async () => {
     const user = userEvent.setup();
 
-    const TestCounter = withViewController(CounterView, CounterController);
+    const TestCounter = withViewController(CounterController)(CounterView);
 
     render(<TestCounter initialValue={5} label="TestLabel" />);
 
