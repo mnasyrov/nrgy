@@ -1,6 +1,6 @@
 import { createContainer, token } from 'ditox';
 
-import { declareController } from '../mvc';
+import { ControllerConstructorError, declareController } from '../mvc';
 
 import { provideDependencyContainer, withInjections } from './withInjections';
 
@@ -21,5 +21,17 @@ describe('withInjections()', () => {
       provideDependencyContainer(container),
     ]);
     expect(controller.value).toBe(1);
+  });
+
+  it('should throw an error if DI container is not provided', () => {
+    const TestController = declareController()
+      .extend(withInjections({ value: token<number>() }))
+      .apply(() => ({ value: 1 }));
+
+    expect(() => new TestController()).toThrow(
+      new ControllerConstructorError(
+        'Dependency injection container is not provided',
+      ),
+    );
   });
 });

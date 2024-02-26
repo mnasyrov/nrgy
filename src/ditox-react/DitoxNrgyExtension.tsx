@@ -12,6 +12,9 @@ const DitoxInjectionParamsProvider: ExtensionParamsProvider = (params) => {
   return params;
 };
 
+/**
+ * This extension binds a dependency container to view controllers and view-models.
+ */
 export const DitoxNrgyExtension: FC<PropsWithChildren> = ({ children }) => {
   return (
     <NrgyControllerExtension provider={DitoxInjectionParamsProvider}>
