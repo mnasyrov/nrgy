@@ -10,6 +10,7 @@ import {
 import { useController } from './useController';
 import { ViewControllerProvider } from './ViewControllerProvider';
 
+// TODO: Align function signature with withViewModel()
 /**
  * Creates a higher-order React component that provides a controller for a given view component.
  *
