@@ -23,4 +23,10 @@ describe('useAtoms()', () => {
     act(() => s1.set(3));
     await waitFor(() => expect(result.current).toEqual({ s1: 2, s2: 30 }));
   });
+
+  it('should render with a current value and watch for value changes', async () => {
+    const { result } = renderHook(() => useAtoms(undefined));
+
+    expect(result.current).toEqual({});
+  });
 });
