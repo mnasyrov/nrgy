@@ -58,6 +58,8 @@ export type ViewModelDeclaration<
 > = {
   /** @internal Keep the type for inference */
   readonly __contextType?: TContext;
+
+  /** @internal Keep the type for inference */
   readonly __viewModelType?: TViewModel;
 
   new (): Controller<TViewModel>;

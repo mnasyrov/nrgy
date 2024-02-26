@@ -12,6 +12,11 @@ type InferHocComponent<
   TViewModelProps = InferViewModelProps<TViewModel>,
 > = FC<PropsWithChildren<Omit<TComponentProps, 'viewModel'> & TViewModelProps>>;
 
+/**
+ * Creates a higher-order React component that provides a view model for a given view component.
+ *
+ * @param viewModelDeclaration - Controller declaration
+ */
 export function withViewModel<TViewModel extends BaseViewModel>(
   viewModelDeclaration: ViewModelDeclaration<
     TViewModel,
@@ -25,6 +30,12 @@ export function withViewModel<TViewModel extends BaseViewModel>(
   };
 }
 
+/**
+ * Creates a higher-order React component that provides a view model for a given view component.
+ *
+ * @param viewModelDeclaration - Controller declaration
+ * @param ViewComponent - React component to be wrapped
+ */
 export function withViewModelImpl<
   TViewModel extends BaseViewModel,
   TComponentProps extends { viewModel: TViewModel },

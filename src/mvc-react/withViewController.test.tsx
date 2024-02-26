@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 
 import { Atom } from '../core';
 import { declareController, withView } from '../mvc';
-import { useAtom } from '../react/useAtom';
+import { useAtom } from '../react';
 
 import { withViewController } from './withViewController';
 

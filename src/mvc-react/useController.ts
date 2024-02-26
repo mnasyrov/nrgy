@@ -13,11 +13,17 @@ import {
 
 import { useNrgyControllerExtensionContext } from './NrgyControllerExtension';
 
+/**
+ * Returns a controller instance for the given controller declaration.
+ */
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
 >(declaration: ControllerDeclaration<TContext, TService>): TService;
 
+/**
+ * Returns a controller instance for the given controller declaration and props.
+ */
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
@@ -27,6 +33,9 @@ export function useController<
   props: TProps,
 ): TService;
 
+/**
+ * Returns a controller instance for the given controller declaration and props.
+ */
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,

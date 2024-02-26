@@ -102,6 +102,12 @@ export type ControllerDeclaration<
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
 
+      /** @internal Keep the type for inference */
+      readonly __paramsType?: TParams;
+
+      /** @internal Keep the type for inference */
+      readonly __serviceType?: TService;
+
       /**
        * Creates a new controller with the given parameters
        */
@@ -117,6 +123,9 @@ export type ControllerDeclaration<
   : {
       /** @internal Keep the type for inference */
       readonly __contextType?: TContext;
+
+      /** @internal Keep the type for inference */
+      readonly __serviceType?: TService;
 
       /**
        * Creates a new controller
@@ -194,6 +203,9 @@ export type ControllerClassDeclaration<TContext extends BaseControllerContext> =
     ? {
         /** @internal Keep the type for inference */
         readonly __contextType?: TContext;
+
+        /** @internal Keep the type for inference */
+        readonly __paramsType?: TParams;
 
         /**
          * Creates a new controller with the given parameters

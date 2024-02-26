@@ -10,15 +10,18 @@ import {
 import { useController } from './useController';
 import { ViewControllerProvider } from './ViewControllerProvider';
 
+/**
+ * Creates a higher-order React component that provides a controller for a given view component.
+ *
+ * @param ViewComponent - React component to be wrapped
+ * @param declaration - Controller declaration
+ */
 export function withViewController<
   TProps extends ViewProps,
-  TController extends BaseService,
+  TService extends BaseService,
 >(
-  ViewComponent: React.ComponentType<TProps & { controller: TController }>,
-  declaration: ControllerDeclaration<
-    ViewControllerContext<TProps>,
-    TController
-  >,
+  ViewComponent: React.ComponentType<TProps & { controller: TService }>,
+  declaration: ControllerDeclaration<ViewControllerContext<TProps>, TService>,
 ): FC<TProps> {
   return function (props: TProps) {
     const controller = useController(declaration, props);
