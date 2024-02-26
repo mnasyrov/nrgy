@@ -1,8 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { atom } from '../core/atom';
-import { compute } from '../core/compute';
+import { atom, compute, signal } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { observe } from './observe';
@@ -158,5 +157,56 @@ describe('observe()', () => {
     expect(emits()).toBe(1);
 
     expect(hits).toBe(1);
+  });
+
+  it('should emits only changes for atoms if "onlyChanges" option is set', () => {
+    const source = atom(1);
+    const observable = observe(source, { sync: true, onlyChanges: true });
+
+    const spy = jest.fn();
+    observable.subscribe(spy);
+
+    source.set(2);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenLastCalledWith(2);
+
+    source.set(2);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenLastCalledWith(2);
+
+    source.set(3);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenLastCalledWith(3);
+  });
+
+  it('should use a sync scheduler for atoms if "sync" option is set', () => {
+    const source = atom(1);
+    const observable = observe(source, { sync: true });
+
+    const spy = jest.fn();
+    observable.subscribe(spy);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenLastCalledWith(1);
+
+    source.set(2);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenLastCalledWith(2);
+  });
+
+  it('should use a sync scheduler for signals if "sync" option is set', () => {
+    const source = signal<number>();
+    const observable = observe(source, { sync: true });
+
+    const spy = jest.fn();
+    observable.subscribe(spy);
+    expect(spy).toHaveBeenCalledTimes(0);
+
+    source(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenLastCalledWith(1);
+
+    source(2);
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenLastCalledWith(2);
   });
 });
