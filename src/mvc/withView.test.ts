@@ -43,7 +43,7 @@ describe('withView()', () => {
 
 describe('provideView()', () => {
   it('should provide a view to the extension by extension params', () => {
-    const view = createViewProxy({});
+    const view = createViewProxy();
     const provider = provideView(view);
 
     const result = provider({});
@@ -54,7 +54,8 @@ describe('provideView()', () => {
 describe('ViewProxy', () => {
   describe('createViewProxy()', () => {
     it('should create a view proxy', () => {
-      const view = createViewProxy({});
+      const view = createViewProxy();
+
       expect(view).toEqual(
         expect.objectContaining({
           props: expect.any(Object),
@@ -79,7 +80,7 @@ describe('ViewProxy', () => {
 
   describe('mount()', () => {
     it('should notify the view is mounted by onMount signal', () => {
-      const view = createViewProxy({});
+      const view = createViewProxy();
 
       const spy = jest.fn();
       syncEffect(view.onMount, spy);
@@ -125,7 +126,7 @@ describe('ViewProxy', () => {
 
   describe('unmount()', () => {
     it('should notify the view is unmounted by onUnmount signal', () => {
-      const view = createViewProxy({});
+      const view = createViewProxy();
 
       const spy = jest.fn();
       syncEffect(view.onUnmount, spy);

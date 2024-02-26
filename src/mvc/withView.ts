@@ -23,9 +23,14 @@ export type ViewProps = Record<string, unknown>;
  * ViewPropAtoms are the atoms wit View's props that are provided
  * to the controller by the ViewBinding
  */
-export type ViewPropAtoms<TProps extends ViewProps> = Readonly<{
-  [K in keyof TProps]: Atom<TProps[K]>;
-}>;
+export type ViewPropAtoms<TProps extends ViewProps> = TProps extends Record<
+  string,
+  never
+>
+  ? Record<string, never>
+  : Readonly<{
+      [K in keyof TProps]: Atom<TProps[K]>;
+    }>;
 
 /**
  * ViewBinding is the binding between the controller and the view
@@ -124,12 +129,23 @@ export function provideView(view: ViewBinding<any>): ExtensionParamsProvider {
   };
 }
 
-// TODO: Added a version of createViewProxy() to create a view proxy without props
+/**
+ * Creates a view proxy that implements the view binding
+ */
+export function createViewProxy(): ViewProxy<Record<string, never>>;
+
 /**
  * Creates a view proxy that implements the view binding
  */
 export function createViewProxy<TProps extends ViewProps>(
   initialProps: TProps,
+): ViewProxy<TProps>;
+
+/**
+ * Creates a view proxy that implements the view binding
+ */
+export function createViewProxy<TProps extends ViewProps>(
+  initialProps?: TProps,
 ): ViewProxy<TProps> {
   const props: Record<string, WritableAtom<any>> = {};
   const readonlyProps: Record<string, Atom<any>> = {};

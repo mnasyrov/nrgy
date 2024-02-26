@@ -119,7 +119,7 @@ export class ViewModelDeclarationBuilder<
       const partialViewModel = factory(context);
 
       return Object.assign(partialViewModel, {
-        props: context.view.props,
+        props: context.view.props as any,
       }) as TViewModel;
     }, extensions);
 
