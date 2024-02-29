@@ -2,7 +2,7 @@
 
 <img alt="energy" src="energy.svg" width="120" />
 
-Energy to program using reactive state and effects
+Energy for reactive programming
 
 [![npm](https://img.shields.io/npm/v/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 [![licence](https://img.shields.io/github/license/mnasyrov/nrgy.svg)](https://github.com/mnasyrov/nrgy/blob/master/LICENSE)

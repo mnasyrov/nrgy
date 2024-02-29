@@ -2,7 +2,7 @@
   "private": true,
   "name": "nrgy",
   "version": "0.0.24",
-  "description": "Reactive state and effect management",
+  "description": "Energy for reactive programming with atoms, signals and MVC/MVVM patters",
   "license": "MIT",
   "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
   "homepage": "https://github.com/mnasyrov/nrgy",
@@ -128,6 +128,12 @@
     "effect",
     "management",
     "reactive",
-    "rxjs"
+    "rxjs",
+    "react",
+    "typescript",
+    "atom",
+    "signals",
+    "MVC",
+    "MVVM"
   ]
 }
