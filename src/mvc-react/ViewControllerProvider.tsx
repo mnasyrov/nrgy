@@ -80,9 +80,7 @@ export function useOptionalViewController<
 }
 
 /**
- * @internal
- *
- * Creates a React context that provides a controller for a given controller declaration.
+ * Provides a controller for a given controller declaration using a React context.
  */
 export const ViewControllerProvider = <
   TContext extends BaseControllerContext,

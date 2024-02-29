@@ -11,8 +11,7 @@ import { Atom } from '../core';
 import { withInjections } from '../ditox';
 import { DitoxNrgyExtension } from '../ditox-react';
 import { declareViewModel, ViewModel } from '../mvc';
-import { useAtom } from '../react/useAtom';
-import { useAtoms } from '../react/useAtoms';
+import { useAtom, useAtoms } from '../react';
 import { declareStore } from '../store';
 
 import { useProvidedViewController } from './ViewControllerProvider';
