@@ -18,6 +18,7 @@ export const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
  * call it.
  */
 export type Atom<T> = (() => T) & {
+  /** @internal */
   readonly [ATOM_SYMBOL]: unknown;
 };
 
