@@ -2,6 +2,7 @@
 
 module.exports = {
   root: true,
+  ignorePatterns: ['website'],
   plugins: [
     '@typescript-eslint/eslint-plugin',
     'eslint-plugin-import',

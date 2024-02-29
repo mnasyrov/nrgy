@@ -2,7 +2,7 @@
 
 <img alt="energy" src="energy.svg" width="120" />
 
-Energy for reactive programming
+The energy for reactive programming with MVC/MVVM patterns
 
 [![npm](https://img.shields.io/npm/v/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 [![licence](https://img.shields.io/github/license/mnasyrov/nrgy.svg)](https://github.com/mnasyrov/nrgy/blob/master/LICENSE)
@@ -51,7 +51,6 @@ server applications, libraries and CLI tools.
 - Framework-agnostic core components
 - Developer-friendly functional API
 - Typescript typings
-- 100% test coverage
 
 ## Usage
 
@@ -60,8 +59,3 @@ server applications, libraries and CLI tools.
 ```
 npm install nrgy
 ```
-
----
-
-&copy; 2023 [Mikhail Nasyrov](https://github.com/mnasyrov),
-[MIT license](./LICENSE)
