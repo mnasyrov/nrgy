@@ -29,8 +29,8 @@ const config = {
   tagline: 'The energy for reactive programming with MVC/MVVM patterns',
   favicon: 'img/favicon.svg',
 
-  url: 'https://mnasyrov.github.io',
-  baseUrl: '/nrgy',
+  url: 'https://nrgy.js.org',
+  baseUrl: '/',
 
   // GitHub pages deployment config.
   organizationName: 'mnasyrov',
