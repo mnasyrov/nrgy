@@ -35,12 +35,11 @@ const FeatureList = [
   {
     title: 'Framework-agnostic Core',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
-    // description: (
-    //   <>
-    //     The library was designed to be easily installed and used to get your
-    //     application up and running quickly.
-    //   </>
-    // ),
+    description: (
+      <>
+        It can be used by web and server applications, libraries and CLI tools
+      </>
+    ),
   },
   {
     title: 'Developer-friendly API',
