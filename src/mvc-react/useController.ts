@@ -55,7 +55,7 @@ export function useController<
     isMounted: boolean;
   };
 
-  const extensionParamsProviders = useNrgyControllerExtensionContext();
+  const reactExtensionProviders = useNrgyControllerExtensionContext();
 
   const hookContextRef = useRef<HookContext>();
 
@@ -64,7 +64,9 @@ export function useController<
       (props ?? {}) as ViewProxyProps,
     );
 
-    const providers = [...extensionParamsProviders, provideView(view)];
+    // NOTE:  React hooks of the extension will be invoked
+    //        by calling the declaration.
+    const providers = [...reactExtensionProviders, provideView(view)];
     const controller = new declaration(providers);
 
     hookContextRef.current = {
@@ -73,6 +75,12 @@ export function useController<
       view,
       isMounted: false,
     };
+  } else {
+    // HACK:  Needs to keep invoking the extension providers
+    //        to keep execution of React hooks in the order.
+    for (const provider of reactExtensionProviders) {
+      provider({});
+    }
   }
 
   useEffect(() => {
@@ -92,6 +100,8 @@ export function useController<
     return () => {
       context.view.unmount();
       context.controller.destroy();
+
+      hookContextRef.current = undefined;
     };
   }, [declaration]);
 

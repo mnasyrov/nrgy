@@ -158,23 +158,27 @@ describe('useController() and withView() extension', () => {
 });
 
 describe('useController() and a custom extension', () => {
+  function withCustomExtension<
+    TSourceContext extends BaseControllerContext,
+  >(): ExtensionFn<
+    TSourceContext,
+    TSourceContext & { customValue: string | undefined }
+  > {
+    return (sourceContext, extensionParams) => ({
+      ...sourceContext,
+      customValue: extensionParams?.['customValue'],
+    });
+  }
+
+  const TestController = declareController()
+    .extend(withCustomExtension())
+    .apply(({ customValue }) => ({ customValue }));
+
+  const TestController2 = declareController()
+    .extend(withCustomExtension())
+    .apply(({ customValue }) => ({ customValue: 'foo-' + customValue }));
+
   it('should use an extension context provided by NrgyControllerExtension', () => {
-    function withCustomExtension<
-      TSourceContext extends BaseControllerContext,
-    >(): ExtensionFn<
-      TSourceContext,
-      TSourceContext & { customValue: string | undefined }
-    > {
-      return (sourceContext, extensionParams) => ({
-        ...sourceContext,
-        customValue: extensionParams?.['customValue'],
-      });
-    }
-
-    const TestController = declareController()
-      .extend(withCustomExtension())
-      .apply(({ customValue }) => ({ customValue }));
-
     let result: any;
 
     const TestComponent: FC = () => {
@@ -194,6 +198,40 @@ describe('useController() and a custom extension', () => {
     );
 
     expect(result).toEqual({
+      customValue: 'value1',
+      destroy: expect.any(Function),
+    });
+  });
+
+  it('should use NrgyControllerExtension', () => {
+    const customValueProvider: ExtensionParamsProvider = (params) => ({
+      ...params,
+      customValue: 'value1',
+    });
+
+    let ControllerDeclaration: any = TestController;
+
+    const { result, rerender } = renderHook(
+      () => useController(TestController),
+      {
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={customValueProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current).toEqual({
+      customValue: 'value1',
+      destroy: expect.any(Function),
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ControllerDeclaration = TestController2;
+    rerender();
+
+    expect(result.current).toEqual({
       customValue: 'value1',
       destroy: expect.any(Function),
     });
