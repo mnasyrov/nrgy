@@ -101,11 +101,9 @@ const config = {
       },
       footer: {
         style: 'dark',
-        copyright: [
-          `Copyright © ${new Date().getFullYear()}`,
-          `<a href="https://github.com/mnasyrov/">Mikhail Nasyrov</a>.`,
-          `Icon by <a href="https://uxwing.com/energy-icon/">UXWing</a>.`,
-        ].join(' '),
+        copyright:
+          `Copyright © ${new Date().getFullYear()} ` +
+          `<a href="https://github.com/mnasyrov/">Mikhail Nasyrov</a>`,
       },
       prism: {
         theme: prismThemes.github,
