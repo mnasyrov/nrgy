@@ -1,7 +1,8 @@
 import { Observable, skip } from 'rxjs';
 
-import { Atom, DestroyableAtom } from '../core';
-import { fromObservable, observe } from '../rxjs';
+import { atom, Atom, compute, createScope, DestroyableAtom } from '../core';
+import { createAtomFromFunction, getAtomNode } from '../core/atom';
+import { observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
 
@@ -26,9 +27,68 @@ export function toQuery<T>(source: Atom<T>): Query<T> {
   };
 }
 
+const enum StateType {
+  value,
+  error,
+}
+
+type State =
+  | { type: StateType.value }
+  | { type: StateType.error; error: unknown };
+
 /**
  * Creates an Atom from a Query
  */
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
-  return fromObservable(query.value$.pipe(skip(1)), query.get());
+  const source = query.value$.pipe(skip(1));
+
+  const scope = createScope();
+
+  let readonlyAtom: Atom<T> | undefined = undefined;
+
+  const state = atom<State>(
+    { type: StateType.value },
+    { onDestroy: () => scope.destroy() },
+  );
+
+  // The actual returned atom is a `computed` of the `State` atom, which maps the various states
+  // to either values or errors.
+  const result = compute<T>(() => {
+    const current = state();
+
+    switch (current.type) {
+      case StateType.value:
+        return query.get();
+
+      case StateType.error:
+        throw current.error;
+    }
+  });
+
+  const node = getAtomNode(result);
+
+  const asReadonly = (): Atom<T> => {
+    if (readonlyAtom === undefined) {
+      readonlyAtom = createAtomFromFunction(node, () => result());
+    }
+    return readonlyAtom;
+  };
+
+  scope.add(
+    source.subscribe({
+      next: () => state.set({ type: StateType.value }),
+      error: (error: unknown) => state.set({ type: StateType.error, error }),
+    }),
+  );
+
+  const resultAtom: DestroyableAtom<T> = createAtomFromFunction(
+    node,
+    () => result(),
+    {
+      destroy: () => state.destroy(),
+      asReadonly,
+    },
+  );
+
+  return resultAtom;
 }

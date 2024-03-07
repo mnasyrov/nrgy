@@ -4,7 +4,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom, compute, syncEffect } from '../core';
+import { atom, compute, effect, isAtom, syncEffect } from '../core';
+import { getSignalNode } from '../core/signal';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { fromQuery, Query, toQuery } from './query';
@@ -104,6 +105,101 @@ describe('fromQuery()', () => {
     result.destroy();
     source.next(2);
     expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should rethrow an error from the source', () => {
+    const source = new BehaviorSubject(1);
+    const query: Query<number> = {
+      get: () => source.getValue(),
+      value$: source.asObservable(),
+    };
+
+    const result = fromQuery(query);
+
+    const getterSpy = jest.fn();
+    const fx = syncEffect(result, getterSpy);
+
+    const errorSpy = jest.fn();
+    syncEffect(fx.onError, errorSpy);
+
+    source.error(new Error('test error'));
+    expect(() => result()).toThrow(new Error('test error'));
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(new Error('test error'));
+  });
+
+  describe('asReadonly()', () => {
+    it('should return a read-only representation of the writable Atom', () => {
+      const source = atom(1);
+      const atomQuery = toQuery(source);
+
+      const result = fromQuery(atomQuery);
+      const readonly = result.asReadonly();
+
+      expect(readonly).toBeInstanceOf(Function);
+      expect(isAtom(readonly)).toBe(true);
+      expect(readonly()).toBe(1);
+
+      expect(readonly).not.toEqual(
+        expect.objectContaining({
+          set: expect.any(Function),
+          update: expect.any(Function),
+          mutate: expect.any(Function),
+          asReadonly: expect.any(Function),
+          destroy: expect.any(Function),
+        }),
+      );
+
+      expect(readonly()).toEqual(1);
+
+      source.set(2);
+      expect(readonly()).toEqual(2);
+    });
+
+    test('Read-only atom should transmit "destroy" notification', () => {
+      const source = atom(1);
+      const atomQuery = toQuery(source);
+
+      const result = fromQuery(atomQuery);
+      const readonly = result.asReadonly();
+      const fx = syncEffect(readonly, () => {});
+
+      source.destroy();
+      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+    });
+  });
+});
+
+describe('Equivalence of toQuery/fromQuery transformation', () => {
+  it('should provide the getter which returns the actual value of the source', () => {
+    const source = atom(1);
+
+    const query = toQuery(source);
+    const clone = fromQuery(query);
+
+    const isTwo = compute(() => clone() === 2);
+    expect(isTwo()).toBe(false);
+
+    source.set(2);
+    expect(isTwo()).toBe(true);
+  });
+
+  it('should provide async subscriptions to actual values of the source', async () => {
+    const source = atom(1);
+
+    const query = toQuery(source);
+    const clone = fromQuery(query);
+
+    const values: number[] = [];
+
+    effect(clone, (value) => values.push(value));
+    await flushMicrotasks();
+    expect(values).toEqual([1]);
+
+    source.set(2);
+    await flushMicrotasks();
+    expect(values).toEqual([1, 2]);
   });
 });
 
