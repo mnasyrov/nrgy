@@ -2,7 +2,6 @@ import * as REF_CORE from 'nrgy-reference';
 import { Bench } from 'tinybench';
 
 import * as DEV_CORE from '../dist';
-import { createLatch } from '../src/core/utils/latch';
 
 const ITERATION_COUNT = 200;
 
@@ -104,4 +103,19 @@ function createReferenceComputeTest(core: typeof REF_CORE, effectFactory: any) {
   });
 
   return latch.promise;
+}
+
+function createLatch<T = void>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+} {
+  const result = {} as any;
+
+  result.promise = new Promise<T>((resolve, reject) => {
+    result.resolve = resolve;
+    result.reject = reject;
+  });
+
+  return result;
 }
