@@ -25,8 +25,8 @@ const packageNames = [
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Nrgy',
-  tagline: 'The energy for reactive programming with MVC/MVVM patterns',
+  title: 'Nrgy.js',
+  tagline: 'Javascript library for reactive programming with MVC/MVVM patterns',
   favicon: 'img/favicon.svg',
 
   url: 'https://nrgy.js.org',
@@ -40,9 +40,6 @@ const config = {
   // onBrokenMarkdownLinks: 'warn',
   // onDuplicateRoutes: 'throw',
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'ru'],
@@ -67,12 +64,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
+      image: 'img/og-image.png',
       navbar: {
-        title: 'Nrgy',
+        title: 'Nrgy.js',
         logo: {
-          alt: 'Nrgy',
+          alt: 'Nrgy.js',
           src: 'img/logo.svg',
         },
         items: [
@@ -100,10 +96,9 @@ const config = {
         ],
       },
       footer: {
-        style: 'dark',
         copyright:
-          `Copyright © ${new Date().getFullYear()} ` +
-          `<a href="https://github.com/mnasyrov/">Mikhail Nasyrov</a>`,
+          `Released under the MIT License<br /> ` +
+          `Copyright © <a href="https://github.com/mnasyrov/">Mikhail Nasyrov</a>`,
       },
       prism: {
         theme: prismThemes.github,
