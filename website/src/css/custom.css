@@ -1,3 +1,19 @@
+:root {
+  font-family: Inter, sans-serif;
+  --ifm-font-family-base: Inter, sans-serif;
+
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1; /* fix for Chrome */
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+    --ifm-font-family-base: InterVariable, sans-serif;
+  }
+}
+
 /**
  * Any CSS included here will be global. The classic template
  * bundles Infima by default. Infima is a CSS framework designed to

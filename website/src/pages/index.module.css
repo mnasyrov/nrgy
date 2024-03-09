@@ -4,10 +4,48 @@
  */
 
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
+  padding: 32px;
   position: relative;
   overflow: hidden;
+
+  color: black;
+  background: linear-gradient(258.48deg, #fff7e0 19.32%, #e5f1ff 100%);
+
+  [data-theme='dark'] & {
+    color: white;
+    background: linear-gradient(258.48deg, #a87d00 19.32%, #003b80 100%);
+  }
+
+  .heroLogo {
+    max-height: 260px;
+    float: right;
+    display: block;
+    max-width: 30%;
+  }
+
+  h1 {
+    font-family: 'Inter', serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 60px;
+    line-height: 60px;
+  }
+
+  p {
+    font-family: 'Inter', serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+  }
+}
+
+p.heroSubtitle {
+  font-family: 'Inter', serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 29px;
 }
 
 @media screen and (max-width: 996px) {
@@ -19,7 +57,7 @@
 .buttons {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .features {
@@ -27,9 +65,4 @@
   align-items: center;
   padding: 2rem 0;
   width: 100%;
-}
-
-.featureSvg {
-  height: 200px;
-  width: 200px;
 }
