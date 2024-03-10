@@ -27,17 +27,21 @@ export default function Home() {
 
 function HomepageHeader() {
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <header className={clsx('hero', styles.heroBanner)}>
       <div className="container">
         <LogoIcon role="img" className={styles.heroLogo} />
 
-        <Heading as="h1">Nrgy.js</Heading>
+        <Heading as="h1" className={styles.heroTitle}>
+          Nrgy.js
+        </Heading>
 
         <br />
         <br />
-        <p className={styles.heroSubtitle}>Energy for reactive programming</p>
+        <p className={styles.heroTagline}>Energy for reactive programming</p>
 
-        <p>State and effect management, MVC and MVVM patterns</p>
+        <p className={styles.heroSubtitle}>
+          State and effect management, MVC and MVVM patterns
+        </p>
 
         <div className={styles.buttons}>
           <Link className="button button--primary button--lg" to="/docs/intro">
