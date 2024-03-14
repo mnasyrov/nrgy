@@ -1,7 +1,7 @@
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
 import { AnyFunction, Atom, Signal } from './common';
-import { ENERGY_RUNTIME } from './runtime';
+import { ENERGY_RUNTIME, tracked } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
@@ -111,11 +111,23 @@ export const effect: EffectFn = <T, R>(
   let sideEffectFn: SideEffectFn<R>;
   if (isAtom<T>(source)) {
     if (!inferredCallback) throw new Error('Callback is missed');
+
     sideEffectFn = function () {
-      return inferredCallback(source());
+      // Unfolding `tracked()` and `untracked()` for better performance
+      const prevTracked = ENERGY_RUNTIME.tracked;
+
+      try {
+        ENERGY_RUNTIME.tracked = true;
+        const value = source();
+
+        ENERGY_RUNTIME.tracked = false;
+        return inferredCallback(value);
+      } finally {
+        ENERGY_RUNTIME.tracked = prevTracked;
+      }
     };
   } else {
-    sideEffectFn = source as SideEffectFn<R>;
+    sideEffectFn = () => tracked(source as SideEffectFn<R>);
   }
 
   const atomEffect = new AtomEffect(scheduler, sideEffectFn);

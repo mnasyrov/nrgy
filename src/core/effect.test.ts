@@ -1,6 +1,6 @@
 import { flushMicrotasks } from '../test/testUtils';
 
-import { atom } from './atom';
+import { atom, AtomUpdateError } from './atom';
 import { compute } from './compute';
 import {
   effect,
@@ -310,5 +310,235 @@ describe('Effect with a primitive value', () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(42);
+  });
+});
+
+describe('Untracked context in the signal effect', () => {
+  it('should be possible to update other atoms', async () => {
+    const s1 = signal<number>();
+    const b = atom(0);
+
+    const fx = effect(s1, (value) => b.set(value));
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(b()).toBe(0);
+
+    s1(2);
+    await flushMicrotasks();
+    expect(b()).toBe(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+
+  it('should be possible to notify signals', async () => {
+    const s1 = signal<number>();
+    const s2 = signal<number>();
+
+    const signalCallback = jest.fn();
+    effect(s2, signalCallback);
+
+    const fx = effect(s1, (value) => s2(value));
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(0);
+
+    signalCallback.mockClear();
+    s1(2);
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('Untracked context in the atom effect with the explicit dependency', () => {
+  it('should be possible to update other atoms', async () => {
+    const a = atom(1);
+    const b = atom(0);
+
+    const fx = effect(a, (value) => b.set(value));
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(b()).toBe(1);
+
+    a.set(2);
+    await flushMicrotasks();
+    expect(b()).toBe(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+
+  it('should be possible to notify signals', async () => {
+    const a = atom(1);
+    const s = signal<number>();
+
+    const signalCallback = jest.fn();
+    effect(s, signalCallback);
+
+    const fx = effect(a, (value) => s(value));
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(1);
+
+    signalCallback.mockClear();
+    a.set(2);
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('Tracked context in the effect with implicit dependencies', () => {
+  it('should be NOT possible to update any atoms', async () => {
+    const a = atom(1, { name: 'a' });
+    const b = atom(0, { name: 'b' });
+
+    const fx = effect(() => {
+      const value = a();
+      b.set(value);
+    });
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(b()).toBe(0);
+
+    a.set(2);
+    await flushMicrotasks();
+    expect(b()).toBe(0);
+
+    expect(errorCallback).toHaveBeenCalledTimes(2);
+    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+  });
+
+  it('should be possible to notify signals', async () => {
+    const a = atom(1);
+    const s = signal<number>();
+
+    const signalCallback = jest.fn();
+    effect(s, signalCallback);
+
+    const fx = effect(() => {
+      const value = a();
+      return s(value);
+    });
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(1);
+
+    signalCallback.mockClear();
+    a.set(2);
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('@regression Cycled effect on reading and updating the same atom', () => {
+  it('should not trigger an infinite loop', async () => {
+    const inputs = atom<string[]>([]);
+    const store = atom<{ [key: string]: number }>({});
+
+    effect(inputs, (items) => {
+      const prevState = store();
+
+      const nextState = { ...prevState };
+
+      items.forEach((item) => {
+        nextState[item] = (nextState[item] || 0) + 1;
+      });
+
+      const set = new Set(items);
+      Object.keys(nextState).forEach((key) => {
+        if (!set.has(key)) {
+          delete nextState[key];
+        }
+      });
+
+      store.set(nextState);
+    });
+
+    await flushMicrotasks();
+    expect(store()).toEqual({});
+
+    inputs.set(['a']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ a: 1 });
+
+    inputs.set(['a', 'b']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ a: 2, b: 1 });
+
+    inputs.set(['b', 'c']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ b: 2, c: 1 });
+  });
+
+  it('should not trigger an infinite loop with signals', async () => {
+    type State = { [key: string]: number };
+
+    const inputs = atom<string[]>([]);
+    const store = atom<State>({});
+
+    const updateStore = signal<State>();
+    effect(updateStore, (state) => store.set(state));
+
+    effect(inputs, (items) => {
+      const prevState = store();
+
+      const nextState = { ...prevState };
+
+      items.forEach((item) => {
+        nextState[item] = (nextState[item] || 0) + 1;
+      });
+
+      const set = new Set(items);
+      Object.keys(nextState).forEach((key) => {
+        if (!set.has(key)) {
+          delete nextState[key];
+        }
+      });
+
+      updateStore(nextState);
+    });
+
+    await flushMicrotasks();
+    expect(store()).toEqual({});
+
+    inputs.set(['a']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ a: 1 });
+
+    inputs.set(['a', 'b']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ a: 2, b: 1 });
+
+    inputs.set(['b', 'c']);
+    await flushMicrotasks();
+    expect(store()).toEqual({ b: 2, c: 1 });
   });
 });

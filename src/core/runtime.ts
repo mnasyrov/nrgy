@@ -14,6 +14,11 @@ export class EnergyRuntime {
   readonly syncScheduler = createSyncTaskScheduler();
 
   /**
+   * Marks the current computation context as tracked
+   */
+  tracked: boolean = false;
+
+  /**
    * @readonly
    * The current global clock of changed atoms.
    */
@@ -76,8 +81,38 @@ export class EnergyRuntime {
    * Visits a computed node if the current effect frame is not empty
    */
   visitComputedNode(node: ComputedNode<any>) {
-    if (this.currentEffect) {
+    if (this.tracked && this.currentEffect) {
       this.visitedComputedNodes.push(node);
+    }
+  }
+
+  /**
+   * Run a function in a tracked context
+   */
+  runAsTracked<T>(reactiveReadsFn: () => T): T {
+    const prevTracked = this.tracked;
+
+    try {
+      this.tracked = true;
+
+      return reactiveReadsFn();
+    } finally {
+      this.tracked = prevTracked;
+    }
+  }
+
+  /**
+   * Run a function in an untracked context
+   */
+  runAsUntracked<T>(nonReactiveReadsFn: () => T): T {
+    const prevTracked = this.tracked;
+
+    try {
+      this.tracked = false;
+
+      return nonReactiveReadsFn();
+    } finally {
+      this.tracked = prevTracked;
     }
   }
 }
@@ -92,4 +127,18 @@ export const ENERGY_RUNTIME = new EnergyRuntime();
  */
 export function runEffects(): void {
   ENERGY_RUNTIME.asyncScheduler.execute();
+}
+
+/**
+ * Run a function in a tracked context
+ */
+export function tracked<T>(reactiveReadsFn: () => T): T {
+  return ENERGY_RUNTIME.runAsTracked(reactiveReadsFn);
+}
+
+/**
+ * Run a function in an untracked context
+ */
+export function untracked<T>(nonReactiveReadsFn: () => T): T {
+  return ENERGY_RUNTIME.runAsUntracked(nonReactiveReadsFn);
 }

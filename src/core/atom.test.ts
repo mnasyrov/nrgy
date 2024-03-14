@@ -1,6 +1,13 @@
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
-import { atom, getAtomName, getAtomNode, isAtom, WritableAtom } from './atom';
+import {
+  atom,
+  AtomUpdateError,
+  getAtomName,
+  getAtomNode,
+  isAtom,
+  WritableAtom,
+} from './atom';
 import { compute } from './compute';
 import { syncEffect } from './effect';
 import { getSignalNode } from './signal';
@@ -257,5 +264,19 @@ describe('Atom', () => {
       expect(node.isDestroyed).toBe(true);
       expect(onDestroy).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('AtomUpdateError', () => {
+  it("should has correct message for empty atom's name", () => {
+    const error = new AtomUpdateError();
+    expect(error.message).toBe('Atom cannot be updated in tracked context');
+  });
+
+  it("should has correct message for atom's name", () => {
+    const error = new AtomUpdateError('atom-name');
+    expect(error.message).toBe(
+      'Atom cannot be updated in tracked context (atom-name)',
+    );
   });
 });

@@ -2,7 +2,7 @@ import { atom } from './atom';
 import { AtomEffect, isComputedNodesChanged } from './atomEffect';
 import { compute } from './compute';
 import { syncEffect } from './effect';
-import { ENERGY_RUNTIME } from './runtime';
+import { ENERGY_RUNTIME, tracked } from './runtime';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -162,7 +162,7 @@ describe('AtomEffect', () => {
       const computed = compute(() => store());
       const scheduler = createSyncTaskScheduler();
 
-      const action = jest.fn(() => computed());
+      const action = jest.fn(() => tracked(computed));
       const effect = new AtomEffect(scheduler, action);
 
       effect.notify();

@@ -1,5 +1,11 @@
 import { AtomEffectNode } from './common';
-import { ENERGY_RUNTIME, EnergyRuntime, runEffects } from './runtime';
+import {
+  ENERGY_RUNTIME,
+  EnergyRuntime,
+  runEffects,
+  tracked,
+  untracked,
+} from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
   it('should be defined', () => {
@@ -77,6 +83,7 @@ describe('EnergyRuntime', () => {
   describe('getVisitedComputedNodes()', () => {
     it('should return the list of visited computed nodes', () => {
       const runtime = new EnergyRuntime();
+      runtime.tracked = true;
       expect(runtime.getVisitedComputedNodes()).toEqual([]);
 
       runtime.visitComputedNode({} as any);
@@ -91,6 +98,7 @@ describe('EnergyRuntime', () => {
   describe('resetVisitedComputedNodes()', () => {
     it('should reset the list of visited computed nodes', () => {
       const runtime = new EnergyRuntime();
+      runtime.tracked = true;
 
       runtime.setCurrentEffect({} as any);
       runtime.visitComputedNode({} as any);
@@ -104,6 +112,7 @@ describe('EnergyRuntime', () => {
   describe('visitComputedNode()', () => {
     it('should add the computed node to the list of visited only if the current effect is set ', () => {
       const runtime = new EnergyRuntime();
+      runtime.tracked = true;
 
       runtime.visitComputedNode({} as any);
       expect(runtime.getVisitedComputedNodes()).toEqual([]);
@@ -111,6 +120,83 @@ describe('EnergyRuntime', () => {
       runtime.setCurrentEffect({} as any);
       runtime.visitComputedNode({} as any);
       expect(runtime.getVisitedComputedNodes()).toEqual([{} as any]);
+    });
+  });
+
+  describe('runAsTracked()', () => {
+    it('should run an action as tracked', () => {
+      const runtime = new EnergyRuntime();
+
+      expect(runtime.tracked).toBe(false);
+
+      const spy = jest.fn();
+      const result = runtime.runAsTracked(() => {
+        spy(runtime.tracked);
+        return 'bar';
+      });
+
+      expect(runtime.tracked).toBe(false);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(true);
+      expect(result).toEqual('bar');
+    });
+  });
+
+  describe('runAsUntracked()', () => {
+    it('should run an action as not tracked', () => {
+      const runtime = new EnergyRuntime();
+      runtime.tracked = true;
+
+      const spy = jest.fn();
+      const result = runtime.runAsUntracked(() => {
+        spy(runtime.tracked);
+        return 'bar';
+      });
+
+      expect(runtime.tracked).toBe(true);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(false);
+      expect(result).toEqual('bar');
+    });
+  });
+});
+
+describe('tracked()', () => {
+  it('should act the same as `EnergyRuntime.runAsTracked`', () => {
+    expect(ENERGY_RUNTIME.tracked).toBe(false);
+
+    const spy = jest.fn();
+    const result = tracked(() => {
+      spy(ENERGY_RUNTIME.tracked);
+      return 'bar';
+    });
+
+    expect(ENERGY_RUNTIME.tracked).toBe(false);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(true);
+    expect(result).toEqual('bar');
+  });
+});
+
+describe('untracked()', () => {
+  it('should act the same as `EnergyRuntime.runAsUntracked`', () => {
+    ENERGY_RUNTIME.runAsTracked(() => {
+      expect(ENERGY_RUNTIME.tracked).toBe(true);
+
+      const spy = jest.fn();
+      const result = untracked(() => {
+        spy(ENERGY_RUNTIME.tracked);
+        return 'bar';
+      });
+
+      expect(ENERGY_RUNTIME.tracked).toBe(true);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(false);
+      expect(result).toEqual('bar');
     });
   });
 });

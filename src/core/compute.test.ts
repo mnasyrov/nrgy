@@ -4,13 +4,14 @@ import {
   flushMicrotasks,
 } from '../test/testUtils';
 
-import { atom } from './atom';
+import { atom, AtomUpdateError } from './atom';
 import { createAtomSubject } from './atomSubject';
 import { defaultEquals } from './atomUtils';
 import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
 import { ENERGY_RUNTIME } from './runtime';
+import { signal } from './signal';
 import { signalChanges } from './signalUtils';
 
 describe('compute()', () => {
@@ -615,5 +616,67 @@ describe('ComputedImpl()', () => {
 
       expect(result.version).toBeGreaterThan(prevVersion);
     });
+  });
+});
+
+describe('Tracked context in the computed expression with implicit dependencies', () => {
+  it('should be NOT possible to update any atoms', async () => {
+    const a = atom(1, { name: 'a' });
+    const b = atom(0, { name: 'b' });
+
+    const c = compute(() => {
+      const value = a();
+      b.set(value);
+      return value;
+    });
+
+    expect(() => c()).toThrow(new AtomUpdateError('b'));
+
+    const fx = effect(() => c());
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(b()).toBe(0);
+
+    a.set(2);
+    await flushMicrotasks();
+    expect(b()).toBe(0);
+
+    expect(errorCallback).toHaveBeenCalledTimes(2);
+    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+  });
+
+  it('should be possible to notify signals, but the expression is not pure', async () => {
+    const a = atom(1, { name: 'a' });
+    const s = signal<number>();
+
+    const signalCallback = jest.fn();
+    effect(s, signalCallback);
+
+    const c = compute(() => {
+      const value = a();
+      s(value);
+      return value;
+    });
+
+    const fx = effect(() => c());
+
+    const errorCallback = jest.fn();
+    effect(fx.onError, errorCallback);
+
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(1);
+
+    signalCallback.mockClear();
+    a.set(2);
+    await flushMicrotasks();
+    expect(signalCallback).toHaveBeenCalledTimes(1);
+    expect(signalCallback).toHaveBeenCalledWith(2);
+
+    expect(errorCallback).toHaveBeenCalledTimes(0);
   });
 });

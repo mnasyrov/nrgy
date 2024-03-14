@@ -128,6 +128,18 @@ export type AtomOptions<T> = {
   onDestroy?: () => void;
 };
 
+/**
+ * Error thrown when an attempt is made to update an atom in a tracked context.
+ */
+export class AtomUpdateError extends Error {
+  constructor(name?: string) {
+    super(
+      'Atom cannot be updated in tracked context' + (name ? ` (${name})` : ''),
+    );
+    this.name = 'AtomUpdateError';
+  }
+}
+
 class WritableAtomImpl<T> implements AtomNode<T> {
   readonly name?: string;
 
@@ -167,6 +179,8 @@ class WritableAtomImpl<T> implements AtomNode<T> {
       return;
     }
 
+    this.producerBeforeChange();
+
     if (this.equal(this.value, newValue)) {
       return;
     }
@@ -194,6 +208,8 @@ class WritableAtomImpl<T> implements AtomNode<T> {
       return;
     }
 
+    this.producerBeforeChange();
+
     // Mutate bypasses equality checks as it's by definition changing the value.
     mutator(this.value);
 
@@ -219,6 +235,15 @@ class WritableAtomImpl<T> implements AtomNode<T> {
     this.onDestroy = undefined;
 
     this.isDestroyed = true;
+  }
+
+  /**
+   * Checks if the atom can be updated in the current context
+   */
+  protected producerBeforeChange(): void {
+    if (ENERGY_RUNTIME.tracked) {
+      throw new AtomUpdateError(this.name);
+    }
   }
 
   /**
@@ -260,6 +285,10 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Mark that this producer node has been accessed in the current reactive context.
    */
   protected producerAccessed(): void {
+    if (!ENERGY_RUNTIME.tracked) {
+      return;
+    }
+
     const effects = ENERGY_RUNTIME.getTrackedEffects();
 
     if (effects.length > 0) {
