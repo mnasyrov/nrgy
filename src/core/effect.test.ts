@@ -262,3 +262,53 @@ describe('selectScheduler()', () => {
     );
   });
 });
+
+describe('Effect with a primitive value', () => {
+  it('should trigger the syncEffect', () => {
+    const source = atom(false);
+    const callback = jest.fn();
+
+    syncEffect(source, callback);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(false);
+
+    callback.mockClear();
+    source.set(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(true);
+  });
+
+  it('should trigger the effect', async () => {
+    const source = atom(false);
+    const callback = jest.fn();
+
+    effect(source, callback);
+
+    await flushMicrotasks();
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(false);
+
+    callback.mockClear();
+    source.set(true);
+
+    await flushMicrotasks();
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(true);
+  });
+
+  it('should chain signals', async () => {
+    const signal1 = signal<number>();
+    const signal2 = signal<number>();
+
+    const callback = jest.fn();
+    effect(signal1, callback);
+    effect(signal2, signal1);
+
+    signal2(42);
+
+    await flushMicrotasks();
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(42);
+  });
+});

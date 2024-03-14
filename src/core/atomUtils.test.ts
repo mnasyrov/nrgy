@@ -2,6 +2,11 @@ import { defaultEquals, objectEquals } from './atomUtils';
 
 describe('defaultEquals()', () => {
   it('should compare values using identity semantics', () => {
+    expect(defaultEquals(true, true)).toBe(true);
+    expect(defaultEquals(true, false)).toBe(false);
+    expect(defaultEquals(false, true)).toBe(false);
+    expect(defaultEquals(false, false)).toBe(true);
+
     expect(defaultEquals(1, 1)).toBe(true);
     expect(defaultEquals('a', 'a')).toBe(true);
     expect(defaultEquals('1', 1)).toBe(false);
