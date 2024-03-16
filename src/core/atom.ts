@@ -1,4 +1,3 @@
-import { defaultEquals } from './atomUtils';
 import {
   AnyObject,
   Atom,
@@ -9,6 +8,7 @@ import {
   ReactiveNode,
   ValueEqualityFn,
 } from './common';
+import { defaultEquals } from './commonUtils';
 import { ENERGY_RUNTIME } from './runtime';
 
 /**

@@ -12,12 +12,12 @@ export { atom, isAtom, getAtomName } from './atom';
 export type { AtomSubject } from './atomSubject';
 export { createAtomSubject } from './atomSubject';
 
-export { objectEquals, defaultEquals } from './atomUtils';
+export { objectEquals, defaultEquals } from './commonUtils';
 
 export type { Computation, ComputeOptions } from './compute';
 export { compute } from './compute';
 
-export { mapAtom, mergeAtoms } from './computeUtils';
+export { combineAtoms, mapAtom, mergeAtoms } from './atomUtils';
 
 export type { EffectOptions, EffectSubscription } from './effect';
 export { effect, syncEffect } from './effect';

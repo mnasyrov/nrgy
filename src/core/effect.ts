@@ -1,5 +1,6 @@
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
+import { AtomList, combineAtoms } from './atomUtils';
 import { AnyFunction, Atom, Signal } from './common';
 import { ENERGY_RUNTIME, tracked } from './runtime';
 import { TaskScheduler } from './schedulers';
@@ -65,6 +66,15 @@ export interface EffectFn {
   ): EffectSubscription<R>;
 
   /**
+   * Creates a new effect for a list of atoms
+   */
+  <TValues extends unknown[], R>(
+    sources: AtomList<TValues>,
+    callback: ValueCallbackFn<TValues, R>,
+    options?: EffectOptions,
+  ): EffectSubscription<R>;
+
+  /**
    * Creates a new effect for a side effect
    */
   <R>(action: SideEffectFn<R>, options?: EffectOptions): EffectSubscription<R>;
@@ -74,7 +84,7 @@ export interface EffectFn {
  * Creates a new effect
  */
 export const effect: EffectFn = <T, R>(
-  source: Signal<T> | Atom<T> | SideEffectFn<R>,
+  source: Signal<T> | Atom<T> | AtomList<T[]> | SideEffectFn<R>,
   callback?: ValueCallbackFn<T, R> | EffectOptions,
   options?: EffectOptions,
 ) => {
@@ -109,6 +119,7 @@ export const effect: EffectFn = <T, R>(
   }
 
   let sideEffectFn: SideEffectFn<R>;
+
   if (isAtom<T>(source)) {
     if (!inferredCallback) throw new Error('Callback is missed');
 
@@ -126,6 +137,9 @@ export const effect: EffectFn = <T, R>(
         ENERGY_RUNTIME.tracked = prevTracked;
       }
     };
+  } else if (Array.isArray(source)) {
+    const list = combineAtoms(source);
+    return effect(list as any, callback as any, options);
   } else {
     sideEffectFn = () => tracked(source as SideEffectFn<R>);
   }
@@ -168,21 +182,39 @@ export function isForcedSyncSource(source: unknown): boolean {
 }
 
 export interface SyncEffectFn {
+  /**
+   * Creates a new effect for a signal
+   */
   <T, R>(
     source: Signal<T>,
     callback: ValueCallbackFn<T, R>,
   ): EffectSubscription<R>;
 
+  /**
+   * Creates a new effect for an atom
+   */
   <T, R>(
     source: Atom<T>,
     callback: ValueCallbackFn<T, R>,
   ): EffectSubscription<R>;
 
+  /**
+   * Creates a new effect for a list of atoms
+   */
+  <TValues extends unknown[], R>(
+    sources: AtomList<TValues>,
+    callback: ValueCallbackFn<TValues, R>,
+    options?: EffectOptions,
+  ): EffectSubscription<R>;
+
+  /**
+   * Creates a new effect for a side effect
+   */
   <R>(action: SideEffectFn<R>): EffectSubscription<R>;
 }
 
 export const syncEffect: SyncEffectFn = <T, R>(
-  source: Signal<T> | Atom<T> | SideEffectFn<R>,
+  source: Signal<T> | Atom<T> | AtomList<T[]> | SideEffectFn<R>,
   callback?: ValueCallbackFn<T, R>,
 ) => {
   const options: EffectOptions = { scheduler: ENERGY_RUNTIME.syncScheduler };

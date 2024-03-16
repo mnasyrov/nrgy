@@ -542,3 +542,47 @@ describe('@regression Cycled effect on reading and updating the same atom', () =
     expect(store()).toEqual({ b: 2, c: 1 });
   });
 });
+
+describe('Explicit dependencies in the effect', () => {
+  it('should be possible specify explicit Atom dependencies', async () => {
+    const atomA = atom(1);
+    const atomB = atom(0);
+    const store = atom(0);
+
+    effect([atomA, atomB], ([a, b]) => {
+      store.update((prev) => prev + a + b);
+    });
+
+    await flushMicrotasks();
+    expect(store()).toBe(1);
+
+    atomA.set(2);
+    await flushMicrotasks();
+    expect(store()).toBe(3);
+
+    atomB.set(3);
+    await flushMicrotasks();
+    expect(store()).toBe(8);
+  });
+
+  // it('should be possible specify explicit Signal dependencies', async () => {
+  //   const signalA = signal<number>();
+  //   const signalB = signal<number>();
+  //   const store = atom<number>(0);
+  //
+  //   effect(mix([signalA, signalB]), (value) => {
+  //     store.update((prev) => prev + value);
+  //   });
+  //
+  //   await flushMicrotasks();
+  //   expect(store()).toBe(0);
+  //
+  //   signalA.set(1);
+  //   await flushMicrotasks();
+  //   expect(store()).toBe(1);
+  //
+  //   signalB.set(2);
+  //   await flushMicrotasks();
+  //   expect(store()).toBe(3);
+  // });
+});
