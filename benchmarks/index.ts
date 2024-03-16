@@ -19,11 +19,11 @@ async function main() {
   });
 
   bench.add('REF: compute + syncEffect', () => {
-    return createReferenceComputeTest(REF_CORE, REF_CORE.effectSync);
+    return createReferenceComputeTest(REF_CORE, { sync: true });
   });
 
   bench.add('REF: compute + effect    ', () => {
-    return createReferenceComputeTest(REF_CORE, REF_CORE.effect);
+    return createReferenceComputeTest(REF_CORE, { sync: false });
   });
 
   await bench.run();
@@ -57,10 +57,9 @@ function createDevComputeTest(
 
   let i = 0;
 
-  DEV_CORE.effect(
+  const fx = core.effect(
+    h,
     () => {
-      h();
-
       if (i < ITERATION_COUNT) {
         entry.set(++i);
       } else {
@@ -70,11 +69,16 @@ function createDevComputeTest(
     { sync },
   );
 
-  return latch.promise;
+  return latch.promise.then(() => fx.destroy());
 }
 
-function createReferenceComputeTest(core: typeof REF_CORE, effectFactory: any) {
-  const atom = core.signal;
+function createReferenceComputeTest(
+  core: typeof REF_CORE,
+  params: { sync: boolean },
+) {
+  const { sync } = params;
+  const atom = core.atom;
+
   const { compute } = core;
 
   const entry = atom(0);
@@ -92,17 +96,19 @@ function createReferenceComputeTest(core: typeof REF_CORE, effectFactory: any) {
 
   let i = 0;
 
-  effectFactory(() => {
-    h();
+  const fx = core.effect(
+    h,
+    () => {
+      if (i < ITERATION_COUNT) {
+        entry.set(++i);
+      } else {
+        latch.resolve();
+      }
+    },
+    { sync },
+  );
 
-    if (i < ITERATION_COUNT) {
-      entry.set(++i);
-    } else {
-      latch.resolve();
-    }
-  });
-
-  return latch.promise;
+  return latch.promise.then(() => fx.destroy());
 }
 
 function createLatch<T = void>(): {
