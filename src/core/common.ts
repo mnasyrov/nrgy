@@ -94,7 +94,7 @@ export type AtomNode<T> = ReactiveNode &
 /**
  * A computed node
  */
-export type ComputedNode<T> = ReactiveNode &
+export type ComputedNode<T> = AtomNode<T> &
   Readonly<{
     /**
      * The clock of the last computation
@@ -105,11 +105,6 @@ export type ComputedNode<T> = ReactiveNode &
      * The version of the cached value
      */
     version: number;
-
-    /**
-     * Returns the current value
-     */
-    get: () => T;
 
     /**
      * Returns true if the value has changed

@@ -4,9 +4,8 @@ import {
   flushMicrotasks,
 } from '../test/testUtils';
 
-import { atom, AtomUpdateError } from './atom';
+import { atom, AtomUpdateError, getAtomName } from './atom';
 import { createAtomSubject } from './atomSubject';
-import { defaultEquals } from './atomUtils';
 import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
@@ -554,7 +553,7 @@ describe('ComputedImpl()', () => {
   it('should tell about a changed state', () => {
     const source = atom('a');
     const other = atom('something 1');
-    const result = new ComputedImpl(() => source(), defaultEquals);
+    const result = new ComputedImpl(() => source());
 
     // Case 1: recalculation is triggered by result.isChanged()
     expect(result.version).toBe(0);
@@ -601,7 +600,7 @@ describe('ComputedImpl()', () => {
   describe('destroy()', () => {
     it('should reset a cached value and recalculate it on access', () => {
       const source = atom('a');
-      const result = new ComputedImpl(() => source(), defaultEquals);
+      const result = new ComputedImpl(() => source());
 
       expect((result as any).value).not.toBe('a');
       expect(result.get()).toBe('a');
@@ -616,6 +615,16 @@ describe('ComputedImpl()', () => {
 
       expect(result.version).toBeGreaterThan(prevVersion);
     });
+  });
+});
+
+describe('getAtomName() with the computed atom', () => {
+  it('should return a name of computed atoms', () => {
+    const namelessAtom = compute(() => 1);
+    expect(getAtomName(namelessAtom)).toBe(undefined);
+
+    const namedAtom = compute(() => 1, { name: 'foo' });
+    expect(getAtomName(namedAtom)).toBe('foo');
   });
 });
 

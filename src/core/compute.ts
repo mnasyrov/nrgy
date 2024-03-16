@@ -14,6 +14,11 @@ export type Computation<T> = () => T;
  */
 export type ComputeOptions<T> = {
   /**
+   * Atom's name
+   */
+  name?: string;
+
+  /**
    * A function to determine if two values are equal. Defaults to `Object.is`.
    */
   equal?: ValueEqualityFn<T>;
@@ -29,7 +34,7 @@ export function compute<T>(
   computation: Computation<T>,
   options?: ComputeOptions<T>,
 ): Atom<T> {
-  const node = new ComputedImpl(computation, options?.equal ?? defaultEquals);
+  const node = new ComputedImpl(computation, options);
 
   return createAtomFromFunction(node, node.get.bind(node));
 }
@@ -58,6 +63,8 @@ const ERRORED: any = Symbol('ERRORED');
  * A computation, which derives a value from a declarative reactive expression.
  */
 export class ComputedImpl<T> implements ComputedNode<T> {
+  readonly name?: string;
+
   clock: number | undefined = undefined;
   version = 0;
 
@@ -68,6 +75,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private value: T = UNSET;
   private changed = false;
+  private readonly equal: ValueEqualityFn<T>;
 
   /**
    * If `value` is `ERRORED`, the error caught from the last computation attempt which will
@@ -79,8 +87,11 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   constructor(
     private computation: Computation<T>,
-    private equal: (oldValue: T, newValue: T) => boolean,
-  ) {}
+    options?: ComputeOptions<T>,
+  ) {
+    this.name = options?.name;
+    this.equal = options?.equal ?? defaultEquals;
+  }
 
   destroy(): void {
     this.value = UNSET;
