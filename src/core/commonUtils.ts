@@ -7,6 +7,9 @@ export const defaultEquals: ValueEqualityFn<unknown> = Object.is;
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
+/**
+ * An equality function which compares two objects using their own keys
+ */
 export const objectEquals: ValueEqualityFn<
   Readonly<Record<string, unknown>>
 > = (objA, objB): boolean => {

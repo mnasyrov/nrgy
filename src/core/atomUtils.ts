@@ -28,10 +28,17 @@ export function mergeAtoms<TValues extends unknown[], TResult>(
   }, options);
 }
 
+/**
+ * Type for an array of atoms
+ */
 export type AtomList<TValues extends unknown[]> = [
   ...{ [K in keyof TValues]: Atom<TValues[K]> },
 ];
 
+/**
+ * Creates a new Atom which takes the latest values from source atoms
+ * and combines them into an array.
+ */
 export function combineAtoms<TValues extends unknown[]>(
   sources: AtomList<TValues>,
   options?: ComputeOptions<TValues>,
