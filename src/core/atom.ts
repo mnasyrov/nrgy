@@ -292,11 +292,11 @@ class WritableAtomImpl<T> implements AtomNode<T> {
     const effects = ENERGY_RUNTIME.getTrackedEffects();
 
     if (effects.length > 0) {
-      effects.forEach((effect) => {
+      for (const effect of effects) {
         if (!effect.isDestroyed) {
           this.consumerEffects.set(effect.ref, effect.clock);
         }
-      });
+      }
     }
   }
 }

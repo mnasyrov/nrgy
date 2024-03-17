@@ -564,25 +564,4 @@ describe('Explicit dependencies in the effect', () => {
     await flushMicrotasks();
     expect(store()).toBe(8);
   });
-
-  // it('should be possible specify explicit Signal dependencies', async () => {
-  //   const signalA = signal<number>();
-  //   const signalB = signal<number>();
-  //   const store = atom<number>(0);
-  //
-  //   effect(mix([signalA, signalB]), (value) => {
-  //     store.update((prev) => prev + value);
-  //   });
-  //
-  //   await flushMicrotasks();
-  //   expect(store()).toBe(0);
-  //
-  //   signalA.set(1);
-  //   await flushMicrotasks();
-  //   expect(store()).toBe(1);
-  //
-  //   signalB.set(2);
-  //   await flushMicrotasks();
-  //   expect(store()).toBe(3);
-  // });
 });

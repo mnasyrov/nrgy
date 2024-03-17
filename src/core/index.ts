@@ -4,7 +4,7 @@ export type { SignalOptions } from './signal';
 export { signal, isSignal, destroySignal } from './signal';
 
 export type { KeepLastValueOptions } from './signalUtils';
-export { keepLastValue, signalChanges } from './signalUtils';
+export { keepLastValue, mixSignals, signalChanges } from './signalUtils';
 
 export type { AtomOptions, WritableAtom } from './atom';
 export { atom, isAtom, getAtomName } from './atom';

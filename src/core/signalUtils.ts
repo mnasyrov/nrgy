@@ -1,7 +1,8 @@
 import { createAtomSubject } from './atomSubject';
 import { Atom, DestroyableAtom, Signal } from './common';
+import { effect } from './effect';
 import { createScope } from './scope';
-import { SignalOptions } from './signal';
+import { isSignal, signal, SignalOptions } from './signal';
 
 /**
  * Options passed to the `keepLastValue` function.
@@ -110,4 +111,28 @@ export function signalChanges<T>(
   );
 
   return s;
+}
+
+type MixSignalsSources<TValues extends unknown[]> = [
+  ...{ [K in keyof TValues]: Signal<TValues[K]> },
+];
+
+/**
+ * Mixes multiple signals into a single signal
+ */
+export function mixSignals<TValues extends unknown[]>(
+  sources: MixSignalsSources<TValues>,
+  options?: SignalOptions,
+): Signal<TValues[number]> {
+  type TResult = TValues[number];
+
+  const resultSignal = signal<TResult>(options);
+
+  for (const source of sources) {
+    if (isSignal(source)) {
+      effect(source, resultSignal, { sync: options?.sync });
+    }
+  }
+
+  return resultSignal;
 }

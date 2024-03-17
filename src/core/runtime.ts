@@ -5,6 +5,9 @@ import {
 } from './schedulers';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
+/**
+ * @internal
+ */
 export class EnergyRuntime {
   private currentEffect: AtomEffectNode | undefined = undefined;
   private trackedEffects: AtomEffectNode[] = [];
