@@ -1,13 +1,13 @@
 export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
 
 export type { SignalOptions } from './signal';
-export { signal, isSignal, destroySignal } from './signal';
+export { signal, getSignalName, isSignal, destroySignal } from './signal';
 
 export type { KeepLastValueOptions } from './signalUtils';
 export { keepLastValue, mixSignals, signalChanges } from './signalUtils';
 
 export type { AtomOptions, WritableAtom } from './atom';
-export { atom, isAtom, getAtomName } from './atom';
+export { atom, isAtom, getAtomName, AtomUpdateError } from './atom';
 
 export type { AtomSubject } from './atomSubject';
 export { createAtomSubject } from './atomSubject';

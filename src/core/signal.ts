@@ -35,7 +35,7 @@ export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {
 }
 
 /**
- * Returns a name of the given Atom.
+ * Returns a name of the given Signal
  */
 export function getSignalName(value: Signal<any>): string | undefined {
   return getSignalNode(value).name;
