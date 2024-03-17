@@ -300,9 +300,11 @@ export class ControllerDeclarationBuilder<
   /**
    * Declares the controller with the given parameters
    */
-  params<TParams extends ControllerParams>() {
+  params<TParams extends ControllerParams>(): ControllerDeclarationBuilder<
+    TContext & ControllerParamsContext<TParams>
+  > {
     return this as unknown as ControllerDeclarationBuilder<
-      ControllerParamsContext<TParams>
+      TContext & ControllerParamsContext<TParams>
     >;
   }
 
