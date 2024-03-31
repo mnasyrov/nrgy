@@ -1,4 +1,5 @@
 import { Atom } from '../core';
+import { AnyObject } from '../core/common';
 
 import {
   BaseController,
@@ -16,9 +17,9 @@ import {
   withView,
 } from './withView';
 
-export type BaseViewModel = {
+export type BaseViewModel = Record<string, unknown> & {
   props?: Record<string, Atom<unknown>>;
-  state: Record<string, Atom<unknown>>;
+  state?: Record<string, Atom<unknown>>;
 };
 
 export type ViewModel<T extends BaseViewModel> = T;
@@ -26,7 +27,7 @@ export type ViewModel<T extends BaseViewModel> = T;
 export type InferViewModelProps<TViewModel extends BaseViewModel> =
   TViewModel['props'] extends ViewPropAtoms<infer InferredProps>
     ? InferredProps
-    : never;
+    : AnyObject;
 
 export type ViewModelFactory<
   TContext extends BaseControllerContext,
@@ -40,7 +41,7 @@ export abstract class BaseViewController<
   readonly view: TContext['view'] = this.context.view;
   readonly props: TContext['view']['props'] = this.context.view.props;
 
-  abstract readonly state: TViewModel['state'];
+  abstract readonly state: Exclude<TViewModel['state'], undefined>;
 
   constructor(
     paramsOrProviders:
