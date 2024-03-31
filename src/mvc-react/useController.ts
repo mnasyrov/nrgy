@@ -98,7 +98,7 @@ export function useController<
     context.view.mount();
 
     return () => {
-      context.view.unmount();
+      context.view.destroy();
       context.controller.destroy();
 
       hookContextRef.current = undefined;

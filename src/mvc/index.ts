@@ -39,6 +39,7 @@ export type {
   ViewPropAtoms,
   ViewProps,
   ViewProxy,
+  ViewStatus,
 } from './withView';
 
 export { createViewProxy, withView, provideView } from './withView';

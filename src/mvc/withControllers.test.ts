@@ -64,6 +64,7 @@ describe('withControllers()', () => {
     const controller = new TestController([provideView(testView)]);
     expect(controller.result()).toBe(4);
 
+    testView.mount();
     testView.update({ a: 3 });
     expect(controller.result()).toBe(9);
   });

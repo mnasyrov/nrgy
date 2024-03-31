@@ -1,4 +1,4 @@
-import { atom, Atom, signal, Signal, WritableAtom } from '../core';
+import { atom, Atom, createScope, signal, Signal, WritableAtom } from '../core';
 
 import {
   BaseControllerContext,
@@ -32,6 +32,14 @@ export type ViewPropAtoms<TProps extends ViewProps> = TProps extends Record<
       [K in keyof TProps]: Atom<TProps[K]>;
     }>;
 
+export type ViewStatus = 'unmounted' | 'mounted' | 'destroyed';
+
+export const ViewStatuses = {
+  unmounted: 'unmounted' as ViewStatus,
+  mounted: 'mounted' as ViewStatus,
+  destroyed: 'destroyed' as ViewStatus,
+} as const;
+
 /**
  * ViewBinding is the binding between the controller and the view
  */
@@ -40,6 +48,8 @@ export type ViewBinding<TProps extends ViewProps> = {
    * View's props
    */
   readonly props: ViewPropAtoms<TProps>;
+
+  readonly status: Atom<ViewStatus>;
 
   /**
    * Signals that the view has been mounted
@@ -81,6 +91,11 @@ export type ViewProxy<TProps extends ViewProps> = ViewBinding<TProps> & {
    * Unmount the view
    */
   readonly unmount: () => void;
+
+  /**
+   * Destroy the view
+   */
+  readonly destroy: () => void;
 };
 
 /**
@@ -147,12 +162,15 @@ export function createViewProxy<TProps extends ViewProps>(
 export function createViewProxy<TProps extends ViewProps>(
   initialProps?: TProps,
 ): ViewProxy<TProps> {
+  const status = atom<ViewStatus>(ViewStatuses.unmounted);
   const props: Record<string, WritableAtom<any>> = {};
   const readonlyProps: Record<string, Atom<any>> = {};
 
+  const scope = createScope();
+
   if (initialProps) {
     Object.keys(initialProps).forEach((key) => {
-      const store = atom(initialProps[key]);
+      const store = scope.atom(initialProps[key]);
       props[key] = store;
       readonlyProps[key] = store.asReadonly();
     });
@@ -163,6 +181,7 @@ export function createViewProxy<TProps extends ViewProps>(
   const onUnmount = signal<void>();
 
   return {
+    status: status.asReadonly(),
     props: readonlyProps as ViewPropAtoms<TProps>,
 
     onMount,
@@ -170,10 +189,17 @@ export function createViewProxy<TProps extends ViewProps>(
     onUnmount,
 
     mount(): void {
-      onMount();
+      if (status() === ViewStatuses.unmounted) {
+        status.set(ViewStatuses.mounted);
+        onMount();
+      }
     },
 
     update(nextProps?: Partial<TProps>): void {
+      if (status() !== ViewStatuses.mounted) {
+        return;
+      }
+
       if (nextProps) {
         Object.keys(nextProps).forEach((key) => {
           props[key]?.set(nextProps[key]);
@@ -184,7 +210,18 @@ export function createViewProxy<TProps extends ViewProps>(
     },
 
     unmount(): void {
-      onUnmount();
+      if (status() === ViewStatuses.mounted) {
+        status.set(ViewStatuses.unmounted);
+        onUnmount();
+      }
+    },
+
+    destroy(): void {
+      if (status() !== ViewStatuses.destroyed) {
+        onUnmount();
+        status.set(ViewStatuses.destroyed);
+        scope.destroy();
+      }
     },
   };
 }

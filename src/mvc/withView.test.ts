@@ -28,6 +28,7 @@ describe('withView()', () => {
 
     expect(controller.result()).toBe(4);
 
+    view.mount();
     view.update({ input: 3 });
     expect(controller.result()).toBe(9);
   });
@@ -91,11 +92,31 @@ describe('ViewProxy', () => {
   });
 
   describe('update()', () => {
+    it('should not notify if the view is not mounted', () => {
+      const view = createViewProxy({ value: 1 });
+
+      const spy = jest.fn();
+      syncEffect(view.onUpdate, spy);
+
+      view.update({ value: 2 });
+      expect(spy).toHaveBeenCalledTimes(0);
+      expect(view.props.value()).toBe(1);
+
+      spy.mockClear();
+      view.mount();
+      view.update({ value: 3 });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenLastCalledWith({ value: 3 });
+      expect(view.props.value()).toBe(3);
+    });
+
     it('should notify the view is updated by onUpdate signal', () => {
       const view = createViewProxy({ value: 1 });
 
       const spy = jest.fn();
       syncEffect(view.onUpdate, spy);
+
+      view.mount();
 
       view.update({ value: 2 });
       expect(spy).toHaveBeenCalledTimes(1);
@@ -115,6 +136,7 @@ describe('ViewProxy', () => {
       const spy = jest.fn();
       syncEffect(view.onUpdate, spy);
 
+      view.mount();
       view.update({ value: 2, unknown: 3 } as any);
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenLastCalledWith({ value: 2, unknown: 3 });
@@ -127,6 +149,7 @@ describe('ViewProxy', () => {
   describe('unmount()', () => {
     it('should notify the view is unmounted by onUnmount signal', () => {
       const view = createViewProxy();
+      view.mount();
 
       const spy = jest.fn();
       syncEffect(view.onUnmount, spy);
