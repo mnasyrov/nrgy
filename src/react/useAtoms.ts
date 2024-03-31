@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo } from 'react';
 
 import { Atom, compute, objectEquals } from '../core';
 
@@ -31,29 +31,36 @@ export const useAtoms: UseAtomsFn = function <
   },
 >(sources: TSourceAtoms): TResult {
   const sourcesArg = sources ?? EMPTY_ATOMS_SOURCES;
-  const sourcesRef = useRef(sourcesArg);
-  sourcesRef.current = sourcesArg;
 
-  const $result = useRef(() =>
-    compute(
-      () => {
-        const sourceAtoms = sourcesRef.current;
+  const $result = useMemo(() => createComputedAtoms(sourcesArg), [sourcesArg]);
 
-        if (sourceAtoms === EMPTY_ATOMS_SOURCES) {
-          return EMPTY_ATOMS_RESULTS as TResult;
-        }
-
-        const acc: Record<string, any> = {};
-
-        for (const key of Object.keys(sourceAtoms)) {
-          acc[key] = sourceAtoms[key]();
-        }
-
-        return acc as TResult;
-      },
-      { equal: objectEquals },
-    ),
-  );
-
-  return useAtom($result.current());
+  return useAtom($result) as TResult;
 };
+
+function createComputedAtoms<
+  TSourceAtoms extends Record<string, Atom<unknown>>,
+  TResult extends {
+    [K in keyof TSourceAtoms]: TSourceAtoms[K] extends Atom<infer V>
+      ? V
+      : never;
+  },
+>(sources: TSourceAtoms): Atom<TResult> {
+  if (sources === EMPTY_ATOMS_SOURCES) {
+    return compute(() => EMPTY_ATOMS_RESULTS as TResult);
+  }
+
+  return compute(
+    () => {
+      const sourceAtoms = sources;
+
+      const result: Record<string, any> = {};
+
+      for (const key of Object.keys(sourceAtoms)) {
+        result[key] = sourceAtoms[key]();
+      }
+
+      return result as TResult;
+    },
+    { equal: objectEquals },
+  );
+}
