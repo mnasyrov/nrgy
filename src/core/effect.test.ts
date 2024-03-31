@@ -77,7 +77,7 @@ describe('effect()', () => {
     const b = atom(2);
 
     let result = 0;
-    const fx = effect(() => (result = a() + b()));
+    const fx = effect([a, b], ([a, b]) => (result = a + b));
 
     await flushMicrotasks();
     expect(result).toBe(3);
@@ -96,7 +96,7 @@ describe('effect()', () => {
     const a = atom(0);
 
     const results: number[] = [];
-    effect(() => results.push(a()));
+    effect(a, (value) => results.push(value));
     await flushMicrotasks();
 
     a.set(1);
@@ -204,7 +204,7 @@ describe('syncEffect()', () => {
     const b = atom(2);
 
     let result = 0;
-    const fx = syncEffect(() => (result = a() + b()));
+    const fx = syncEffect([a, b], ([a, b]) => (result = a + b));
     expect(result).toBe(3);
 
     a.set(2);
@@ -409,10 +409,13 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     const a = atom(1, { name: 'a' });
     const b = atom(0, { name: 'b' });
 
-    const fx = effect(() => {
-      const value = a();
-      b.set(value);
-    });
+    const fx = effect(
+      compute(() => {
+        const value = a();
+        b.set(value);
+      }),
+      () => {},
+    );
 
     const errorCallback = jest.fn();
     effect(fx.onError, errorCallback);
@@ -436,8 +439,7 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     const signalCallback = jest.fn();
     effect(s, signalCallback);
 
-    const fx = effect(() => {
-      const value = a();
+    const fx = effect(a, (value) => {
       return s(value);
     });
 

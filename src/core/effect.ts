@@ -2,7 +2,7 @@ import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
 import { AtomList, combineAtoms } from './atomUtils';
 import { AnyFunction, Atom, Signal } from './common';
-import { ENERGY_RUNTIME, tracked } from './runtime';
+import { ENERGY_RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
@@ -73,18 +73,13 @@ export interface EffectFn {
     callback: ValueCallbackFn<TValues, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for a side effect
-   */
-  <R>(action: SideEffectFn<R>, options?: EffectOptions): EffectSubscription<R>;
 }
 
 /**
  * Creates a new effect
  */
 export const effect: EffectFn = <T, R>(
-  source: Signal<T> | Atom<T> | AtomList<T[]> | SideEffectFn<R>,
+  source: Signal<T> | Atom<T> | AtomList<T[]>,
   callback?: ValueCallbackFn<T, R> | EffectOptions,
   options?: EffectOptions,
 ) => {
@@ -141,7 +136,7 @@ export const effect: EffectFn = <T, R>(
     const list = combineAtoms(source);
     return effect(list as any, callback as any, options);
   } else {
-    sideEffectFn = () => tracked(source as SideEffectFn<R>);
+    throw new Error('Unexpected the first argument');
   }
 
   const atomEffect = new AtomEffect(scheduler, sideEffectFn);
@@ -206,11 +201,6 @@ export interface SyncEffectFn {
     callback: ValueCallbackFn<TValues, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for a side effect
-   */
-  <R>(action: SideEffectFn<R>): EffectSubscription<R>;
 }
 
 export const syncEffect: SyncEffectFn = <T, R>(

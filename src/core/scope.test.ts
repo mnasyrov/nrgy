@@ -1,4 +1,5 @@
 import { atom } from './atom';
+import { syncEffect } from './effect';
 import { createScope, ScopeDestructionError } from './scope';
 import { getSignalNode } from './signal';
 
@@ -93,7 +94,7 @@ describe('Scope', () => {
     it('should create and register an effect', () => {
       const scope = createScope();
 
-      const fx = scope.effect(() => {});
+      const fx = scope.effect(atom(1), () => {});
       scope.destroy();
 
       expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
@@ -102,12 +103,9 @@ describe('Scope', () => {
 
   describe('syncEffect()', () => {
     it('should create and register a sync effect', async () => {
-      const scope = createScope();
-
-      const fx = scope.syncEffect(() => {});
-      scope.destroy();
-
-      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+      expect(() => syncEffect((() => {}) as unknown as any, {} as any)).toThrow(
+        new Error('Unexpected the first argument'),
+      );
     });
   });
 });

@@ -28,14 +28,14 @@ describe('compute()', () => {
 
     const results: number[] = [];
 
-    effect(() => results.push(h()));
-    await 0;
+    effect(h, (value) => results.push(value));
+    await flushMicrotasks();
 
     entry.set(1);
-    await 0;
+    await flushMicrotasks();
 
     entry.set(2);
-    await 0;
+    await flushMicrotasks();
 
     expect(results).toEqual([10, 18, 26]);
   });
@@ -54,7 +54,7 @@ describe('compute()', () => {
 
     const results: number[] = [];
 
-    syncEffect(() => results.push(h()));
+    syncEffect(h, (value) => results.push(value));
 
     entry.set(1);
     entry.set(2);
@@ -71,30 +71,30 @@ describe('compute()', () => {
     const output = compute(() => (isA() ? a() : b()) + `, i${i}`);
 
     const results: any[] = [];
-    effect(() => results.push(output()));
+    effect(output, (value) => results.push(value));
 
-    await 0;
+    await flushMicrotasks();
 
     i = 1;
     b.set('b1a');
-    await 0;
+    await flushMicrotasks();
 
     i = 2;
     a.set('a2');
     b.set('b2');
-    await 0;
+    await flushMicrotasks();
 
     i = 3;
     isA.set(false);
-    await 0;
+    await flushMicrotasks();
 
     i = 4;
     b.set('b3');
-    await 0;
+    await flushMicrotasks();
 
     i = 5;
     a.set('a4');
-    await 0;
+    await flushMicrotasks();
 
     expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4']);
   });
@@ -108,20 +108,20 @@ describe('compute()', () => {
     expect(notSubscribed()).toBe(1);
 
     const results: any[] = [];
-    const { destroy } = effect(() => results.push(subscribed()));
+    const { destroy } = effect(subscribed, (value) => results.push(value));
 
-    await 0;
+    await flushMicrotasks();
 
     value = 2;
-    await 0;
+    await flushMicrotasks();
 
     value = 3;
-    await 0;
+    await flushMicrotasks();
 
     value = 4;
-    await 0;
+    await flushMicrotasks();
     expect(subscribed()).toBe(1);
-    await 0;
+    await flushMicrotasks();
 
     destroy();
 
@@ -161,7 +161,7 @@ describe('compute()', () => {
     const b = compute(() => a() + 1);
 
     const results: number[] = [];
-    const fx = syncEffect(() => results.push(b()));
+    const fx = syncEffect(b, (value) => results.push(value));
     source.set(1);
     source.set(2);
     fx.destroy();
@@ -176,7 +176,7 @@ describe('compute()', () => {
 
     const results: number[] = [];
 
-    const fx = effect(() => results.push(b()));
+    const fx = effect(b, (value) => results.push(value));
     await flushMicrotasks();
 
     source.set(1);
@@ -275,7 +275,7 @@ describe('compute()', () => {
       entry.set(1);
       expect(d()).toEqual(7);
 
-      await 0;
+      await flushMicrotasks();
 
       entry.set(2);
       expect(d()).toEqual(9);
@@ -641,7 +641,7 @@ describe('Tracked context in the computed expression with implicit dependencies'
 
     expect(() => c()).toThrow(new AtomUpdateError('b'));
 
-    const fx = effect(() => c());
+    const fx = effect(c, () => {});
 
     const errorCallback = jest.fn();
     effect(fx.onError, errorCallback);
@@ -671,7 +671,7 @@ describe('Tracked context in the computed expression with implicit dependencies'
       return value;
     });
 
-    const fx = effect(() => c());
+    const fx = effect(c, () => {});
 
     const errorCallback = jest.fn();
     effect(fx.onError, errorCallback);
