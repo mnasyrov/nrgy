@@ -3,8 +3,12 @@ import { defer, finalize, MonoTypeOperatorFunction, noop } from 'rxjs';
 import { Atom, createScope } from '../core';
 import { createLatch } from '../core/utils/latch';
 
-export function flushMicrotasks(interval = 0): Promise<void> {
+export function promiseTimeout(interval: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, interval));
+}
+
+export function flushMicrotasks(interval = 0): Promise<void> {
+  return promiseTimeout(interval);
 }
 
 type HistoryEvent<T> =

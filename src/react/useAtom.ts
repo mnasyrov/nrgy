@@ -11,7 +11,7 @@ export function useAtom<T>(source: Atom<T>): T {
   const [value, setValue] = useState<T>(source);
 
   useEffect(() => {
-    const subscription = effect(() => setValue(source()));
+    const subscription = effect(source, (value) => setValue(value));
 
     return subscription.destroy;
   }, [source]);
