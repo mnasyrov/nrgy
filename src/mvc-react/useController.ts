@@ -52,7 +52,6 @@ export function useController<
     declaration: ControllerDeclaration<TContext, TService>;
     controller: Controller<TService>;
     view: ViewProxy<ViewProxyProps>;
-    isMounted: boolean;
   };
 
   const reactExtensionProviders = useNrgyControllerExtensionContext();
@@ -73,7 +72,6 @@ export function useController<
       declaration,
       controller,
       view,
-      isMounted: false,
     };
   } else {
     // HACK:  Needs to keep invoking the extension providers
@@ -84,17 +82,18 @@ export function useController<
   }
 
   useEffect(() => {
-    const context = hookContextRef.current!;
-
-    if (context.isMounted) {
+    const context = hookContextRef.current;
+    if (context) {
       context.view.update(props);
     }
   }, [props]);
 
   useEffect(() => {
-    const context = hookContextRef.current!;
+    const context = hookContextRef.current;
+    if (!context) {
+      return undefined;
+    }
 
-    context.isMounted = true;
     context.view.mount();
 
     return () => {
