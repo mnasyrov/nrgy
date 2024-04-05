@@ -54,6 +54,38 @@ describe('useController()', () => {
     unmount();
     expect(destroy).toHaveBeenCalledTimes(1);
   });
+
+  it('should be able to replace the controller by the new implementation', () => {
+    const destroy1 = jest.fn();
+    const destroy2 = jest.fn();
+
+    const TestController1 = declareController(() => ({
+      value: 1,
+      destroy: destroy1,
+    }));
+
+    const TestController2 = declareController(() => ({
+      value: 2,
+      destroy: destroy2,
+    }));
+
+    const { result, rerender, unmount } = renderHook(
+      ({ controller }) => useController(controller),
+      { initialProps: { controller: TestController1 } },
+    );
+
+    expect(result.current.value).toBe(1);
+
+    rerender({ controller: TestController2 });
+    expect(result.current.value).toBe(2);
+    expect(destroy1).toHaveBeenCalledTimes(1);
+    expect(destroy2).toHaveBeenCalledTimes(0);
+
+    destroy1.mockClear();
+    unmount();
+    expect(destroy1).toHaveBeenCalledTimes(0);
+    expect(destroy2).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('useController() and withView() extension', () => {

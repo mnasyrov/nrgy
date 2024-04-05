@@ -90,17 +90,19 @@ export function useController<
 
   useEffect(() => {
     const context = hookContextRef.current;
-    if (!context) {
-      return undefined;
+    if (context) {
+      context.view.mount();
     }
 
-    context.view.mount();
-
     return () => {
-      context.view.destroy();
-      context.controller.destroy();
+      if (context) {
+        context.view.destroy();
+        context.controller.destroy();
+      }
 
-      hookContextRef.current = undefined;
+      if (hookContextRef.current === context) {
+        hookContextRef.current = undefined;
+      }
     };
   }, [declaration]);
 
