@@ -113,12 +113,12 @@ describe('Atom', () => {
       const store = atom<number>(1);
       const fx = syncEffect(store, onChange);
 
-      onChange.mockReset();
+      onChange.mockClear();
       store.set(2);
       expect(onChange).toHaveBeenCalledTimes(1);
       expect(onChange).toHaveBeenCalledWith(2);
 
-      onChange.mockReset();
+      onChange.mockClear();
       fx.destroy();
       store.set(3);
       const node = getSignalNode(fx.onDestroy);
