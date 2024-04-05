@@ -2,6 +2,7 @@ export type {
   BaseControllerContext,
   BaseService,
   Controller,
+  ControllerContext,
   ControllerDeclaration,
   ControllerClassDeclaration,
   ControllerFactory,
@@ -27,10 +28,6 @@ export type {
   ViewModelClassDeclaration,
 } from './viewModel';
 export { declareViewModel } from './viewModel';
-
-export type { ControllerCompositionContext } from './withControllers';
-
-export { withControllers } from './withControllers';
 
 export type {
   InferViewPropsFromControllerContext,

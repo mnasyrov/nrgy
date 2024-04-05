@@ -3,7 +3,7 @@ import { createScope, Scope, signal } from '../core';
 /**
  * Base service type which is implemented by controllers
  */
-export type BaseService = Record<string, unknown> | ((...args: any[]) => any);
+export type BaseService = Record<string, any> | ((...args: any[]) => any);
 
 /**
  * Effects and business logic controller.
@@ -146,7 +146,7 @@ export type ControllerDeclaration<
  * Base class for controllers
  */
 export abstract class BaseController<TContext extends BaseControllerContext> {
-  protected readonly context: TContext;
+  protected readonly context: ControllerContext<TContext>;
   protected readonly scope: Scope;
   protected readonly params: TContext['params'];
 
@@ -160,6 +160,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     extensions?: ReadonlyArray<ExtensionFn<any, any>>,
   ) {
     this.context = createControllerContext(paramsOrProviders, extensions);
+
     this.scope = this.context.scope;
     this.params = this.context.params;
 
@@ -267,13 +268,34 @@ export type InferContextParams<
   ? InferredParams
   : ElseType;
 
+export type ControllerContext<TContext extends BaseControllerContext> =
+  TContext & {
+    create<
+      TContext extends BaseControllerContext,
+      TService extends BaseService,
+    >(
+      declaration: ControllerDeclaration<TContext, TService>,
+    ): Controller<TService>;
+
+    create<
+      TContext extends BaseControllerContext,
+      TService extends BaseService,
+      TParams extends InferContextParams<TContext, never>,
+    >(
+      declaration: ControllerDeclaration<TContext, TService>,
+      params: TParams,
+    ): Controller<TService>;
+  };
+
 /**
  * Factory function for a controller
  */
 export type ControllerFactory<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-> = (context: TContext) => PartialController<TService> | undefined | void;
+> = (
+  context: ControllerContext<TContext>,
+) => PartialController<TService> | undefined | void;
 
 /**
  * @internal
@@ -419,22 +441,39 @@ function controllerConstructor<
     | undefined,
   extensions: ReadonlyArray<ExtensionFn<any, any>> | undefined,
 ): Controller<TService> {
-  const context: TContext = createControllerContext(
-    paramsOrProviders,
-    extensions,
-  );
-
+  const context = createControllerContext(paramsOrProviders, extensions);
   const scope = context.scope;
-  const result = factory(context) ?? { destroy: undefined };
 
-  const originalDestroy = result.destroy;
+  const controller = factory(context) ?? { destroy: undefined };
+
+  const originalDestroy = controller.destroy;
   if (originalDestroy) {
-    scope.onDestroy(() => originalDestroy.call(result));
+    scope.onDestroy(() => originalDestroy.call(controller));
   }
 
-  return Object.assign(result, {
+  return Object.assign(controller, {
     destroy: () => scope.destroy(),
   });
+}
+
+/**
+ * @internal
+ *
+ * Returns the params and providers from the given paramsOrProviders
+ */
+export function resolveParamsAndProviders<
+  TContext extends BaseControllerContext,
+>(
+  paramsOrProviders?:
+    | TContext['params']
+    | ReadonlyArray<ExtensionParamsProvider>,
+): {
+  params: TContext['params'] | undefined;
+  providers: ReadonlyArray<ExtensionParamsProvider>;
+} {
+  return Array.isArray(paramsOrProviders)
+    ? { params: undefined, providers: paramsOrProviders }
+    : { params: paramsOrProviders, providers: [] };
 }
 
 /**
@@ -447,27 +486,19 @@ export function createControllerContext<TContext extends BaseControllerContext>(
     | TContext['params']
     | ReadonlyArray<ExtensionParamsProvider>,
   extensions?: ReadonlyArray<ExtensionFn<any, any>>,
-): TContext {
+): ControllerContext<TContext> {
   const scope = createScope();
 
-  let params: TContext['params'] | undefined;
-  let providers: ReadonlyArray<ExtensionParamsProvider> | undefined;
+  const args = resolveParamsAndProviders(paramsOrProviders);
 
-  if (Array.isArray(paramsOrProviders)) {
-    providers = paramsOrProviders;
-  } else {
-    params = paramsOrProviders;
-  }
+  const extensionParams =
+    args.providers.length > 0
+      ? createExtensionParams(args.providers)
+      : undefined;
 
-  const extensionParams = providers
-    ? createExtensionParams(providers)
-    : undefined;
+  const params = args.params ?? extensionParams?.controllerParams ?? {};
 
-  if (!params && extensionParams?.controllerParams) {
-    params = extensionParams.controllerParams;
-  }
-
-  const baseContext: BaseControllerContext = { scope, params: params ?? {} };
+  const baseContext: BaseControllerContext = { scope, params };
 
   const context: TContext = (
     extensions
@@ -478,7 +509,28 @@ export function createControllerContext<TContext extends BaseControllerContext>(
       : baseContext
   ) as TContext;
 
-  return context;
+  const factoryContext: ControllerContext<TContext> = {
+    ...context,
+
+    create<
+      TContext extends BaseControllerContext,
+      TService extends BaseService,
+    >(
+      declaration: ControllerDeclaration<TContext, TService>,
+      params?: InferContextParams<TContext, undefined>,
+    ): Controller<TService> {
+      const nextProviders = [
+        ...args.providers,
+        provideControllerParams(params),
+      ];
+
+      const controller = new declaration(nextProviders);
+
+      return scope.add(controller);
+    },
+  };
+
+  return factoryContext;
 }
 
 /**
