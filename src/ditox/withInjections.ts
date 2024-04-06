@@ -4,11 +4,9 @@ import {
   BaseControllerContext,
   ControllerConstructorError,
   ExtensionFn,
-  ExtensionParams,
-  ExtensionParamsProvider,
 } from '../mvc';
 
-const DITOX_EXTENSION_CONTAINER_KEY = 'ditox.container';
+import { DITOX_EXTENSION_CONTAINER_KEY } from './withContainer';
 
 export type DependencyProps = {
   [key: string]: unknown;
@@ -44,20 +42,4 @@ export function withInjections<
 
     return { ...sourceContext, deps };
   };
-}
-
-export function provideDependencyContainer(
-  container: Container,
-): ExtensionParamsProvider {
-  return (params) => {
-    setDependencyContainerToParams(params, container);
-    return params;
-  };
-}
-
-export function setDependencyContainerToParams(
-  params: ExtensionParams,
-  container: Container | undefined,
-): void {
-  params[DITOX_EXTENSION_CONTAINER_KEY] = container;
 }

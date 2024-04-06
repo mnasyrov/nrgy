@@ -2,10 +2,8 @@ import { Container } from 'ditox';
 
 import { BaseService, ControllerDeclaration } from '../mvc';
 
-import {
-  DependencyContext,
-  provideDependencyContainer,
-} from './withInjections';
+import { provideDependencyContainer } from './withContainer';
+import { DependencyContext } from './withInjections';
 
 /**
  * This utility allows to use a controller with injections in DI bindings

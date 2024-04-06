@@ -2,17 +2,16 @@ import { createContainer, token } from 'ditox';
 
 import { ControllerConstructorError, declareController } from '../mvc';
 
-import { provideDependencyContainer } from './withContainer';
-import { withInjections } from './withInjections';
+import { provideDependencyContainer, withContainer } from './withContainer';
 
-describe('withInjections()', () => {
+describe('withContainer()', () => {
   it('should provide a value from DI container to the controller', () => {
     const VALUE_TOKEN = token<number>();
 
     const TestController = declareController()
-      .extend(withInjections({ value: VALUE_TOKEN }))
+      .extend(withContainer())
       .apply((context) => {
-        return { value: context.deps.value };
+        return { value: context.container.resolve(VALUE_TOKEN) };
       });
 
     const container = createContainer();
@@ -26,7 +25,7 @@ describe('withInjections()', () => {
 
   it('should throw an error if DI container is not provided', () => {
     const TestController = declareController()
-      .extend(withInjections({ value: token<number>() }))
+      .extend(withContainer())
       .apply(() => ({ value: 1 }));
 
     expect(() => new TestController()).toThrow(

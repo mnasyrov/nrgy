@@ -2,7 +2,7 @@ import React, { FC, PropsWithChildren } from 'react';
 
 import { useDependencyContainer } from 'ditox-react';
 
-import { setDependencyContainerToParams } from '../ditox/withInjections';
+import { setDependencyContainerToParams } from '../ditox/withContainer';
 import { ExtensionParamsProvider } from '../mvc';
 import { NrgyControllerExtension } from '../mvc-react';
 
