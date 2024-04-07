@@ -13,6 +13,7 @@ export class EnergyRuntime {
   private trackedEffects: AtomEffectNode[] = [];
   private visitedComputedNodes: ComputedNode<any>[] = [];
 
+  private batchUpdateLock: number = 0;
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
@@ -116,6 +117,33 @@ export class EnergyRuntime {
       return nonReactiveReadsFn();
     } finally {
       this.tracked = prevTracked;
+    }
+  }
+
+  /**
+   * Returns the current batch update lock
+   */
+  getBatchUpdateLock(): number {
+    return this.batchUpdateLock;
+  }
+
+  batchUpdate(action: () => any): void {
+    try {
+      this.batchUpdateLock++;
+
+      if (this.batchUpdateLock === 1) {
+        this.syncScheduler.pause();
+        this.asyncScheduler.pause();
+      }
+
+      action();
+    } finally {
+      this.batchUpdateLock--;
+
+      if (this.batchUpdateLock === 0) {
+        this.syncScheduler.resume();
+        this.asyncScheduler.resume();
+      }
     }
   }
 }

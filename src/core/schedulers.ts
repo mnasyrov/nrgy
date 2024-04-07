@@ -13,6 +13,12 @@ export type TaskScheduler = Readonly<{
 
   /** Execute the queue */
   execute(): void;
+
+  /** Pause the queue */
+  pause(): void;
+
+  /** Resume the queue */
+  resume(): void;
 }>;
 
 /**
@@ -33,6 +39,7 @@ export function createMicrotaskScheduler(
 
   const queue = createQueue<() => void>();
   let isActive = false;
+  let isPaused = false;
 
   const execute = () => {
     if (isActive) return;
@@ -40,7 +47,7 @@ export function createMicrotaskScheduler(
     isActive = true;
 
     let action;
-    while ((action = queue.get())) {
+    while (!isPaused && (action = queue.get())) {
       try {
         action();
       } catch (error) {
@@ -62,6 +69,18 @@ export function createMicrotaskScheduler(
       }
     },
     execute,
+
+    pause: () => {
+      isPaused = true;
+    },
+
+    resume: () => {
+      isPaused = false;
+
+      if (!queue.isEmpty()) {
+        queueMicrotask(execute);
+      }
+    },
   };
 }
 
@@ -75,6 +94,7 @@ export function createSyncTaskScheduler(
 
   const queue = createQueue<() => void>();
   let isActive = false;
+  let isPaused = false;
 
   const execute = () => {
     if (isActive) return;
@@ -82,7 +102,7 @@ export function createSyncTaskScheduler(
     isActive = true;
 
     let action;
-    while ((action = queue.get())) {
+    while (!isPaused && (action = queue.get())) {
       try {
         action();
       } catch (error) {
@@ -99,5 +119,16 @@ export function createSyncTaskScheduler(
       if (!isActive) execute();
     },
     execute,
+
+    pause: () => {
+      isPaused = true;
+    },
+    resume: () => {
+      isPaused = false;
+
+      if (!queue.isEmpty()) {
+        execute();
+      }
+    },
   };
 }
