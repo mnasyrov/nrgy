@@ -1,4 +1,7 @@
+import { createContainer, token } from 'ditox';
+
 import { compute } from '../core';
+import { provideDependencyContainer, withInjections } from '../ditox';
 import { flushMicrotasks } from '../test/testUtils';
 
 import {
@@ -357,6 +360,30 @@ describe('ControllerContext', () => {
       expect(controller.r2()).toBe(8);
       expect(controller.r3()).toBe(4);
       expect(controller.r4()).toBe(8);
+    });
+
+    it('should share extensions with children controllers', () => {
+      const TOKEN = token<number>();
+
+      const ChildController = declareController()
+        .extend(withInjections({ value: TOKEN }))
+        .apply(({ deps }) => {
+          return { value: deps.value };
+        });
+
+      const TestController = declareController().apply(({ create }) => {
+        const child = create(ChildController);
+
+        return { value: child.value };
+      });
+
+      const container = createContainer();
+      container.bindValue(TOKEN, 1);
+
+      const controller = new TestController([
+        provideDependencyContainer(container),
+      ]);
+      expect(controller.value).toBe(1);
     });
   });
 });
