@@ -23,6 +23,7 @@ export type { EffectOptions, EffectSubscription } from './effect';
 export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
+export { batchUpdate } from './batchUpdate';
 
 export type { TaskScheduler } from './schedulers';
 
