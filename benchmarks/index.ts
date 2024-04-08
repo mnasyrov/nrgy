@@ -28,9 +28,7 @@ async function main() {
 
   await bench.run();
 
-  console.table(
-    bench.table().sort((a, b) => (b?.Samples ?? 0) - (a?.Samples ?? 0)),
-  );
+  console.table(bench.table());
 }
 
 function createDevComputeTest(

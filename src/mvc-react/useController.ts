@@ -39,19 +39,18 @@ export function useController<
 export function useController<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-  TProps extends InferViewPropsFromControllerContext<TContext, undefined>,
+  TProps extends InferViewPropsFromControllerContext<
+    TContext,
+    Record<string, never>
+  >,
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   props?: TProps,
 ): TService {
-  type ViewProxyProps = TProps extends undefined
-    ? Record<string, never>
-    : TProps;
-
   type HookContext = {
     declaration: ControllerDeclaration<TContext, TService>;
     controller: Controller<TService>;
-    view: ViewProxy<ViewProxyProps>;
+    view: ViewProxy<TProps>;
   };
 
   const reactExtensionProviders = useNrgyControllerExtensionContext();
@@ -59,9 +58,7 @@ export function useController<
   const hookContextRef = useRef<HookContext>();
 
   if (hookContextRef.current?.declaration !== declaration) {
-    const view = createViewProxy<ViewProxyProps>(
-      (props ?? {}) as ViewProxyProps,
-    );
+    const view = createViewProxy<TProps>((props ?? {}) as TProps);
 
     // NOTE:  React hooks of the extension will be invoked
     //        by calling the declaration.
