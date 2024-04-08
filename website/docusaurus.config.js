@@ -55,7 +55,7 @@ const config = {
           editUrl: 'https://github.com/mnasyrov/nrgy/tree/main/website/',
         },
         theme: {
-          customCss: ['./src/fonts/inter/inter.css', './src/css/custom.css'],
+          customCss: ['./src/css/custom.css'],
         },
       }),
     ],
