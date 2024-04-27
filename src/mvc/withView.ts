@@ -23,14 +23,12 @@ export type ViewProps = Record<string, unknown>;
  * ViewPropAtoms are the atoms wit View's props that are provided
  * to the controller by the ViewBinding
  */
-export type ViewPropAtoms<TProps extends ViewProps> = TProps extends Record<
-  string,
-  never
->
-  ? Record<string, never>
-  : Readonly<{
-      [K in keyof TProps]: Atom<TProps[K]>;
-    }>;
+export type ViewPropAtoms<TProps extends ViewProps> =
+  TProps extends Record<string, never>
+    ? Record<string, never>
+    : Readonly<{
+        [K in keyof TProps]: Atom<TProps[K]>;
+      }>;
 
 export type ViewStatus = 'unmounted' | 'mounted' | 'destroyed';
 
@@ -111,9 +109,10 @@ export type ViewControllerContext<TProps extends ViewProps = ViewProps> =
 export type InferViewPropsFromControllerContext<
   TContext extends BaseControllerContext,
   ElseType,
-> = TContext extends ViewControllerContext<infer InferredProps>
-  ? InferredProps
-  : ElseType;
+> =
+  TContext extends ViewControllerContext<infer InferredProps>
+    ? InferredProps
+    : ElseType;
 
 /**
  * withView is an extension that provides the view to the controller
@@ -176,9 +175,9 @@ export function createViewProxy<TProps extends ViewProps>(
     });
   }
 
-  const onMount = signal<void>();
-  const onUpdate = signal<Partial<TProps>>();
-  const onUnmount = signal<void>();
+  const onMount = signal<void>({ sync: true });
+  const onUpdate = signal<Partial<TProps>>({ sync: true });
+  const onUnmount = signal<void>({ sync: true });
 
   return {
     status: status.asReadonly(),

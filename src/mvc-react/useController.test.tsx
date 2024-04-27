@@ -10,6 +10,7 @@ import {
   ExtensionParamsProvider,
   withView,
 } from '../mvc';
+import { flushMicrotasks } from '../test/testUtils';
 
 import { NrgyControllerExtension } from './NrgyControllerExtension';
 import { useController } from './useController';
@@ -89,7 +90,7 @@ describe('useController()', () => {
 });
 
 describe('useController() and withView() extension', () => {
-  it('should call lifecycle signals', () => {
+  it('should call lifecycle signals using syncEffect()', () => {
     const mountCallback = jest.fn();
     const updateCallback = jest.fn();
     const unmountCallback = jest.fn();
@@ -132,6 +133,59 @@ describe('useController() and withView() extension', () => {
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     unmount();
+    expect(mountCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(3);
+    expect(unmountCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call lifecycle signals using async effect()', async () => {
+    const mountCallback = jest.fn();
+    const updateCallback = jest.fn();
+    const unmountCallback = jest.fn();
+
+    const ViewController = declareController()
+      .extend(withView<{ value: number }>())
+      .apply(({ scope, view: { onMount, onUnmount, onUpdate, props } }) => {
+        effect(props.value, () => {});
+
+        scope.effect(onMount, mountCallback);
+        scope.effect(onUpdate, updateCallback);
+        scope.effect(onUnmount, unmountCallback);
+      });
+
+    const { rerender, unmount } = renderHook(
+      ({ value }) => useController(ViewController, { value }),
+      { initialProps: { value: 1 } },
+    );
+
+    await flushMicrotasks();
+    expect(mountCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(0);
+    expect(unmountCallback).toHaveBeenCalledTimes(0);
+
+    rerender({ value: 2 });
+    await flushMicrotasks();
+    expect(mountCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(unmountCallback).toHaveBeenCalledTimes(0);
+
+    rerender({ value: 2 });
+    await flushMicrotasks();
+    expect(mountCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(2);
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(unmountCallback).toHaveBeenCalledTimes(0);
+
+    rerender({ value: 3 });
+    await flushMicrotasks();
+    expect(mountCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(3);
+    expect(updateCallback).toHaveBeenCalledWith({ value: 3 });
+    expect(unmountCallback).toHaveBeenCalledTimes(0);
+
+    unmount();
+    await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(3);
     expect(unmountCallback).toHaveBeenCalledTimes(1);
