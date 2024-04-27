@@ -10,12 +10,8 @@ import {
   ExtensionFn,
   ExtensionParamsProvider,
 } from './controller';
-import {
-  ViewControllerContext,
-  ViewPropAtoms,
-  ViewProps,
-  withView,
-} from './withView';
+import { ViewPropAtoms, ViewProps } from './view';
+import { ViewControllerContext, withView } from './withView';
 
 export type BaseViewModel = Record<string, unknown> & {
   props?: Record<string, Atom<unknown>>;

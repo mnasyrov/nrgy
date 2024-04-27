@@ -29,14 +29,13 @@ export type {
 } from './viewModel';
 export { declareViewModel } from './viewModel';
 
+export type { ViewBinding, ViewPropAtoms, ViewProps, ViewStatus } from './view';
+
 export type {
   InferViewPropsFromControllerContext,
-  ViewBinding,
   ViewControllerContext,
-  ViewPropAtoms,
-  ViewProps,
-  ViewProxy,
-  ViewStatus,
 } from './withView';
+export { withView, provideView } from './withView';
 
-export { createViewProxy, withView, provideView } from './withView';
+export type { ViewProxy } from './viewProxy';
+export { createViewProxy } from './viewProxy';
