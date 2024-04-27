@@ -100,8 +100,9 @@ export const effect: EffectFn = <T, R>(
   if (isSignal<T>(source)) {
     if (!inferredCallback) throw new Error('Callback is missed');
     const node = getSignalNode<T>(source);
-
     const signalEffect = new SignalEffect<T>(scheduler, inferredCallback);
+
+    const nodeRef = node.ref;
     node.subscribe(signalEffect.ref);
 
     return {
@@ -109,7 +110,10 @@ export const effect: EffectFn = <T, R>(
       onError: signalEffect.onError,
       onDestroy: signalEffect.onDestroy,
 
-      destroy: () => signalEffect.destroy(),
+      destroy: () => {
+        nodeRef.deref()?.unsubscribe(signalEffect.ref);
+        signalEffect.destroy();
+      },
     };
   }
 

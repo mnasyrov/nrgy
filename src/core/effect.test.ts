@@ -9,7 +9,7 @@ import {
   syncEffect,
 } from './effect';
 import { ENERGY_RUNTIME } from './runtime';
-import { signal } from './signal';
+import { getSignalNode, signal } from './signal';
 
 describe('effect()', () => {
   it('should subscribe to a signal', async () => {
@@ -137,6 +137,27 @@ describe('effect()', () => {
 
     // onDestory is a signal which is forced to be synchronous
     expect(asyncOnDestroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should be destroyed without errors even if a the reference to the source signal is lost', async () => {
+    const source = signal();
+
+    const node = getSignalNode(source);
+    let refValue: any = node;
+    (node as any).ref = {
+      deref: () => refValue,
+    };
+
+    const fx = effect(source, () => {});
+
+    const onDestroy = jest.fn();
+
+    syncEffect(fx.onDestroy, onDestroy);
+    expect(onDestroy).toHaveBeenCalledTimes(0);
+
+    refValue = undefined;
+    expect(() => fx.destroy()).not.toThrow();
+    expect(onDestroy).toHaveBeenCalledTimes(1);
   });
 
   it('should throw an error if the callback is not provided', () => {

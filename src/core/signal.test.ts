@@ -1,7 +1,15 @@
 import { flushMicrotasks } from '../test/testUtils';
 
 import { effect, syncEffect } from './effect';
-import { destroySignal, getSignalName, getSignalNode, signal } from './signal';
+import { ENERGY_RUNTIME } from './runtime';
+import {
+  destroySignal,
+  getSignalName,
+  getSignalNode,
+  isSignalDestroyed,
+  signal,
+} from './signal';
+import { SignalEffect } from './signalEffect';
 
 describe('getSignalName()', () => {
   it('should return a name of writable and read-only atoms', () => {
@@ -64,6 +72,96 @@ describe('signal()', () => {
     a(2);
     expect(callback).toHaveBeenCalledTimes(0);
   });
+
+  it('should not notify destroyed SignalEffect', () => {
+    const callback = jest.fn();
+
+    const a = signal<number>();
+    const node = getSignalNode(a);
+
+    const signalEffect = new SignalEffect(
+      ENERGY_RUNTIME.syncScheduler,
+      callback,
+    );
+    node.subscribe(signalEffect.ref);
+
+    node.emit(10);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(10);
+
+    callback.mockClear();
+
+    signalEffect.destroy();
+    node.emit(20);
+    expect(callback).toHaveBeenCalledTimes(0);
+  });
+
+  it('should should call onUnsubscribed() if a destroyed SignalEffect is found during notification', () => {
+    const onUnsubscribe = jest.fn();
+
+    const a = signal<number>({ onUnsubscribe });
+    const node = getSignalNode(a);
+
+    const signalEffect = new SignalEffect(
+      ENERGY_RUNTIME.syncScheduler,
+      () => {},
+    );
+    node.subscribe(signalEffect.ref);
+
+    node.emit(10);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+
+    onUnsubscribe.mockClear();
+
+    signalEffect.destroy();
+    node.emit(20);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onUnsubscribe).toHaveBeenCalledWith(true);
+  });
+
+  it('should call the onEvent() callback when the emitter is called with a new value', () => {
+    const onEvent = jest.fn();
+    const source = signal<number>({ onEvent });
+
+    source(10);
+    expect(onEvent).toBeCalledTimes(1);
+    expect(onEvent).toBeCalledWith(10);
+  });
+
+  it('should call the onSubscribe() callback when a new effect is subscribed', () => {
+    const onSubscribe = jest.fn();
+
+    const s = signal({ onSubscribe });
+
+    effect(s, () => {});
+    expect(onSubscribe).toBeCalledTimes(1);
+
+    onSubscribe.mockClear();
+    effect(s, () => {});
+    expect(onSubscribe).toBeCalledTimes(1);
+  });
+
+  it('should call the onUnsubscribe() callback when the effect is unsubscribed', () => {
+    const onUnsubscribe = jest.fn();
+
+    const s = signal({ onUnsubscribe });
+
+    const fx1 = effect(s, () => {});
+    const fx2 = effect(s, () => {});
+
+    fx2.destroy();
+    expect(onUnsubscribe).toBeCalledTimes(1);
+    expect(onUnsubscribe).toBeCalledWith(false);
+
+    onUnsubscribe.mockClear();
+    fx2.destroy();
+    expect(onUnsubscribe).toBeCalledTimes(0);
+
+    onUnsubscribe.mockClear();
+    fx1.destroy();
+    expect(onUnsubscribe).toBeCalledTimes(1);
+    expect(onUnsubscribe).toBeCalledWith(true);
+  });
 });
 
 describe('destroySignal()', () => {
@@ -93,5 +191,15 @@ describe('destroySignal()', () => {
     callback.mockClear();
     destroySignal(a);
     expect(callback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('isSignalDestroyed()', () => {
+  it('should return true is the signal is destroyed', () => {
+    const s = signal();
+    expect(isSignalDestroyed(s)).toBe(false);
+
+    destroySignal(s);
+    expect(isSignalDestroyed(s)).toBe(true);
   });
 });

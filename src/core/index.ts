@@ -1,7 +1,14 @@
 export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
 
 export type { SignalOptions } from './signal';
-export { signal, getSignalName, isSignal, destroySignal } from './signal';
+export {
+  signal,
+  getSignalName,
+  isSignal,
+  destroySignal,
+  isSignalSubscribed,
+  isSignalDestroyed,
+} from './signal';
 
 export type { KeepLastValueOptions } from './signalUtils';
 export { keepLastValue, mixSignals, signalChanges } from './signalUtils';

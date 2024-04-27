@@ -83,7 +83,7 @@ export function keepLastValue<T>(
  */
 export function signalChanges<T>(
   source: Atom<T>,
-  options?: SignalOptions,
+  options?: SignalOptions<T>,
 ): Signal<T> {
   const scope = createScope();
 
@@ -122,7 +122,7 @@ type MixSignalsSources<TValues extends unknown[]> = [
  */
 export function mixSignals<TValues extends unknown[]>(
   sources: MixSignalsSources<TValues>,
-  options?: SignalOptions,
+  options?: SignalOptions<TValues[number]>,
 ): Signal<TValues[number]> {
   type TResult = TValues[number];
 

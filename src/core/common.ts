@@ -163,6 +163,8 @@ export type AtomEffectNode = ReactiveNode &
 
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
+    ref: WeakRef<SignalNode<T>>;
+
     /**
      * The name of the signal
      */
@@ -172,6 +174,11 @@ export type SignalNode<T> = ReactiveNode &
      * If true, the SyncScheduler will be forced to use to notify consumers.
      */
     sync?: boolean;
+
+    /**
+     * Indicates that the `Signal` is subscribed
+     */
+    isSubscribed(): boolean;
 
     /**
      * Indicates that the `Signal` has been destroyed
@@ -187,6 +194,11 @@ export type SignalNode<T> = ReactiveNode &
      * Subscribe to this signal
      */
     subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
+
+    /**
+     * Unsubscribe from this signal
+     */
+    unsubscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
   }>;
 
 /**
