@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "name": "nrgy-benchmarks",
+  "version": "0.0.34",
+  "description": "Benchmarks for Nrgy library",
+  "license": "MIT",
+  "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
+  "homepage": "https://github.com/mnasyrov/nrgy",
+  "bugs": "https://github.com/mnasyrov/nrgy/issues",
+  "repository": "github:mnasyrov/nrgy",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf build coverage dist",
+    "start": "npm run -w nrgy build -- --silent && tsx ./index.ts"
+  },
+  "devDependencies": {
+    "nrgy-reference": "npm:nrgy@0.0.27",
+    "tinybench": "2.6.0"
+  }
+}
