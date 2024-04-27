@@ -5,16 +5,6 @@ import { createScope } from './scope';
 import { isSignal, signal, SignalOptions } from './signal';
 
 /**
- * Options passed to the `keepLastValue` function.
- */
-export type KeepLastValueOptions = {
-  /**
-   * If `true` the effect will be synced.
-   */
-  sync?: boolean;
-};
-
-/**
  * Returns an atom which remembers the last emitter value.
  *
  * @param source - The source signal.
@@ -28,12 +18,10 @@ export function keepLastValue<T>(
  *
  * @param source - The source signal.
  * @param initialValue - The initial value.
- * @param options - Options
  */
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue: T,
-  options?: KeepLastValueOptions,
 ): DestroyableAtom<T>;
 
 /**
@@ -41,12 +29,10 @@ export function keepLastValue<T>(
  *
  * @param source - The source signal.
  * @param initialValue - The initial value.
- * @param options - Options
  */
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue?: T,
-  options?: KeepLastValueOptions,
 ): DestroyableAtom<T | undefined>;
 
 /**
@@ -54,12 +40,10 @@ export function keepLastValue<T>(
  *
  * @param source - The source signal.
  * @param initialValue - The initial value.
- * @param options - Options
  */
 export function keepLastValue<T>(
   source: Signal<T>,
   initialValue?: T,
-  options?: KeepLastValueOptions,
 ): DestroyableAtom<T> {
   const scope = createScope();
 
@@ -67,10 +51,9 @@ export function keepLastValue<T>(
     onDestroy: scope.destroy,
   });
 
-  const effectFn = options?.sync ? scope.syncEffect : scope.effect;
-  const sub = effectFn(source, subject.next);
-  effectFn(sub.onError, subject.error);
-  effectFn(sub.onDestroy, subject.destroy);
+  const sub = scope.syncEffect(source, subject.next);
+  scope.syncEffect(sub.onError, subject.error);
+  scope.syncEffect(sub.onDestroy, subject.destroy);
 
   return subject.asDestroyable();
 }

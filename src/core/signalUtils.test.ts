@@ -12,39 +12,13 @@ import {
 } from './index';
 
 describe('keepSignalValue()', () => {
-  it('should return an atom which remembers the last emitter value using sync explicitly ', () => {
-    const source = signal<number>();
-
-    const lastValue = keepLastValue(source, 0, { sync: true });
-    expect(lastValue()).toBe(0);
-
-    source(1);
-    expect(lastValue()).toBe(1);
-  });
-
-  it('should return an atom which remembers the last emitter value using  async scheduler explicitly ', async () => {
-    const source = signal<number>();
-
-    const lastValue = keepLastValue(source, 0, { sync: false });
-    expect(lastValue()).toBe(0);
-
-    source(1);
-    expect(lastValue()).toBe(0);
-
-    await flushMicrotasks();
-    expect(lastValue()).toBe(1);
-  });
-
-  it('should return an atom which remembers the last emitter value using async scheduler by default', async () => {
+  it('should return an atom which remembers the last emitter value ', () => {
     const source = signal<number>();
 
     const lastValue = keepLastValue(source, 0);
     expect(lastValue()).toBe(0);
 
     source(1);
-    expect(lastValue()).toBe(0);
-
-    await flushMicrotasks();
     expect(lastValue()).toBe(1);
   });
 });

@@ -10,7 +10,6 @@ export {
   isSignalDestroyed,
 } from './signal';
 
-export type { KeepLastValueOptions } from './signalUtils';
 export { keepLastValue, mixSignals, signalChanges } from './signalUtils';
 
 export type { AtomOptions, WritableAtom } from './atom';
