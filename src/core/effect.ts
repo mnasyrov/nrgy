@@ -40,8 +40,7 @@ export type EffectSubscription<R> = Readonly<{
   destroy(): void;
 }>;
 
-type SideEffectFn<R> = () => R;
-type ValueCallbackFn<T, R> = (value: T) => R;
+type EffectAction<T, R> = (value: T) => R;
 
 /**
  * An effect function
@@ -52,7 +51,7 @@ export interface EffectFn {
    */
   <T, R>(
     source: Signal<T>,
-    callback: ValueCallbackFn<T, R>,
+    action: EffectAction<T, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 
@@ -61,7 +60,7 @@ export interface EffectFn {
    */
   <T, R>(
     source: Atom<T>,
-    callback: ValueCallbackFn<T, R>,
+    action: EffectAction<T, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 
@@ -70,7 +69,7 @@ export interface EffectFn {
    */
   <TValues extends unknown[], R>(
     sources: AtomList<TValues>,
-    callback: ValueCallbackFn<TValues, R>,
+    action: EffectAction<TValues, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 }
@@ -80,27 +79,14 @@ export interface EffectFn {
  */
 export const effect: EffectFn = <T, R>(
   source: Signal<T> | Atom<T> | AtomList<T[]>,
-  callback?: ValueCallbackFn<T, R> | EffectOptions,
+  action: EffectAction<T, R>,
   options?: EffectOptions,
 ) => {
-  const isCallbackFunction = typeof callback === 'function';
-
-  const inferredOptions: EffectOptions | undefined = options
-    ? options
-    : isCallbackFunction
-      ? undefined
-      : callback;
-
-  const inferredCallback: ValueCallbackFn<T, R> | undefined = isCallbackFunction
-    ? callback
-    : undefined;
-
-  const scheduler = selectScheduler(source, inferredOptions);
+  const scheduler = selectScheduler(source, options);
 
   if (isSignal<T>(source)) {
-    if (!inferredCallback) throw new Error('Callback is missed');
     const node = getSignalNode<T>(source);
-    const signalEffect = new SignalEffect<T>(scheduler, inferredCallback);
+    const signalEffect = new SignalEffect<T>(scheduler, action);
 
     const nodeRef = node.ref;
     node.subscribe(signalEffect.ref);
@@ -117,44 +103,27 @@ export const effect: EffectFn = <T, R>(
     };
   }
 
-  let sideEffectFn: SideEffectFn<R>;
-
   if (isAtom<T>(source)) {
-    if (!inferredCallback) throw new Error('Callback is missed');
+    const atomEffect = new AtomEffect<T, R>(scheduler, source, action);
 
-    sideEffectFn = function () {
-      // Unfolding `tracked()` and `untracked()` for better performance
-      const prevTracked = ENERGY_RUNTIME.tracked;
+    // Effect starts dirty.
+    atomEffect.notify();
 
-      try {
-        ENERGY_RUNTIME.tracked = true;
-        const value = source();
+    return {
+      onResult: atomEffect.onResult,
+      onError: atomEffect.onError,
+      onDestroy: atomEffect.onDestroy,
 
-        ENERGY_RUNTIME.tracked = false;
-        return inferredCallback(value);
-      } finally {
-        ENERGY_RUNTIME.tracked = prevTracked;
-      }
+      destroy: () => atomEffect.destroy(),
     };
-  } else if (Array.isArray(source)) {
-    const list = combineAtoms(source);
-    return effect(list as any, callback as any, options);
-  } else {
-    throw new Error('Unexpected the first argument');
   }
 
-  const atomEffect = new AtomEffect(scheduler, sideEffectFn);
+  if (Array.isArray(source)) {
+    const list = combineAtoms(source);
+    return effect(list as any, action as any, options);
+  }
 
-  // Effect starts dirty.
-  atomEffect.notify();
-
-  return {
-    onResult: atomEffect.onResult,
-    onError: atomEffect.onError,
-    onDestroy: atomEffect.onDestroy,
-
-    destroy: () => atomEffect.destroy(),
-  };
+  throw new Error('Unexpected the first argument');
 };
 
 export function selectScheduler(
@@ -184,34 +153,28 @@ export interface SyncEffectFn {
   /**
    * Creates a new effect for a signal
    */
-  <T, R>(
-    source: Signal<T>,
-    callback: ValueCallbackFn<T, R>,
-  ): EffectSubscription<R>;
+  <T, R>(source: Signal<T>, action: EffectAction<T, R>): EffectSubscription<R>;
 
   /**
    * Creates a new effect for an atom
    */
-  <T, R>(
-    source: Atom<T>,
-    callback: ValueCallbackFn<T, R>,
-  ): EffectSubscription<R>;
+  <T, R>(source: Atom<T>, callback: EffectAction<T, R>): EffectSubscription<R>;
 
   /**
    * Creates a new effect for a list of atoms
    */
   <TValues extends unknown[], R>(
     sources: AtomList<TValues>,
-    callback: ValueCallbackFn<TValues, R>,
+    action: EffectAction<TValues, R>,
     options?: EffectOptions,
   ): EffectSubscription<R>;
 }
 
 export const syncEffect: SyncEffectFn = <T, R>(
-  source: Signal<T> | Atom<T> | AtomList<T[]> | SideEffectFn<R>,
-  callback?: ValueCallbackFn<T, R>,
+  source: Signal<T> | Atom<T> | AtomList<T[]>,
+  action?: EffectAction<T, R>,
 ) => {
   const options: EffectOptions = { scheduler: ENERGY_RUNTIME.syncScheduler };
 
-  return (effect as AnyFunction)(source, callback, options);
+  return (effect as AnyFunction)(source, action, options);
 };

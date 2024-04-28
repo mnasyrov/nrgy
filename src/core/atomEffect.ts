@@ -1,4 +1,4 @@
-import { AtomEffectNode, ComputedNode } from './common';
+import { Atom, AtomEffectNode, ComputedNode } from './common';
 import { ENERGY_RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { destroySignal, signal } from './signal';
@@ -12,7 +12,7 @@ import { nextSafeInteger } from './utils/nextSafeInteger';
  * `AtomEffect` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `AtomEffect.run()`.
  */
-export class AtomEffect<T> implements AtomEffectNode {
+export class AtomEffect<T, R> implements AtomEffectNode {
   readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
 
   /** Monotonically increasing version of the effect */
@@ -27,7 +27,7 @@ export class AtomEffect<T> implements AtomEffectNode {
   /**
    * Signals a result of the action function
    */
-  readonly onResult = signal<T>();
+  readonly onResult = signal<R>();
 
   /**
    * Signals an error which occurred in the execution of the action function
@@ -40,21 +40,32 @@ export class AtomEffect<T> implements AtomEffectNode {
   readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
-  private action: undefined | (() => T);
+  private source?: Atom<T>;
+  private action: undefined | ((value: T) => R);
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
-  constructor(scheduler: TaskScheduler, action: () => T) {
+  constructor(
+    scheduler: TaskScheduler,
+    source: Atom<T>,
+    action: (value: T) => R,
+  ) {
     this.scheduler = scheduler;
     this.action = action;
+    this.source = source;
   }
 
   /**
    * Destroys the effect
    */
   destroy(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.isDestroyed = true;
     this.scheduler = undefined;
+    this.source = undefined;
     this.action = undefined;
     this.seenComputedNodes = undefined;
 
@@ -106,7 +117,7 @@ export class AtomEffect<T> implements AtomEffectNode {
 
     this.dirty = false;
 
-    if (this.isDestroyed || !this.action) {
+    if (this.isDestroyed || !this.action || !this.source) {
       return;
     }
 
@@ -126,10 +137,18 @@ export class AtomEffect<T> implements AtomEffectNode {
     }
 
     let errorRef: undefined | { error: unknown };
+    // Unfolding `tracked()` and `untracked()` for better performance
+    const prevTracked = ENERGY_RUNTIME.tracked;
     try {
-      const result = this.action();
+      ENERGY_RUNTIME.tracked = true;
+      const value = this.source();
+      ENERGY_RUNTIME.tracked = prevTracked;
+
+      const result = this.action(value);
+
       this.onResult(result);
     } catch (error) {
+      ENERGY_RUNTIME.tracked = prevTracked;
       errorRef = { error };
     } finally {
       ENERGY_RUNTIME.setCurrentEffect(prevEffect);

@@ -23,6 +23,8 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
 }
 
 /**
+ * @internal
+ *
  * Returns `AtomNode` from the given Atom.
  */
 export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {

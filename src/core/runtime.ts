@@ -161,6 +161,8 @@ export function runEffects(): void {
 }
 
 /**
+ * @internal
+ *
  * Run a function in a tracked context
  */
 export function tracked<T>(reactiveReadsFn: () => T): T {
@@ -168,6 +170,8 @@ export function tracked<T>(reactiveReadsFn: () => T): T {
 }
 
 /**
+ * @internal
+ *
  * Run a function in an untracked context
  */
 export function untracked<T>(nonReactiveReadsFn: () => T): T {

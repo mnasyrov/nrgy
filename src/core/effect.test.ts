@@ -159,15 +159,6 @@ describe('effect()', () => {
     expect(() => fx.destroy()).not.toThrow();
     expect(onDestroy).toHaveBeenCalledTimes(1);
   });
-
-  it('should throw an error if the callback is not provided', () => {
-    expect(() => effect(atom(1), null as any)).toThrow(
-      new Error('Callback is missed'),
-    );
-    expect(() => effect(signal(), null as any)).toThrow(
-      new Error('Callback is missed'),
-    );
-  });
 });
 
 describe('syncEffect()', () => {

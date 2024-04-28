@@ -12,7 +12,11 @@ import { getSignalNode } from './signal';
 describe('AtomEffect', () => {
   describe('destroy()', () => {
     it('should destroy the effect', () => {
-      const effect = new AtomEffect(createSyncTaskScheduler(), () => {});
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        atom(1),
+        () => {},
+      );
       effect.destroy();
       expect(effect.isDestroyed).toBe(true);
     });
@@ -20,7 +24,11 @@ describe('AtomEffect', () => {
     it('should call onDestroy signal', () => {
       const onDestroyCallback = jest.fn();
 
-      const effect = new AtomEffect(createSyncTaskScheduler(), () => {});
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        atom(1),
+        () => {},
+      );
       syncEffect(effect.onDestroy, onDestroyCallback);
 
       effect.destroy();
@@ -28,7 +36,11 @@ describe('AtomEffect', () => {
     });
 
     it('should destroy onDestroy, onError, onResult signals', () => {
-      const effect = new AtomEffect(createSyncTaskScheduler(), () => {});
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        atom(1),
+        () => {},
+      );
 
       effect.destroy();
 
@@ -42,7 +54,7 @@ describe('AtomEffect', () => {
     it('should notify the effect', () => {
       const scheduler = createMicrotaskScheduler();
 
-      const effect = new AtomEffect(scheduler, () => {});
+      const effect = new AtomEffect(scheduler, atom(1), () => {});
 
       effect.notify();
       expect(effect.dirty).toBe(true);
@@ -56,7 +68,7 @@ describe('AtomEffect', () => {
     it('should not notify the effect if it is destroyed', () => {
       const scheduler = createMicrotaskScheduler();
 
-      const effect = new AtomEffect(scheduler, () => {});
+      const effect = new AtomEffect(scheduler, atom(1), () => {});
       effect.destroy();
 
       effect.notify();
@@ -68,7 +80,11 @@ describe('AtomEffect', () => {
 
   describe('notifyDestroy()', () => {
     it('should notify the effect that it must be destroyed', () => {
-      const effect = new AtomEffect(createSyncTaskScheduler(), () => {});
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        atom(1),
+        () => {},
+      );
 
       effect.notifyDestroy();
 
@@ -76,7 +92,11 @@ describe('AtomEffect', () => {
     });
 
     it('should not notify the effect if it is destroyed', () => {
-      const effect = new AtomEffect(createSyncTaskScheduler(), () => {});
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        atom(1),
+        () => {},
+      );
 
       const mockDestroy = jest.fn(effect.destroy.bind(effect));
       effect.destroy = mockDestroy;
@@ -95,7 +115,7 @@ describe('AtomEffect', () => {
       const resultCallback = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, () => 'result');
+      const effect = new AtomEffect(scheduler, atom(1), () => 'result');
       syncEffect(effect.onResult, resultCallback);
 
       effect.dirty = true;
@@ -109,7 +129,7 @@ describe('AtomEffect', () => {
       const errorCallback = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, () => {
+      const effect = new AtomEffect(scheduler, atom(1), () => {
         throw new Error('error');
       });
       syncEffect(effect.onError, errorCallback);
@@ -125,7 +145,7 @@ describe('AtomEffect', () => {
       const action = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, action);
+      const effect = new AtomEffect(scheduler, atom(1), action);
 
       effect.dirty = true;
       effect.run();
@@ -137,7 +157,7 @@ describe('AtomEffect', () => {
       const action = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, action);
+      const effect = new AtomEffect(scheduler, atom(1), action);
 
       effect.dirty = false;
       effect.run();
@@ -149,7 +169,7 @@ describe('AtomEffect', () => {
       const action = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, action);
+      const effect = new AtomEffect(scheduler, atom(1), action);
 
       effect.dirty = true;
       effect.isDestroyed = true;
@@ -163,7 +183,7 @@ describe('AtomEffect', () => {
       const scheduler = createSyncTaskScheduler();
 
       const action = jest.fn(() => tracked(computed));
-      const effect = new AtomEffect(scheduler, action);
+      const effect = new AtomEffect(scheduler, atom(1), action);
 
       effect.notify();
       expect(action).toHaveBeenCalledTimes(1);
