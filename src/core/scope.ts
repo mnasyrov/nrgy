@@ -1,6 +1,6 @@
 import { atom } from './atom';
 import { AnyFunction } from './common';
-import { effect, EffectFn, syncEffect, SyncEffectFn } from './effect';
+import { effect, EffectFn, syncEffect } from './effect';
 import { destroySignal, signal } from './signal';
 
 /**
@@ -58,7 +58,7 @@ export type Scope = Readonly<
     /**
      * Creates a new sync effect and registers it for later disposal
      */
-    syncEffect: SyncEffectFn;
+    syncEffect: EffectFn;
   }
 >;
 
@@ -139,7 +139,7 @@ class ScopeImpl implements Scope {
     return this.add((effect as AnyFunction)(...args));
   };
 
-  syncEffect: SyncEffectFn = (...args: any[]) => {
+  syncEffect: EffectFn = (...args: any[]) => {
     return this.add((syncEffect as AnyFunction)(...args));
   };
 }

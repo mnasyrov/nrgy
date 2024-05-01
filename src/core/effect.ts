@@ -1,9 +1,8 @@
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
 import { AtomList, combineAtoms } from './atomUtils';
-import { AnyFunction, Atom, Signal } from './common';
+import { Atom, Signal } from './common';
 import { ENERGY_RUNTIME } from './runtime';
-import { TaskScheduler } from './schedulers';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
 
@@ -12,7 +11,6 @@ import { SignalEffect } from './signalEffect';
  */
 export type EffectOptions = {
   sync?: boolean;
-  scheduler?: TaskScheduler;
 };
 
 /**
@@ -82,10 +80,16 @@ export const effect: EffectFn = <T, R>(
   action: EffectAction<T, R>,
   options?: EffectOptions,
 ) => {
-  const scheduler = selectScheduler(source, options);
+  let scheduler = options?.sync
+    ? ENERGY_RUNTIME.syncScheduler
+    : ENERGY_RUNTIME.asyncScheduler;
 
   if (isSignal<T>(source)) {
     const node = getSignalNode<T>(source);
+    if (node.sync) {
+      scheduler = ENERGY_RUNTIME.syncScheduler;
+    }
+
     const signalEffect = new SignalEffect<T>(scheduler, action);
 
     const nodeRef = node.ref;
@@ -126,55 +130,10 @@ export const effect: EffectFn = <T, R>(
   throw new Error('Unexpected the first argument');
 };
 
-export function selectScheduler(
-  source: unknown,
-  options: EffectOptions | undefined,
-): TaskScheduler {
-  if (options?.scheduler) {
-    return options.scheduler;
-  }
-
-  if (options?.sync) {
-    return ENERGY_RUNTIME.syncScheduler;
-  }
-
-  return isForcedSyncSource(source)
-    ? ENERGY_RUNTIME.syncScheduler
-    : ENERGY_RUNTIME.asyncScheduler;
-}
-
-export function isForcedSyncSource(source: unknown): boolean {
-  return (
-    isSignal<unknown>(source) && getSignalNode<unknown>(source).sync === true
-  );
-}
-
-export interface SyncEffectFn {
-  /**
-   * Creates a new effect for a signal
-   */
-  <T, R>(source: Signal<T>, action: EffectAction<T, R>): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for an atom
-   */
-  <T, R>(source: Atom<T>, callback: EffectAction<T, R>): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for a list of atoms
-   */
-  <TValues extends unknown[], R>(
-    sources: AtomList<TValues>,
-    action: EffectAction<TValues, R>,
-    options?: EffectOptions,
-  ): EffectSubscription<R>;
-}
-
-export const syncEffect: SyncEffectFn = <T, R>(
+export const syncEffect: EffectFn = <T, R>(
   source: Signal<T> | Atom<T> | AtomList<T[]>,
-  action?: EffectAction<T, R>,
+  action: EffectAction<T, R>,
+  options?: EffectOptions,
 ) => {
-  const options: EffectOptions = { scheduler: ENERGY_RUNTIME.syncScheduler };
-
-  return (effect as AnyFunction)(source, action, options);
+  return effect(source as any, action, { sync: true, ...options });
 };

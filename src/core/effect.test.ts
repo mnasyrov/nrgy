@@ -2,13 +2,7 @@ import { flushMicrotasks } from '../test/testUtils';
 
 import { atom, AtomUpdateError } from './atom';
 import { compute } from './compute';
-import {
-  effect,
-  isForcedSyncSource,
-  selectScheduler,
-  syncEffect,
-} from './effect';
-import { ENERGY_RUNTIME } from './runtime';
+import { effect, syncEffect } from './effect';
 import { getSignalNode, signal } from './signal';
 
 describe('effect()', () => {
@@ -225,53 +219,6 @@ describe('syncEffect()', () => {
     fx.destroy();
     a.set(3);
     expect(result).toBe(4);
-  });
-});
-
-describe('isForcedSyncSource()', () => {
-  it('should return true if the source is a signal with forced "sync" option', () => {
-    expect(isForcedSyncSource(signal({ sync: true }))).toBe(true);
-    expect(isForcedSyncSource(signal({ sync: false }))).toBe(false);
-    expect(isForcedSyncSource(signal())).toBe(false);
-    expect(isForcedSyncSource('some value')).toBe(false);
-  });
-});
-
-describe('selectScheduler()', () => {
-  it('should return a scheduler specified by the options', () => {
-    const scheduler1 = selectScheduler(signal(), {
-      scheduler: ENERGY_RUNTIME.syncScheduler,
-    });
-    expect(scheduler1).toBe(ENERGY_RUNTIME.syncScheduler);
-
-    const scheduler2 = selectScheduler(signal(), {
-      scheduler: ENERGY_RUNTIME.asyncScheduler,
-    });
-    expect(scheduler2).toBe(ENERGY_RUNTIME.asyncScheduler);
-  });
-
-  it('should return a scheduler specified by the "sync" option', () => {
-    const scheduler1 = selectScheduler(signal(), {
-      sync: true,
-    });
-    expect(scheduler1).toBe(ENERGY_RUNTIME.syncScheduler);
-
-    const scheduler2 = selectScheduler(signal(), undefined);
-    expect(scheduler2).toBe(ENERGY_RUNTIME.asyncScheduler);
-  });
-
-  it('should return a scheduler specified by the "sync" option of the signal', () => {
-    expect(selectScheduler(atom(1), undefined)).toBe(
-      ENERGY_RUNTIME.asyncScheduler,
-    );
-
-    expect(selectScheduler(signal(), undefined)).toBe(
-      ENERGY_RUNTIME.asyncScheduler,
-    );
-
-    expect(selectScheduler(signal({ sync: true }), undefined)).toBe(
-      ENERGY_RUNTIME.syncScheduler,
-    );
   });
 });
 
