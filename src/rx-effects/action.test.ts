@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 
 import { destroySignal, isSignal, signal, syncEffect } from '../core';
 import { getSignalNode, isSignalSubscribed } from '../core/signal';
+import { expectEffectContext } from '../test/matchers';
 
 import { fromAction, toAction } from './action';
 
@@ -22,7 +23,7 @@ describe('toAction()', () => {
 
     source(10);
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(10);
+    expect(signalCallback).toHaveBeenCalledWith(10, expectEffectContext());
     expect(actionCallback).toHaveBeenCalledTimes(1);
     expect(actionCallback).toHaveBeenCalledWith(10);
 
@@ -31,7 +32,7 @@ describe('toAction()', () => {
 
     action(20);
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(20);
+    expect(signalCallback).toHaveBeenCalledWith(20, expectEffectContext());
     expect(actionCallback).toHaveBeenCalledTimes(1);
     expect(actionCallback).toHaveBeenCalledWith(20);
   });
@@ -64,7 +65,7 @@ describe('fromAction()', () => {
 
     a(10);
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(10);
+    expect(signalCallback).toHaveBeenCalledWith(10, expectEffectContext());
     expect(actionCallback).toHaveBeenCalledTimes(1);
     expect(actionCallback).toHaveBeenCalledWith(10);
 
@@ -73,7 +74,7 @@ describe('fromAction()', () => {
 
     s(20);
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(20);
+    expect(signalCallback).toHaveBeenCalledWith(20, expectEffectContext());
     expect(actionCallback).toHaveBeenCalledTimes(0);
   });
 

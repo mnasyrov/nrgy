@@ -10,6 +10,7 @@ import {
   ExtensionParamsProvider,
   withView,
 } from '../mvc';
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { NrgyControllerExtension } from './NrgyControllerExtension';
@@ -117,19 +118,28 @@ describe('useController() and withView() extension', () => {
     rerender({ value: 2 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(1);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 2 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 2 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(2);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 2 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 3 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(3);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 3 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 3 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     unmount();
@@ -167,21 +177,30 @@ describe('useController() and withView() extension', () => {
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(1);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 2 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 2 });
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(2);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 2 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 3 });
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(3);
-    expect(updateCallback).toHaveBeenCalledWith({ value: 3 });
+    expect(updateCallback).toHaveBeenCalledWith(
+      { value: 3 },
+      expectEffectContext(),
+    );
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     unmount();

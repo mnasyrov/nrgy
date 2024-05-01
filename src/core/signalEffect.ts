@@ -1,5 +1,7 @@
 import { SignalEffectNode } from './common';
+import { EffectAction, EffectContext } from './effectTypes';
 import { TaskScheduler } from './schedulers';
+import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
 
@@ -27,9 +29,12 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
   readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
-  private action?: (value: T) => unknown;
+  private action?: EffectAction<T, unknown>;
 
-  constructor(scheduler: TaskScheduler, action: (value: T) => unknown) {
+  private actionScope?: BaseScope;
+  private actionContext?: EffectContext;
+
+  constructor(scheduler: TaskScheduler, action: EffectAction<T, unknown>) {
     this.scheduler = scheduler;
     this.action = action;
   }
@@ -41,6 +46,10 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
     this.isDestroyed = true;
     this.scheduler = undefined;
     this.action = undefined;
+
+    this.actionScope?.destroy();
+    this.actionScope = undefined;
+    this.actionContext = undefined;
 
     this.onDestroy();
 
@@ -81,10 +90,26 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
     }
 
     try {
-      const result = this.action(value);
+      this.actionScope?.destroy();
+      const result = this.action(value, this.getContext());
       this.onResult(result);
     } catch (error) {
       this.onError(error);
     }
+  }
+
+  private getContext(): EffectContext {
+    if (!this.actionContext) {
+      this.actionContext = {
+        cleanup: (callback: () => void) => {
+          if (!this.actionScope) {
+            this.actionScope = new BaseScope();
+          }
+          this.actionScope.onDestroy(callback);
+        },
+      };
+    }
+
+    return this.actionContext;
   }
 }

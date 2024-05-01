@@ -1,3 +1,5 @@
+import { expectEffectContext } from '../test/matchers';
+
 import { syncEffect } from './effect';
 import {
   createMicrotaskScheduler,
@@ -50,7 +52,7 @@ describe('SignalEffect', () => {
       expect(scheduler.isEmpty()).toBe(true);
 
       expect(action).toHaveBeenCalledTimes(1);
-      expect(action).toHaveBeenCalledWith(1);
+      expect(action).toHaveBeenCalledWith(1, expectEffectContext());
     });
 
     it('should not notify the effect if it is destroyed', () => {
@@ -100,7 +102,10 @@ describe('SignalEffect', () => {
       effect.notify(undefined);
 
       expect(resultCallback).toHaveBeenCalledTimes(1);
-      expect(resultCallback).toHaveBeenCalledWith('result');
+      expect(resultCallback).toHaveBeenCalledWith(
+        'result',
+        expectEffectContext(),
+      );
     });
 
     it('should signals onError with error of action', () => {
@@ -115,7 +120,10 @@ describe('SignalEffect', () => {
       effect.notify(undefined);
 
       expect(errorCallback).toHaveBeenCalledTimes(1);
-      expect(errorCallback).toHaveBeenCalledWith(new Error('error'));
+      expect(errorCallback).toHaveBeenCalledWith(
+        new Error('error'),
+        expectEffectContext(),
+      );
     });
 
     it('should not run action if the effect is destroyed', () => {
@@ -127,6 +135,49 @@ describe('SignalEffect', () => {
 
       effect.run(undefined);
       expect(action).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('Context of the action', () => {
+    describe('cleanup()', () => {
+      it('should be called before calling the next action', () => {
+        const cleanupCallback = jest.fn();
+        const scheduler = createSyncTaskScheduler();
+
+        const effect = new SignalEffect(scheduler, (value, context) => {
+          context.cleanup(() => cleanupCallback(value));
+        });
+
+        cleanupCallback.mockClear();
+        effect.run(10);
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+
+        cleanupCallback.mockClear();
+        effect.run(11);
+        expect(cleanupCallback).toHaveBeenCalledTimes(1);
+        expect(cleanupCallback).toHaveBeenCalledWith(10);
+      });
+
+      it('should be called when the effect is destroyed', () => {
+        const cleanupCallback = jest.fn();
+        const scheduler = createSyncTaskScheduler();
+
+        const effect = new SignalEffect(scheduler, (_value, context) => {
+          context.cleanup(cleanupCallback);
+        });
+
+        cleanupCallback.mockClear();
+        effect.run(10);
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+
+        cleanupCallback.mockClear();
+        effect.destroy();
+        expect(cleanupCallback).toHaveBeenCalledTimes(1);
+
+        cleanupCallback.mockClear();
+        effect.destroy();
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+      });
     });
   });
 });

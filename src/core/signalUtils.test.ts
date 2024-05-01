@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import {
@@ -34,7 +35,7 @@ describe('signalChanges()', () => {
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(2);
-    expect(spy).toHaveBeenLastCalledWith(2);
+    expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockClear();
@@ -42,7 +43,7 @@ describe('signalChanges()', () => {
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(3);
-    expect(spy).toHaveBeenLastCalledWith(3);
+    expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
   });
 
   it('should return a signal that asynchronously emits the changes of the source atom', async () => {
@@ -57,7 +58,7 @@ describe('signalChanges()', () => {
 
     source.set(2);
     await flushMicrotasks();
-    expect(spy).toHaveBeenLastCalledWith(2);
+    expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockClear();
@@ -67,7 +68,7 @@ describe('signalChanges()', () => {
 
     source.set(3);
     await flushMicrotasks();
-    expect(spy).toHaveBeenLastCalledWith(3);
+    expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
   });
 
   it('should return a signal that does not emit the changes if the source atom is destroyed', () => {

@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { effect, syncEffect } from './effect';
@@ -52,7 +53,7 @@ describe('signal()', () => {
 
     a(1);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenLastCalledWith(1);
+    expect(callback).toHaveBeenLastCalledWith(1, expectEffectContext());
 
     callback.mockClear();
     destroySignal(a);
@@ -87,7 +88,7 @@ describe('signal()', () => {
 
     node.emit(10);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(10);
+    expect(callback).toHaveBeenCalledWith(10, expectEffectContext());
 
     callback.mockClear();
 

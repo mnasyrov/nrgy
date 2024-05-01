@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { atom } from './atom';
@@ -65,7 +66,7 @@ describe('batchUpdate()', () => {
     const callback = jest.fn();
     syncEffect(result, callback);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('foo bar');
+    expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
 
     callback.mockClear();
     batchUpdate(() => {
@@ -73,7 +74,10 @@ describe('batchUpdate()', () => {
       s2.set('world!');
     });
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('Hello world!');
+    expect(callback).toHaveBeenCalledWith(
+      'Hello world!',
+      expectEffectContext(),
+    );
   });
 
   it('should defer all async notifications of atoms until the action is finished', async () => {
@@ -85,7 +89,7 @@ describe('batchUpdate()', () => {
     effect(result, callback);
     await flushMicrotasks();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('foo bar');
+    expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
 
     callback.mockClear();
     batchUpdate(() => {
@@ -94,7 +98,10 @@ describe('batchUpdate()', () => {
     });
     await flushMicrotasks();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('Hello world!');
+    expect(callback).toHaveBeenCalledWith(
+      'Hello world!',
+      expectEffectContext(),
+    );
   });
 
   it('should defer all sync notifications of signals until the action is finished', () => {
@@ -115,9 +122,9 @@ describe('batchUpdate()', () => {
     });
 
     expect(callback).toHaveBeenCalledTimes(3);
-    expect(callback).toHaveBeenCalledWith(1);
-    expect(callback).toHaveBeenCalledWith(2);
-    expect(callback).toHaveBeenCalledWith(3);
+    expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(2, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(3, expectEffectContext());
   });
 
   it('should defer all async notifications of signals until the action is finished', async () => {
@@ -135,8 +142,8 @@ describe('batchUpdate()', () => {
     await flushMicrotasks();
 
     expect(callback).toHaveBeenCalledTimes(3);
-    expect(callback).toHaveBeenCalledWith(1);
-    expect(callback).toHaveBeenCalledWith(2);
-    expect(callback).toHaveBeenCalledWith(3);
+    expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(2, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(3, expectEffectContext());
   });
 });

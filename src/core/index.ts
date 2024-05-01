@@ -25,7 +25,12 @@ export { compute } from './compute';
 
 export { combineAtoms, mapAtom, mergeAtoms } from './atomUtils';
 
-export type { EffectOptions, EffectSubscription } from './effect';
+export type {
+  EffectSubscription,
+  EffectContext,
+  EffectAction,
+} from './effectTypes';
+export type { EffectOptions } from './effect';
 export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
@@ -33,11 +38,7 @@ export { batchUpdate } from './batchUpdate';
 
 export type { TaskScheduler } from './schedulers';
 
-export type {
-  Scope,
-  Destroyable,
-  Unsubscribable,
-  ScopeTeardown,
-  SharedScope,
-} from './scope';
-export { createScope, ScopeDestructionError } from './scope';
+export type { Scope, SharedScope } from './scope';
+export { createScope } from './scope';
+export { ScopeDestructionError } from './scopeTypes';
+export type { Destroyable, ScopeTeardown, Unsubscribable } from './scopeTypes';

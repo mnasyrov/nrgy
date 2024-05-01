@@ -1,26 +1,9 @@
 import { atom } from './atom';
 import { AnyFunction } from './common';
 import { effect, EffectFn, syncEffect } from './effect';
+import { BaseScope } from './scopeBase';
+import { Destroyable, ScopeTeardown, Unsubscribable } from './scopeTypes';
 import { destroySignal, signal } from './signal';
-
-/**
- * An object which can be unsubscribed from
- */
-export interface Unsubscribable {
-  unsubscribe(): void;
-}
-
-/**
- * An object which can be destroyed
- */
-export interface Destroyable {
-  destroy(): void;
-}
-
-/**
- * A resource which can be unsubscribed from or destroyed
- */
-export type ScopeTeardown = Unsubscribable | Destroyable | (() => unknown);
 
 /**
  * A boundary for effects and business logic.
@@ -63,68 +46,11 @@ export type Scope = Readonly<
 >;
 
 /**
- * An error thrown when one or more errors have occurred during the
- * `destroy` of a {@link Scope}.
- */
-export class ScopeDestructionError extends Error {
-  readonly errors: unknown[];
-
-  constructor(errors: unknown[]) {
-    super();
-    this.name = 'ScopeDestructionError';
-    this.errors = errors;
-  }
-}
-
-/**
  * `SharedScope` and `Scope` types allow to distinct which third-party code can invoke `destroy()` method.
  */
 export type SharedScope = Omit<Scope, 'destroy'>;
 
-class ScopeImpl implements Scope {
-  private subscriptions: ScopeTeardown[] = [];
-
-  onDestroy(teardown: ScopeTeardown): void {
-    this.subscriptions.push(teardown);
-  }
-
-  add<T extends Unsubscribable | Destroyable>(resource: T): T {
-    this.subscriptions.push(resource);
-    return resource;
-  }
-
-  destroy(): void {
-    if (this.subscriptions.length === 0) {
-      return;
-    }
-
-    const teardowns = this.subscriptions;
-    this.subscriptions = [];
-
-    let errors: unknown[] | undefined;
-
-    for (const teardown of teardowns) {
-      try {
-        if ('unsubscribe' in teardown) {
-          teardown.unsubscribe();
-        } else if ('destroy' in teardown) {
-          teardown.destroy();
-        } else {
-          teardown();
-        }
-      } catch (error) {
-        if (!errors) {
-          errors = [];
-        }
-        errors.push(error);
-      }
-    }
-
-    if (errors) {
-      throw new ScopeDestructionError(errors);
-    }
-  }
-
+class ScopeImpl extends BaseScope implements Scope {
   signal<T>(...args: Parameters<typeof signal<T>>) {
     const emitter = signal<T>(...args);
     this.onDestroy(() => destroySignal(emitter));

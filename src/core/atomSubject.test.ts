@@ -1,3 +1,5 @@
+import { expectEffectContext } from '../test/matchers';
+
 import { isAtom } from './atom';
 import { createAtomSubject } from './atomSubject';
 import { syncEffect } from './effect';
@@ -85,21 +87,21 @@ describe('AtomSubject', () => {
       const spy = jest.fn();
 
       syncEffect(subject, spy);
-      expect(spy).toHaveBeenLastCalledWith(1);
+      expect(spy).toHaveBeenLastCalledWith(1, expectEffectContext());
 
       subject.next(2);
-      expect(spy).toHaveBeenLastCalledWith(2);
+      expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
 
       subject.next(3);
-      expect(spy).toHaveBeenLastCalledWith(3);
+      expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
 
       const spy2 = jest.fn();
       syncEffect(subject, spy2);
-      expect(spy2).toHaveBeenLastCalledWith(3);
+      expect(spy2).toHaveBeenLastCalledWith(3, expectEffectContext());
 
       subject.next(4);
-      expect(spy).toHaveBeenLastCalledWith(4);
-      expect(spy2).toHaveBeenLastCalledWith(4);
+      expect(spy).toHaveBeenLastCalledWith(4, expectEffectContext());
+      expect(spy2).toHaveBeenLastCalledWith(4, expectEffectContext());
     });
 
     it('should not notify subscribers with the same value twice', () => {
@@ -156,10 +158,13 @@ describe('AtomSubject', () => {
 
       const fx = syncEffect(subject, spy);
       syncEffect(fx.onError, spyError);
-      expect(spy).toHaveBeenLastCalledWith(1);
+      expect(spy).toHaveBeenLastCalledWith(1, expectEffectContext());
 
       subject.error(new Error('test'));
-      expect(spyError).toHaveBeenLastCalledWith(new Error('test'));
+      expect(spyError).toHaveBeenLastCalledWith(
+        new Error('test'),
+        expectEffectContext(),
+      );
     });
 
     it('should not notify if the subject is destroyed', () => {

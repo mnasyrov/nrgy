@@ -1,4 +1,5 @@
 import { syncEffect } from '../core';
+import { expectEffectContext } from '../test/matchers';
 
 import { createViewProxy } from './viewProxy';
 
@@ -56,7 +57,7 @@ describe('ViewProxy', () => {
       view.mount();
       view.update({ value: 3 });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({ value: 3 });
+      expect(spy).toHaveBeenLastCalledWith({ value: 3 }, expectEffectContext());
       expect(view.props.value()).toBe(3);
     });
 
@@ -70,13 +71,13 @@ describe('ViewProxy', () => {
 
       view.update({ value: 2 });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({ value: 2 });
+      expect(spy).toHaveBeenLastCalledWith({ value: 2 }, expectEffectContext());
       expect(view.props.value()).toBe(2);
 
       spy.mockClear();
       view.update();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({});
+      expect(spy).toHaveBeenLastCalledWith({}, expectEffectContext());
       expect(view.props.value()).toBe(2);
     });
 
@@ -89,7 +90,10 @@ describe('ViewProxy', () => {
       view.mount();
       view.update({ value: 2, unknown: 3 } as any);
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({ value: 2, unknown: 3 });
+      expect(spy).toHaveBeenLastCalledWith(
+        { value: 2, unknown: 3 },
+        expectEffectContext(),
+      );
 
       expect(view.props.value()).toBe(2);
       expect((view.props as any)['unknown']).toEqual(undefined);

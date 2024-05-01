@@ -1,6 +1,7 @@
 import { atom } from './atom';
 import { syncEffect } from './effect';
-import { createScope, ScopeDestructionError } from './scope';
+import { createScope } from './scope';
+import { ScopeDestructionError } from './scopeTypes';
 import { getSignalNode } from './signal';
 
 describe('Scope', () => {

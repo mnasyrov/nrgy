@@ -1,6 +1,8 @@
 import { Atom, AtomEffectNode, ComputedNode } from './common';
+import { EffectAction, EffectContext } from './effectTypes';
 import { ENERGY_RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
+import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { nextSafeInteger } from './utils/nextSafeInteger';
@@ -41,14 +43,17 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 
   private scheduler?: TaskScheduler;
   private source?: Atom<T>;
-  private action: undefined | ((value: T) => R);
+  private action?: EffectAction<T, R>;
+
+  private actionScope?: BaseScope;
+  private actionContext?: EffectContext;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
 
   constructor(
     scheduler: TaskScheduler,
     source: Atom<T>,
-    action: (value: T) => R,
+    action: EffectAction<T, R>,
   ) {
     this.scheduler = scheduler;
     this.action = action;
@@ -68,6 +73,10 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.source = undefined;
     this.action = undefined;
     this.seenComputedNodes = undefined;
+
+    this.actionScope?.destroy();
+    this.actionScope = undefined;
+    this.actionContext = undefined;
 
     this.onDestroy();
 
@@ -144,7 +153,8 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       const value = this.source();
       ENERGY_RUNTIME.tracked = prevTracked;
 
-      const result = this.action(value);
+      this.actionScope?.destroy();
+      const result = this.action(value, this.getContext());
 
       this.onResult(result);
     } catch (error) {
@@ -163,6 +173,21 @@ export class AtomEffect<T, R> implements AtomEffectNode {
         this.onError(errorRef.error);
       }
     }
+  }
+
+  private getContext(): EffectContext {
+    if (!this.actionContext) {
+      this.actionContext = {
+        cleanup: (callback: () => void) => {
+          if (!this.actionScope) {
+            this.actionScope = new BaseScope();
+          }
+          this.actionScope.onDestroy(callback);
+        },
+      };
+    }
+
+    return this.actionContext;
   }
 }
 

@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { atom, AtomUpdateError } from './atom';
@@ -120,7 +121,7 @@ describe('effect()', () => {
 
     await flushMicrotasks();
 
-    expect(onResult).toHaveBeenLastCalledWith(1);
+    expect(onResult).toHaveBeenLastCalledWith(1, expectEffectContext());
     expect(onResult).toHaveBeenCalledTimes(1);
     expect(syncOnDestroy).toHaveBeenCalledTimes(0);
     expect(asyncOnDestroy).toHaveBeenCalledTimes(0);
@@ -229,12 +230,12 @@ describe('Effect with a primitive value', () => {
 
     syncEffect(source, callback);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(false);
+    expect(callback).toHaveBeenCalledWith(false, expectEffectContext());
 
     callback.mockClear();
     source.set(true);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(true);
+    expect(callback).toHaveBeenCalledWith(true, expectEffectContext());
   });
 
   it('should trigger the effect', async () => {
@@ -245,14 +246,14 @@ describe('Effect with a primitive value', () => {
 
     await flushMicrotasks();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(false);
+    expect(callback).toHaveBeenCalledWith(false, expectEffectContext());
 
     callback.mockClear();
     source.set(true);
 
     await flushMicrotasks();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(true);
+    expect(callback).toHaveBeenCalledWith(true, expectEffectContext());
   });
 
   it('should chain signals', async () => {
@@ -268,7 +269,7 @@ describe('Effect with a primitive value', () => {
     await flushMicrotasks();
 
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(42);
+    expect(callback).toHaveBeenCalledWith(42, expectEffectContext());
   });
 });
 
@@ -311,7 +312,7 @@ describe('Untracked context in the signal effect', () => {
     s1(2);
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(2);
+    expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
   });
@@ -351,13 +352,13 @@ describe('Untracked context in the atom effect with the explicit dependency', ()
 
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(1);
+    expect(signalCallback).toHaveBeenCalledWith(1, expectEffectContext());
 
     signalCallback.mockClear();
     a.set(2);
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(2);
+    expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
   });
@@ -387,8 +388,16 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     expect(b()).toBe(0);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
-    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
-    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      1,
+      new AtomUpdateError('b'),
+      expectEffectContext(),
+    );
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      2,
+      new AtomUpdateError('b'),
+      expectEffectContext(),
+    );
   });
 
   it('should be possible to notify signals', async () => {
@@ -407,13 +416,13 @@ describe('Tracked context in the effect with implicit dependencies', () => {
 
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(1);
+    expect(signalCallback).toHaveBeenCalledWith(1, expectEffectContext());
 
     signalCallback.mockClear();
     a.set(2);
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(2);
+    expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
   });

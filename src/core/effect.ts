@@ -2,6 +2,7 @@ import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
 import { AtomList, combineAtoms } from './atomUtils';
 import { Atom, Signal } from './common';
+import { EffectAction, EffectSubscription } from './effectTypes';
 import { ENERGY_RUNTIME } from './runtime';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
@@ -12,33 +13,6 @@ import { SignalEffect } from './signalEffect';
 export type EffectOptions = {
   sync?: boolean;
 };
-
-/**
- * A reactive effect, which can be manually destroyed.
- */
-export type EffectSubscription<R> = Readonly<{
-  /**
-   * Signal that emits the result of the effect.
-   */
-  onResult: Signal<R>;
-
-  /**
-   * Signal that emits the error of the effect.
-   */
-  onError: Signal<unknown>;
-
-  /**
-   * Signal that emits when the effect is destroyed.
-   */
-  onDestroy: Signal<void>;
-
-  /**
-   * Shut down the effect, removing it from any upcoming scheduled executions.
-   */
-  destroy(): void;
-}>;
-
-type EffectAction<T, R> = (value: T) => R;
 
 /**
  * An effect function

@@ -6,6 +6,7 @@ import { toArray } from 'rxjs/operators';
 
 import { atom, compute, effect, isAtom, syncEffect } from '../core';
 import { getSignalNode } from '../core/signal';
+import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { fromQuery, Query, toQuery } from './query';
@@ -126,7 +127,10 @@ describe('fromQuery()', () => {
     expect(() => result()).toThrow(new Error('test error'));
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith(new Error('test error'));
+    expect(errorSpy).toHaveBeenCalledWith(
+      new Error('test error'),
+      expectEffectContext(),
+    );
   });
 
   describe('asReadonly()', () => {

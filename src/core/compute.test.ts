@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import {
   collectChanges,
   collectHistory,
@@ -370,7 +371,7 @@ describe('compute()', () => {
 
     await flushMicrotasks();
 
-    expect(onSumChanged).toHaveBeenCalledWith('ab');
+    expect(onSumChanged).toHaveBeenCalledWith('ab', expectEffectContext());
     expect(onSumChanged).toHaveBeenCalledTimes(1);
 
     onSumChanged.mockClear();
@@ -654,8 +655,16 @@ describe('Tracked context in the computed expression with implicit dependencies'
     expect(b()).toBe(0);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
-    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
-    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      1,
+      new AtomUpdateError('b'),
+      expectEffectContext(),
+    );
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      2,
+      new AtomUpdateError('b'),
+      expectEffectContext(),
+    );
   });
 
   it('should be possible to notify signals, but the expression is not pure', async () => {
@@ -678,13 +687,13 @@ describe('Tracked context in the computed expression with implicit dependencies'
 
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(1);
+    expect(signalCallback).toHaveBeenCalledWith(1, expectEffectContext());
 
     signalCallback.mockClear();
     a.set(2);
     await flushMicrotasks();
     expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(2);
+    expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
   });

@@ -1,3 +1,4 @@
+import { expectEffectContext } from '../test/matchers';
 import { collectChanges, flushMicrotasks } from '../test/testUtils';
 
 import {
@@ -116,7 +117,7 @@ describe('Atom', () => {
       onChange.mockClear();
       store.set(2);
       expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith(2);
+      expect(onChange).toHaveBeenCalledWith(2, expectEffectContext());
 
       onChange.mockClear();
       fx.destroy();

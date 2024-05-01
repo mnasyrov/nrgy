@@ -1,3 +1,5 @@
+import { expectEffectContext } from '../test/matchers';
+
 import { atom } from './atom';
 import { AtomEffect, isComputedNodesChanged } from './atomEffect';
 import { compute } from './compute';
@@ -122,7 +124,10 @@ describe('AtomEffect', () => {
       effect.run();
 
       expect(resultCallback).toHaveBeenCalledTimes(1);
-      expect(resultCallback).toHaveBeenCalledWith('result');
+      expect(resultCallback).toHaveBeenCalledWith(
+        'result',
+        expectEffectContext(),
+      );
     });
 
     it('should signals onError with error of action', () => {
@@ -138,7 +143,10 @@ describe('AtomEffect', () => {
       effect.run();
 
       expect(errorCallback).toHaveBeenCalledTimes(1);
-      expect(errorCallback).toHaveBeenCalledWith(new Error('error'));
+      expect(errorCallback).toHaveBeenCalledWith(
+        new Error('error'),
+        expectEffectContext(),
+      );
     });
 
     it('should run the effect if it is dirty', () => {
@@ -153,7 +161,7 @@ describe('AtomEffect', () => {
       expect(action).toHaveBeenCalledTimes(1);
     });
 
-    it('should run the effect if it is not dirty', () => {
+    it('should not run the effect if it is not dirty', () => {
       const action = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
@@ -197,6 +205,55 @@ describe('AtomEffect', () => {
       action.mockClear();
       effect.notify();
       expect(action).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('Context of the action', () => {
+    describe('cleanup()', () => {
+      it('should be called before calling the next action', () => {
+        const cleanupCallback = jest.fn();
+
+        const scheduler = createSyncTaskScheduler();
+        const source = atom(10);
+
+        const effect = new AtomEffect(scheduler, source, (value, context) => {
+          context.cleanup(() => cleanupCallback(value));
+        });
+
+        cleanupCallback.mockClear();
+        effect.notify();
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+
+        cleanupCallback.mockClear();
+        source.set(11);
+        effect.dirty = true;
+        effect.notify();
+        expect(cleanupCallback).toHaveBeenCalledTimes(1);
+        expect(cleanupCallback).toHaveBeenCalledWith(10);
+      });
+
+      it('should be called when the effect is destroyed', () => {
+        const cleanupCallback = jest.fn();
+
+        const scheduler = createSyncTaskScheduler();
+        const source = atom(10);
+
+        const effect = new AtomEffect(scheduler, source, (_value, context) => {
+          context.cleanup(cleanupCallback);
+        });
+
+        cleanupCallback.mockClear();
+        effect.notify();
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+
+        cleanupCallback.mockClear();
+        effect.destroy();
+        expect(cleanupCallback).toHaveBeenCalledTimes(1);
+
+        cleanupCallback.mockClear();
+        effect.destroy();
+        expect(cleanupCallback).toHaveBeenCalledTimes(0);
+      });
     });
   });
 });
