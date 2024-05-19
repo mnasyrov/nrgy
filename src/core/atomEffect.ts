@@ -5,6 +5,7 @@ import { TaskScheduler } from './schedulers';
 import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
+import { isPromise } from './utils/isPromise';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
 /**
@@ -148,15 +149,18 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     let errorRef: undefined | { error: unknown };
     // Unfolding `tracked()` and `untracked()` for better performance
     const prevTracked = ENERGY_RUNTIME.tracked;
+    let result;
     try {
       ENERGY_RUNTIME.tracked = true;
       const value = this.source();
       ENERGY_RUNTIME.tracked = prevTracked;
 
       this.actionScope?.destroy();
-      const result = this.action(value, this.getContext());
+      result = this.action(value, this.getContext());
 
-      this.onResult(result);
+      if (!isPromise(result)) {
+        this.onResult(result);
+      }
     } catch (error) {
       ENERGY_RUNTIME.tracked = prevTracked;
       errorRef = { error };
@@ -172,6 +176,16 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       if (errorRef) {
         this.onError(errorRef.error);
       }
+    }
+
+    if (isPromise(result)) {
+      result
+        .then((result) => {
+          this.onResult(result);
+        })
+        .catch((error) => {
+          this.onError(error);
+        });
     }
   }
 

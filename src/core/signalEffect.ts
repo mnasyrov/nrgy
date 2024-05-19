@@ -4,11 +4,12 @@ import { TaskScheduler } from './schedulers';
 import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
+import { isPromise } from './utils/isPromise';
 
 /**
  * SignalEffect represents a subscription to a signal
  */
-export class SignalEffect<T> implements SignalEffectNode<any> {
+export class SignalEffect<T, R> implements SignalEffectNode<any> {
   readonly ref: WeakRef<SignalEffectNode<T>> = createWeakRef(this);
 
   isDestroyed = false;
@@ -16,7 +17,7 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
   /**
    * Signals a result of the action function
    */
-  readonly onResult = signal<any>();
+  readonly onResult = signal<R>();
 
   /**
    * Signals an error which occurred in the execution of the action function
@@ -29,12 +30,12 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
   readonly onDestroy = signal<void>({ sync: true });
 
   private scheduler?: TaskScheduler;
-  private action?: EffectAction<T, unknown>;
+  private action?: EffectAction<T, R>;
 
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  constructor(scheduler: TaskScheduler, action: EffectAction<T, unknown>) {
+  constructor(scheduler: TaskScheduler, action: EffectAction<T, R>) {
     this.scheduler = scheduler;
     this.action = action;
   }
@@ -92,7 +93,18 @@ export class SignalEffect<T> implements SignalEffectNode<any> {
     try {
       this.actionScope?.destroy();
       const result = this.action(value, this.getContext());
-      this.onResult(result);
+
+      if (isPromise(result)) {
+        result
+          .then((result) => {
+            this.onResult(result);
+          })
+          .catch((error) => {
+            this.onError(error);
+          });
+      } else {
+        this.onResult(result);
+      }
     } catch (error) {
       this.onError(error);
     }

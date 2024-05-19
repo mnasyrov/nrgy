@@ -29,4 +29,7 @@ export type EffectContext = {
   cleanup(callback: () => void): void;
 };
 
-export type EffectAction<T, R> = (value: T, context: EffectContext) => R;
+export type EffectAction<T, R> = (
+  value: T,
+  context: EffectContext,
+) => R | Promise<R>;

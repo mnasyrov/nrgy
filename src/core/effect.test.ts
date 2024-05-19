@@ -1,10 +1,11 @@
 import { expectEffectContext } from '../test/matchers';
-import { flushMicrotasks } from '../test/testUtils';
+import { flushMicrotasks, promiseTimeout } from '../test/testUtils';
 
 import { atom, AtomUpdateError } from './atom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { getSignalNode, signal } from './signal';
+import { keepLastValue } from './signalUtils';
 
 describe('effect()', () => {
   it('should subscribe to a signal', async () => {
@@ -533,5 +534,95 @@ describe('Explicit dependencies in the effect', () => {
     atomB.set(3);
     await flushMicrotasks();
     expect(store()).toBe(8);
+  });
+});
+
+describe('Returning a promise by the action', () => {
+  it('should allow to use a promise inside effect callback', async () => {
+    const isPending = atom(false);
+    const source = signal<number>();
+
+    const pendingCallback = jest.fn();
+    syncEffect(isPending, (value) => pendingCallback(value));
+
+    const fx = effect<number, number>(source, async (value) => {
+      isPending.set(true);
+
+      await promiseTimeout(0);
+      isPending.set(false);
+
+      return value * value;
+    });
+
+    const result = keepLastValue(fx.onResult);
+
+    source(3);
+    await promiseTimeout(50);
+
+    expect(pendingCallback).toHaveBeenCalledTimes(3);
+    expect(pendingCallback).toHaveBeenNthCalledWith(1, false);
+    expect(pendingCallback).toHaveBeenNthCalledWith(2, true);
+    expect(pendingCallback).toHaveBeenNthCalledWith(3, false);
+
+    expect(result()).toBe(9);
+  });
+
+  it('should pass a resolved value to onResult of the effect from the signal', async () => {
+    const source = signal<number>();
+    const fx = effect(source, async (x) => x + 10);
+
+    const results: number[] = [];
+    syncEffect(fx.onResult, (x) => results.push(x));
+
+    source(2);
+    await promiseTimeout(50);
+
+    expect(results).toEqual([12]);
+  });
+
+  it('should pass a rejected error to onError of the effect from the signal', async () => {
+    const source = signal<number>();
+    const fx = effect(source, () => Promise.reject('error'));
+
+    const results: number[] = [];
+    const errors: any[] = [];
+    syncEffect(fx.onResult, (x) => results.push(x));
+    syncEffect(fx.onError, (x) => errors.push(x));
+
+    source(2);
+    await promiseTimeout(50);
+
+    expect(results).toEqual([]);
+    expect(errors).toEqual(['error']);
+  });
+
+  it('should pass a resolved value to onResult of the effect from the atom', async () => {
+    const source = atom<number>(1);
+    const fx = effect(source, async (x) => x + 10);
+
+    const results: number[] = [];
+    syncEffect(fx.onResult, (x) => results.push(x));
+
+    await promiseTimeout(50);
+    source.set(2);
+
+    await promiseTimeout(50);
+    expect(results).toEqual([11, 12]);
+  });
+
+  it('should pass a rejected error to onError of the effect from the signal', async () => {
+    const source = atom<number>(1);
+    const fx = effect(source, () => Promise.reject('error'));
+
+    const results: number[] = [];
+    const errors: any[] = [];
+    syncEffect(fx.onResult, (x) => results.push(x));
+    syncEffect(fx.onError, (x) => errors.push(x));
+
+    source.set(2);
+    await promiseTimeout(50);
+
+    expect(results).toEqual([]);
+    expect(errors).toEqual(['error']);
   });
 });

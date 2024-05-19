@@ -64,7 +64,7 @@ export const effect: EffectFn = <T, R>(
       scheduler = ENERGY_RUNTIME.syncScheduler;
     }
 
-    const signalEffect = new SignalEffect<T>(scheduler, action);
+    const signalEffect = new SignalEffect<T, R>(scheduler, action);
 
     const nodeRef = node.ref;
     node.subscribe(signalEffect.ref);
