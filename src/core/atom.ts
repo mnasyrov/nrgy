@@ -84,13 +84,13 @@ export interface WritableAtom<T> extends DestroyableAtom<T> {
   /**
    * Directly set the atom to a new value, and notify any dependents.
    */
-  set(value: T): void;
+  set(value: T): boolean;
 
   /**
    * Update the value of the atom based on its current value, and
    * notify any dependents.
    */
-  update(updateFn: (value: T) => T): void;
+  update(updateFn: (value: T) => T): boolean;
 
   /**
    * Update the current value by mutating it in-place, and
@@ -175,21 +175,25 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    *
    * In the event that `newValue` is semantically equal to the current value, `set` is
    * a no-op.
+   *
+   * Returns `true` if the value was changed.
    */
-  set(newValue: T): void {
+  set(newValue: T): boolean {
     if (this.isDestroyed) {
-      return;
+      return false;
     }
 
     this.producerBeforeChange();
 
     if (this.equal(this.value, newValue)) {
-      return;
+      return false;
     }
 
     this.value = newValue;
 
     this.producerChanged();
+
+    return true;
   }
 
   /**
@@ -197,9 +201,11 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    *
    * This is equivalent to calling `set` on the result of running `updater` on the current
    * value.
+   *
+   * Returns `true` if the value was changed.
    */
-  update(updater: (value: T) => T): void {
-    this.set(updater(this.value));
+  update(updater: (value: T) => T): boolean {
+    return this.set(updater(this.value));
   }
 
   /**

@@ -126,6 +126,22 @@ describe('Atom', () => {
       expect(node.isDestroyed).toBe(true);
       expect(onChange).toHaveBeenCalledTimes(0);
     });
+
+    it('should return true if the value is set', () => {
+      const store = atom(1);
+      expect(store.set(2)).toBe(true);
+    });
+
+    it('should return false if the value is NOT set', () => {
+      const store = atom(1);
+      expect(store.set(1)).toBe(false);
+    });
+
+    it('should return false if the store is destroyed', () => {
+      const store = atom(1);
+      store.destroy();
+      expect(store.set(2)).toBe(false);
+    });
   });
 
   describe('update()', () => {
@@ -144,6 +160,22 @@ describe('Atom', () => {
       store.destroy();
 
       expect(await statePromise).toEqual([{ value: 1 }]);
+    });
+
+    it('should return true if the value is set', () => {
+      const store = atom(1);
+      expect(store.update(() => 2)).toBe(true);
+    });
+
+    it('should return false if the value is NOT set', () => {
+      const store = atom(1);
+      expect(store.update(() => 1)).toBe(false);
+    });
+
+    it('should return false if the store is destroyed', () => {
+      const store = atom(1);
+      store.destroy();
+      expect(store.update(() => 2)).toBe(false);
     });
   });
 
