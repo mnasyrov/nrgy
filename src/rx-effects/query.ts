@@ -1,6 +1,6 @@
 import { Observable, skip } from 'rxjs';
 
-import { atom, Atom, compute, createScope, DestroyableAtom } from '../core';
+import { Atom, compute, createScope, DestroyableAtom } from '../core';
 import { createAtomFromFunction, getAtomNode } from '../core/atom';
 import { observe } from '../rxjs';
 
@@ -46,7 +46,7 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
 
   let readonlyAtom: Atom<T> | undefined = undefined;
 
-  const state = atom<State>(
+  const state = scope.atom<State>(
     { type: StateType.value },
     { onDestroy: () => scope.destroy() },
   );
@@ -78,6 +78,7 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     source.subscribe({
       next: () => state.set({ type: StateType.value }),
       error: (error: unknown) => state.set({ type: StateType.error, error }),
+      complete: () => scope.destroy(),
     }),
   );
 
@@ -85,7 +86,7 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     node,
     () => result(),
     {
-      destroy: () => state.destroy(),
+      destroy: () => scope.destroy(),
       asReadonly,
     },
   );
