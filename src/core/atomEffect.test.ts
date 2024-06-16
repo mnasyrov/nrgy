@@ -92,7 +92,10 @@ describe('AtomEffect', () => {
         () => {},
       );
       effect.notifyAccess(atomId);
-      expect((effect as any).referredAtomIds).toEqual([atomId]);
+      expect((effect as any).referredAtomIds).toEqual({
+        atomId: 6,
+        next: undefined,
+      });
     });
 
     it('should not add an atom as dependency if the effect is destroyed', () => {
@@ -295,27 +298,29 @@ describe('AtomEffect', () => {
 
 describe('isComputedNodesChanged()', () => {
   it('should return true if there are no computed nodes', () => {
-    expect(isComputedNodesChanged([])).toBe(true);
+    expect(isComputedNodesChanged(undefined)).toBe(true);
   });
 
   it('should return false if there are no changed computed nodes', () => {
-    expect(isComputedNodesChanged([{ isChanged: () => false } as any])).toBe(
-      false,
-    );
-  });
-
-  it('should return true if there are changed computed nodes', () => {
-    expect(isComputedNodesChanged([{ isChanged: () => true } as any])).toBe(
-      true,
-    );
+    expect(
+      isComputedNodesChanged({ node: { isChanged: () => false } as any }),
+    ).toBe(false);
   });
 
   it('should return true if there are changed computed nodes', () => {
     expect(
-      isComputedNodesChanged([
-        { isChanged: () => true } as any,
-        { isChanged: () => false } as any,
-      ]),
+      isComputedNodesChanged({ node: { isChanged: () => true } as any }),
+    ).toBe(true);
+  });
+
+  it('should return true if there are changed computed nodes', () => {
+    const node1 = { isChanged: () => true } as any;
+    const node2 = { isChanged: () => false } as any;
+    expect(
+      isComputedNodesChanged({
+        node: node1,
+        next: { node: node2 },
+      }),
     ).toBe(true);
   });
 });

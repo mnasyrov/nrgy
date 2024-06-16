@@ -4,33 +4,37 @@ import {
   ScopeTeardown,
   Unsubscribable,
 } from './scopeTypes';
+import { ListItem } from './utils/list';
+
+type TeardownList = ListItem<{ teardown: ScopeTeardown }>;
 
 /**
  * @internal
  */
 export class BaseScope {
-  private subscriptions: ScopeTeardown[] = [];
+  private subscriptions: undefined | TeardownList;
 
   onDestroy(teardown: ScopeTeardown): void {
-    this.subscriptions.push(teardown);
+    this.subscriptions = { teardown, next: this.subscriptions };
   }
 
   add<T extends Unsubscribable | Destroyable>(resource: T): T {
-    this.subscriptions.push(resource);
+    this.subscriptions = { teardown: resource, next: this.subscriptions };
     return resource;
   }
 
   destroy(): void {
-    if (this.subscriptions.length === 0) {
+    if (!this.subscriptions) {
       return;
     }
 
-    const teardowns = this.subscriptions;
-    this.subscriptions = [];
-
     let errors: unknown[] | undefined;
+    let item: undefined | TeardownList = this.subscriptions;
+    this.subscriptions = undefined;
 
-    for (const teardown of teardowns) {
+    while (item) {
+      const { teardown } = item;
+
       try {
         if ('unsubscribe' in teardown) {
           teardown.unsubscribe();
@@ -45,6 +49,8 @@ export class BaseScope {
         }
         errors.push(error);
       }
+
+      item = item.next;
     }
 
     if (errors) {

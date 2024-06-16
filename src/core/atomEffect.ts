@@ -6,7 +6,11 @@ import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { isPromise } from './utils/isPromise';
+import { ListItem, removeFromList } from './utils/list';
 import { nextSafeInteger } from './utils/nextSafeInteger';
+
+type AtomListItem = ListItem<{ atomId: number }>;
+type ComputedNodeListItem = ListItem<{ node: ComputedNode<any> }>;
 
 /**
  * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
@@ -49,8 +53,8 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  private seenComputedNodes: undefined | ComputedNode<any>[];
-  referredAtomIds: undefined | number[];
+  private seenComputedNodes: undefined | ComputedNodeListItem;
+  referredAtomIds: undefined | AtomListItem;
 
   constructor(
     scheduler: TaskScheduler,
@@ -89,17 +93,18 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   }
 
   addReferredAtom(atomId: number) {
-    this.referredAtomIds = this.referredAtomIds || [];
-    this.referredAtomIds.push(atomId);
+    this.referredAtomIds = { atomId, next: this.referredAtomIds };
   }
 
-  removeReferredAtom(atomId: number): number {
+  removeReferredAtom(atomId: number): void {
     if (!this.referredAtomIds) {
-      return 0;
+      return;
     }
 
-    this.referredAtomIds = this.referredAtomIds.filter((id) => id !== atomId);
-    return this.referredAtomIds.length;
+    this.referredAtomIds = removeFromList(
+      this.referredAtomIds,
+      (node) => node.atomId === atomId,
+    );
   }
 
   /**
@@ -138,19 +143,15 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    if (atomId !== undefined && this.removeReferredAtom(atomId) > 0) {
-      return;
-    }
+    this.removeReferredAtom(atomId);
 
-    this.destroy();
+    if (!this.referredAtomIds) {
+      this.destroy();
+    }
   }
 
   addDependency(node: ComputedNode<any>): void {
-    if (!this.seenComputedNodes) {
-      this.seenComputedNodes = [node];
-    } else {
-      this.seenComputedNodes.push(node);
-    }
+    this.seenComputedNodes = { node, next: this.seenComputedNodes };
   }
 
   /**
@@ -240,13 +241,17 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 /**
  * Checks if the computed nodes have changed
  */
-export function isComputedNodesChanged(nodes: ComputedNode<any>[]): boolean {
-  if (nodes.length === 0) {
+export function isComputedNodesChanged(
+  list: undefined | ComputedNodeListItem,
+): boolean {
+  type List = typeof list;
+
+  if (!list) {
     return true;
   }
 
-  for (const node of nodes) {
-    if (node.isChanged()) {
+  for (let item: List = list; item; item = item.next) {
+    if (item.node.isChanged()) {
       return true;
     }
   }
