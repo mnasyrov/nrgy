@@ -97,48 +97,49 @@ export type ExtensionParamsProvider = (
 export type ControllerDeclaration<
   TContext extends BaseControllerContext,
   TService extends BaseService,
-> = TContext extends ControllerParamsContext<infer TParams>
-  ? {
-      /** @internal Keep the type for inference */
-      readonly __contextType?: TContext;
+> =
+  TContext extends ControllerParamsContext<infer TParams>
+    ? {
+        /** @internal Keep the type for inference */
+        readonly __contextType?: TContext;
 
-      /** @internal Keep the type for inference */
-      readonly __paramsType?: TParams;
+        /** @internal Keep the type for inference */
+        readonly __paramsType?: TParams;
 
-      /** @internal Keep the type for inference */
-      readonly __serviceType?: TService;
+        /** @internal Keep the type for inference */
+        readonly __serviceType?: TService;
 
-      /**
-       * Creates a new controller with the given parameters
-       */
-      new (params: TParams): Controller<TService>;
+        /**
+         * Creates a new controller with the given parameters
+         */
+        new (params: TParams): Controller<TService>;
 
-      /**
-       * Creates a new controller with the given providers
-       */
-      new (
-        providers: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-    }
-  : {
-      /** @internal Keep the type for inference */
-      readonly __contextType?: TContext;
+        /**
+         * Creates a new controller with the given providers
+         */
+        new (
+          providers: ReadonlyArray<ExtensionParamsProvider>,
+        ): Controller<TService>;
+      }
+    : {
+        /** @internal Keep the type for inference */
+        readonly __contextType?: TContext;
 
-      /** @internal Keep the type for inference */
-      readonly __serviceType?: TService;
+        /** @internal Keep the type for inference */
+        readonly __serviceType?: TService;
 
-      /**
-       * Creates a new controller
-       */
-      new (): Controller<TService>;
+        /**
+         * Creates a new controller
+         */
+        new (): Controller<TService>;
 
-      /**
-       * Creates a new controller with the given providers
-       */
-      new (
-        providers: ReadonlyArray<ExtensionParamsProvider>,
-      ): Controller<TService>;
-    };
+        /**
+         * Creates a new controller with the given providers
+         */
+        new (
+          providers: ReadonlyArray<ExtensionParamsProvider>,
+        ): Controller<TService>;
+      };
 
 /**
  * @internal
@@ -163,8 +164,6 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
 
     this.scope = this.context.scope;
     this.params = this.context.params;
-
-    this.scope.onDestroy(() => this.onDestroySignal());
 
     this.scope.effect(this.onCreateSignal, () => this.onCreated());
     this.scope.effect(this.onDestroySignal, () => this.onDestroy());
@@ -192,6 +191,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
    * Destroys the controller
    */
   destroy(): void {
+    this.onDestroySignal();
     this.scope.destroy();
   }
 }
@@ -245,18 +245,20 @@ export type InferService<
     BaseControllerContext,
     BaseService
   >,
-> = TDeclaration extends ControllerDeclaration<any, infer Service>
-  ? Service
-  : never;
+> =
+  TDeclaration extends ControllerDeclaration<any, infer Service>
+    ? Service
+    : never;
 
 /**
  * Utility type to infer the context type from a controller
  */
-export type InferContext<T> = T extends BaseController<infer R1>
-  ? R1
-  : T extends ControllerDeclaration<infer R2, any>
-    ? R2
-    : never;
+export type InferContext<T> =
+  T extends BaseController<infer R1>
+    ? R1
+    : T extends ControllerDeclaration<infer R2, any>
+      ? R2
+      : never;
 
 /**
  * Utility type to infer the params type from a controller
@@ -264,9 +266,10 @@ export type InferContext<T> = T extends BaseController<infer R1>
 export type InferContextParams<
   TContext extends BaseControllerContext,
   ElseType,
-> = TContext extends ControllerParamsContext<infer InferredParams>
-  ? InferredParams
-  : ElseType;
+> =
+  TContext extends ControllerParamsContext<infer InferredParams>
+    ? InferredParams
+    : ElseType;
 
 export type ControllerContext<TContext extends BaseControllerContext> =
   TContext & {
