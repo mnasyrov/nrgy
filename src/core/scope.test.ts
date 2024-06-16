@@ -1,4 +1,4 @@
-import { atom } from './atom';
+import { atom } from './atoms/writableAtom';
 import { syncEffect } from './effect';
 import { createScope } from './scope';
 import { ScopeDestructionError } from './scopeTypes';

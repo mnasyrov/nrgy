@@ -50,6 +50,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionContext?: EffectContext;
 
   private seenComputedNodes: undefined | ComputedNode<any>[];
+  referredAtomIds: undefined | number[];
 
   constructor(
     scheduler: TaskScheduler,
@@ -74,6 +75,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.source = undefined;
     this.action = undefined;
     this.seenComputedNodes = undefined;
+    this.referredAtomIds = undefined;
 
     this.actionScope?.destroy();
     this.actionScope = undefined;
@@ -84,6 +86,31 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     destroySignal(this.onResult);
     destroySignal(this.onError);
     destroySignal(this.onDestroy);
+  }
+
+  addReferredAtom(atomId: number) {
+    this.referredAtomIds = this.referredAtomIds || [];
+    this.referredAtomIds.push(atomId);
+  }
+
+  removeReferredAtom(atomId: number): number {
+    if (!this.referredAtomIds) {
+      return 0;
+    }
+
+    this.referredAtomIds = this.referredAtomIds.filter((id) => id !== atomId);
+    return this.referredAtomIds.length;
+  }
+
+  /**
+   * Notify the effect that an atom has been accessed
+   */
+  notifyAccess(atomId: number): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    this.addReferredAtom(atomId);
   }
 
   /**
@@ -106,12 +133,24 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   /**
    * Notify the effect that it must be destroyed
    */
-  notifyDestroy(): void {
+  notifyDestroy(atomId: number): void {
     if (this.isDestroyed) {
       return;
     }
 
+    if (atomId !== undefined && this.removeReferredAtom(atomId) > 0) {
+      return;
+    }
+
     this.destroy();
+  }
+
+  addDependency(node: ComputedNode<any>): void {
+    if (!this.seenComputedNodes) {
+      this.seenComputedNodes = [node];
+    } else {
+      this.seenComputedNodes.push(node);
+    }
   }
 
   /**
@@ -139,12 +178,10 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     if (!isChanged) {
       ENERGY_RUNTIME.setCurrentEffect(prevEffect);
 
-      if (!prevEffect) {
-        ENERGY_RUNTIME.resetVisitedComputedNodes();
-      }
-
       return;
     }
+
+    this.seenComputedNodes = undefined;
 
     let errorRef: undefined | { error: unknown };
     // Unfolding `tracked()` and `untracked()` for better performance
@@ -162,16 +199,11 @@ export class AtomEffect<T, R> implements AtomEffectNode {
         this.onResult(result);
       }
     } catch (error) {
+      this.seenComputedNodes = undefined;
       ENERGY_RUNTIME.tracked = prevTracked;
       errorRef = { error };
     } finally {
       ENERGY_RUNTIME.setCurrentEffect(prevEffect);
-
-      this.seenComputedNodes = ENERGY_RUNTIME.getVisitedComputedNodes();
-
-      if (!prevEffect) {
-        ENERGY_RUNTIME.resetVisitedComputedNodes();
-      }
 
       if (errorRef) {
         this.onError(errorRef.error);

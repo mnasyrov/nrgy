@@ -133,6 +133,29 @@ describe('fromQuery()', () => {
     );
   });
 
+  it('should transmit "destroy" notification from the source atom', () => {
+    const source = atom(1);
+    const atomQuery = toQuery(source);
+
+    const result = fromQuery(atomQuery);
+    const fx = syncEffect(result, () => {});
+
+    source.destroy();
+    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+  });
+
+  it('should transmit "destroy" notification from the source atom and the computed atom', () => {
+    const source = atom(1);
+    const computed = compute(() => source());
+    const query = toQuery(computed);
+
+    const result = fromQuery(query);
+    const fx = syncEffect(result, () => {});
+
+    source.destroy();
+    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+  });
+
   describe('asReadonly()', () => {
     it('should return a read-only representation of the writable Atom', () => {
       const source = atom(1);

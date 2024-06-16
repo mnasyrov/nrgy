@@ -2,14 +2,22 @@ import {
   AnyObject,
   Atom,
   ATOM_SYMBOL,
-  AtomEffectNode,
   AtomNode,
   DestroyableAtom,
   ReactiveNode,
+  Signal,
   ValueEqualityFn,
 } from './common';
-import { defaultEquals } from './commonUtils';
-import { ENERGY_RUNTIME } from './runtime';
+import { nextSafeInteger } from './utils/nextSafeInteger';
+
+let ATOM_ID: number = 0;
+
+/**
+ * @internal
+ */
+export function generateAtomId(): number {
+  return (ATOM_ID = nextSafeInteger(ATOM_ID));
+}
 
 /**
  * Checks if the given `value` is a reactive `Atom`.
@@ -36,6 +44,11 @@ export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
  */
 export function getAtomName(value: Atom<any>): string | undefined {
   return getAtomNode(value).name;
+}
+
+/** @internal */
+export function getAtomId(value: Atom<any>): number {
+  return getAtomNode(value).id;
 }
 
 /**
@@ -81,6 +94,11 @@ export function createAtomFromFunction<
  * A writable `Atom` with a value that can be mutated via a setter interface.
  */
 export interface WritableAtom<T> extends DestroyableAtom<T> {
+  /**
+   * Signals that the `AtomEffect` has been destroyed
+   */
+  readonly onDestroyed: Signal<void>;
+
   /**
    * Directly set the atom to a new value, and notify any dependents.
    */
@@ -140,196 +158,4 @@ export class AtomUpdateError extends Error {
     );
     this.name = 'AtomUpdateError';
   }
-}
-
-class WritableAtomImpl<T> implements AtomNode<T> {
-  readonly name?: string;
-
-  private readonlyAtom: Atom<T> | undefined;
-  private readonly equal: ValueEqualityFn<T>;
-  private readonly consumerEffects = new Map<WeakRef<AtomEffectNode>, number>();
-  private onDestroy?: () => void;
-
-  private isDestroyed = false;
-
-  constructor(
-    private value: T,
-    options?: AtomOptions<T>,
-  ) {
-    this.name = options?.name;
-    this.equal = options?.equal ?? defaultEquals;
-    this.onDestroy = options?.onDestroy;
-  }
-
-  get(): T {
-    if (!this.isDestroyed) {
-      this.producerAccessed();
-    }
-
-    return this.value;
-  }
-
-  /**
-   * Directly update the value of the atom to a new value, which may or may not be
-   * equal to the previous.
-   *
-   * In the event that `newValue` is semantically equal to the current value, `set` is
-   * a no-op.
-   *
-   * Returns `true` if the value was changed.
-   */
-  set(newValue: T): boolean {
-    if (this.isDestroyed) {
-      return false;
-    }
-
-    this.producerBeforeChange();
-
-    if (this.equal(this.value, newValue)) {
-      return false;
-    }
-
-    this.value = newValue;
-
-    this.producerChanged();
-
-    return true;
-  }
-
-  /**
-   * Derive a new value for the atom from its current value using the `updater` function.
-   *
-   * This is equivalent to calling `set` on the result of running `updater` on the current
-   * value.
-   *
-   * Returns `true` if the value was changed.
-   */
-  update(updater: (value: T) => T): boolean {
-    return this.set(updater(this.value));
-  }
-
-  /**
-   * Calls `mutator` on the current value and assumes that it has been mutated.
-   */
-  mutate(mutator: (value: T) => void): void {
-    if (this.isDestroyed) {
-      return;
-    }
-
-    this.producerBeforeChange();
-
-    // Mutate bypasses equality checks as it's by definition changing the value.
-    mutator(this.value);
-
-    this.producerChanged();
-  }
-
-  asReadonly(): Atom<T> {
-    if (this.readonlyAtom === undefined) {
-      this.readonlyAtom = createAtomFromFunction(this, () => this.get());
-    }
-    return this.readonlyAtom;
-  }
-
-  destroy() {
-    if (this.isDestroyed) {
-      return;
-    }
-
-    this.producerDestroyed();
-
-    this.consumerEffects.clear();
-    this.onDestroy?.();
-    this.onDestroy = undefined;
-
-    this.isDestroyed = true;
-  }
-
-  /**
-   * Checks if the atom can be updated in the current context
-   */
-  protected producerBeforeChange(): void {
-    if (ENERGY_RUNTIME.tracked) {
-      throw new AtomUpdateError(this.name);
-    }
-  }
-
-  /**
-   * Notify all consumers of this producer that its value is changed.
-   */
-  protected producerChanged(): void {
-    ENERGY_RUNTIME.updateAtomClock();
-
-    for (const [effectRef, atEffectClock] of this.consumerEffects) {
-      const effect = effectRef.deref();
-
-      if (
-        !effect ||
-        effect.isDestroyed ||
-        (!effect.dirty && effect.clock !== atEffectClock)
-      ) {
-        this.consumerEffects.delete(effectRef);
-        continue;
-      }
-
-      effect.notify();
-    }
-  }
-
-  /**
-   * Notify all consumers of this producer that it is destroyed
-   */
-  protected producerDestroyed(): void {
-    for (const [effectRef] of this.consumerEffects) {
-      const effect = effectRef.deref();
-
-      if (effect && !effect.isDestroyed) {
-        effect.notifyDestroy();
-      }
-    }
-  }
-
-  /**
-   * Mark that this producer node has been accessed in the current reactive context.
-   */
-  protected producerAccessed(): void {
-    if (!ENERGY_RUNTIME.tracked) {
-      return;
-    }
-
-    const effects = ENERGY_RUNTIME.getTrackedEffects();
-
-    if (effects.length > 0) {
-      for (const effect of effects) {
-        if (!effect.isDestroyed) {
-          this.consumerEffects.set(effect.ref, effect.clock);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Create a `Atom` that can be set or updated directly.
- */
-export function atom<T>(
-  initialValue: T,
-  options?: AtomOptions<T>,
-): WritableAtom<T> {
-  const node = new WritableAtomImpl<T>(initialValue, options);
-
-  const result: WritableAtom<T> = createAtomFromFunction(
-    node,
-    node.get.bind(node),
-    {
-      set: node.set.bind(node),
-      update: node.update.bind(node),
-      mutate: node.mutate.bind(node),
-      asReadonly: node.asReadonly.bind(node),
-
-      destroy: node.destroy.bind(node),
-    },
-  );
-
-  return result;
 }

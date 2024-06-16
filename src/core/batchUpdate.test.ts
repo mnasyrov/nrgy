@@ -1,7 +1,7 @@
 import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
-import { atom } from './atom';
+import { atom } from './atoms/writableAtom';
 import { batchUpdate } from './batchUpdate';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';

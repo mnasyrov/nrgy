@@ -1,4 +1,4 @@
-import { atom } from './atom';
+import { atom } from './atoms/writableAtom';
 import { combineAtoms, mapAtom, mergeAtoms } from './atomUtils';
 import { objectEquals } from './commonUtils';
 

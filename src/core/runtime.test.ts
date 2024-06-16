@@ -1,4 +1,3 @@
-import { AtomEffectNode } from './common';
 import {
   ENERGY_RUNTIME,
   EnergyRuntime,
@@ -39,16 +38,6 @@ describe('EnergyRuntime', () => {
     });
   });
 
-  describe('getTrackedEffects()', () => {
-    it('should return the list of tracked effects', () => {
-      const runtime = new EnergyRuntime();
-      expect(runtime.getTrackedEffects()).toEqual([]);
-
-      runtime.setCurrentEffect({} as any);
-      expect(runtime.getTrackedEffects()).toEqual([{} as any]);
-    });
-  });
-
   describe('getCurrentEffect()', () => {
     it('should return the current effect', () => {
       const runtime = new EnergyRuntime();
@@ -56,70 +45,6 @@ describe('EnergyRuntime', () => {
 
       runtime.setCurrentEffect({} as any);
       expect(runtime.getCurrentEffect()).toEqual({} as any);
-    });
-  });
-
-  describe('setCurrentEffect()', () => {
-    it('should set the current effect', () => {
-      const effect1: AtomEffectNode = { name: 1 } as any;
-      const effect2: AtomEffectNode = { name: 2 } as any;
-
-      const runtime = new EnergyRuntime();
-
-      expect(runtime.setCurrentEffect(effect1)).toBeUndefined();
-      expect(runtime.getTrackedEffects()).toEqual([effect1]);
-
-      expect(runtime.setCurrentEffect(effect2)).toEqual(effect1);
-      expect(runtime.getTrackedEffects()).toEqual([effect1, effect2]);
-
-      expect(runtime.setCurrentEffect(undefined)).toEqual(effect2);
-      expect(runtime.getTrackedEffects()).toEqual([]);
-
-      expect(runtime.setCurrentEffect(undefined)).toEqual(undefined);
-      expect(runtime.getTrackedEffects()).toEqual([]);
-    });
-  });
-
-  describe('getVisitedComputedNodes()', () => {
-    it('should return the list of visited computed nodes', () => {
-      const runtime = new EnergyRuntime();
-      runtime.tracked = true;
-      expect(runtime.getVisitedComputedNodes()).toEqual([]);
-
-      runtime.visitComputedNode({} as any);
-      expect(runtime.getVisitedComputedNodes()).toEqual([]);
-
-      runtime.setCurrentEffect({} as any);
-      runtime.visitComputedNode({} as any);
-      expect(runtime.getVisitedComputedNodes()).toEqual([{} as any]);
-    });
-  });
-
-  describe('resetVisitedComputedNodes()', () => {
-    it('should reset the list of visited computed nodes', () => {
-      const runtime = new EnergyRuntime();
-      runtime.tracked = true;
-
-      runtime.setCurrentEffect({} as any);
-      runtime.visitComputedNode({} as any);
-      expect(runtime.getVisitedComputedNodes()).toEqual([{} as any]);
-
-      runtime.resetVisitedComputedNodes();
-      expect(runtime.getVisitedComputedNodes()).toEqual([]);
-    });
-  });
-
-  describe('visitComputedNode()', () => {
-    it('should add the computed node to the list of visited only if the current effect is set ', () => {
-      const runtime = new EnergyRuntime();
-      runtime.tracked = true;
-
-      runtime.visitComputedNode({} as any);
-      expect(runtime.getVisitedComputedNodes()).toEqual([]);
-
-      runtime.setCurrentEffect({} as any);
-      runtime.visitComputedNode({} as any);
-      expect(runtime.getVisitedComputedNodes()).toEqual([{} as any]);
     });
   });
 

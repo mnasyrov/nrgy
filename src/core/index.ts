@@ -13,7 +13,8 @@ export {
 export { keepLastValue, mixSignals, signalChanges } from './signalUtils';
 
 export type { AtomOptions, WritableAtom } from './atom';
-export { atom, isAtom, getAtomName, AtomUpdateError } from './atom';
+export { isAtom, getAtomName, AtomUpdateError } from './atom';
+export { atom } from './atoms/writableAtom';
 
 export type { AtomSubject } from './atomSubject';
 export { createAtomSubject } from './atomSubject';

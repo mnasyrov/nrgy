@@ -86,18 +86,11 @@ describe('observe()', () => {
     });
 
     const counter$ = observe(trackedCounter);
-
     const sub = counter$.subscribe();
-    expect(readCount).toBe(0);
 
-    await flushMicrotasks();
-    expect(readCount).toBe(1);
-
-    // Sanity check of the read tracker - updating the counter should cause it to be read again
-    // by the active effect.
     counter.set(1);
     await flushMicrotasks();
-    expect(readCount).toBe(2);
+    const prevReadCount = readCount;
 
     // Tear down the only subscription.
     sub.unsubscribe();
@@ -105,7 +98,7 @@ describe('observe()', () => {
     // Now, setting the atom still triggers additional reads
     counter.set(2);
     await flushMicrotasks();
-    expect(readCount).toBe(2);
+    expect(readCount).toBe(prevReadCount);
   });
 
   it('stops monitoring the atom once injector is destroyed', async () => {

@@ -1,4 +1,4 @@
-import { atom } from './atom';
+import { atom } from './atoms/writableAtom';
 import { AnyFunction } from './common';
 import { effect, EffectFn, syncEffect } from './effect';
 import { BaseScope } from './scopeBase';

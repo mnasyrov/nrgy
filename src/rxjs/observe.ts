@@ -1,7 +1,13 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
-import { Atom, effect, isAtom, isSignal, Signal, syncEffect } from '../core';
-import { ENERGY_RUNTIME } from '../core/runtime';
+import {
+  Atom,
+  createScope,
+  isAtom,
+  isSignal,
+  Signal,
+  syncEffect,
+} from '../core';
 
 /**
  * Options for `observe`
@@ -55,21 +61,24 @@ export function observe<T>(
   options?: ObserveOptions,
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
-    const scheduler = options?.sync
-      ? ENERGY_RUNTIME.syncScheduler
-      : ENERGY_RUNTIME.asyncScheduler;
-    const effectFn = options?.sync ? syncEffect : effect;
+    const scope = createScope();
+    scope.onDestroy(() => subscriber.complete());
 
-    const subscription = isAtom(source)
-      ? effectFn(source, (value) =>
-          scheduler.schedule(() => subscriber.next(value)),
-        )
-      : effectFn(source, (value) => subscriber.next(value));
+    const effectFn = options?.sync ? scope.syncEffect : scope.effect;
 
-    syncEffect(subscription.onError, (error) => subscriber.error(error));
-    syncEffect(subscription.onDestroy, () => subscriber.complete());
+    const fx = effectFn(source as Atom<T>, (value) => subscriber.next(value));
 
-    return () => subscription.destroy();
+    syncEffect(fx.onError, (error) => subscriber.error(error));
+    syncEffect(fx.onDestroy, () => scope.destroy());
+
+    if (isAtom(source)) {
+      // This is an artificial effect for tracking the destruction of the source atom.
+      // It is necessary to unsubscribe the subscriber when the source atom is destroyed.
+      const sourceFx = scope.syncEffect(source, () => {});
+      scope.syncEffect(sourceFx.onDestroy, () => scope.destroy());
+    }
+
+    return () => scope.destroy();
   });
 
   if (isSignal(source)) {

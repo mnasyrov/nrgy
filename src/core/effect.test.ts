@@ -1,7 +1,8 @@
 import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks, promiseTimeout } from '../test/testUtils';
 
-import { atom, AtomUpdateError } from './atom';
+import { AtomUpdateError } from './atom';
+import { atom } from './atoms/writableAtom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { getSignalNode, signal } from './signal';
@@ -133,6 +134,21 @@ describe('effect()', () => {
 
     // onDestory is a signal which is forced to be synchronous
     expect(asyncOnDestroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should be destroyed when a computed atom is destroyed #2', () => {
+    const source = atom(1);
+    const fx = syncEffect(source, () => {});
+    source.destroy();
+    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+  });
+
+  it('should be destroyed when a source computed atom is destroyed', () => {
+    const source = atom(1);
+    const computed = compute(() => source());
+    const fx = syncEffect(computed, () => {});
+    source.destroy();
+    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
   });
 
   it('should be destroyed without errors even if a the reference to the source signal is lost', async () => {

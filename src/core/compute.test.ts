@@ -5,7 +5,8 @@ import {
   flushMicrotasks,
 } from '../test/testUtils';
 
-import { atom, AtomUpdateError, getAtomName } from './atom';
+import { AtomUpdateError, getAtomName } from './atom';
+import { atom } from './atoms/writableAtom';
 import { createAtomSubject } from './atomSubject';
 import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
@@ -466,8 +467,8 @@ describe('compute()', () => {
     await flushMicrotasks();
 
     // Expect that the runtime in empty
-    expect(ENERGY_RUNTIME.getTrackedEffects().length).toBe(0);
-    expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
+    expect(ENERGY_RUNTIME.getCurrentEffect()).toBe(undefined);
+    // expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
     expect(ENERGY_RUNTIME.asyncScheduler.isEmpty()).toBe(true);
     expect(ENERGY_RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
@@ -696,5 +697,24 @@ describe('Tracked context in the computed expression with implicit dependencies'
     expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('Leaking tracked effects by compute()', () => {
+  it('should track only ', () => {
+    const a = atom(10);
+    const b = compute(() => a());
+
+    const trigger = atom(true);
+    const results: number[] = [];
+    const callback = jest.fn(() => results.push(b()));
+
+    syncEffect(trigger, callback);
+    trigger.set(false);
+    a.destroy();
+    trigger.set(true);
+
+    expect(callback).toHaveBeenCalledTimes(3);
+    expect(results).toEqual([10, 10, 10]);
   });
 });

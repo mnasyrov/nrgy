@@ -1,4 +1,5 @@
-import { atom, AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
+import { AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
+import { atom } from './atoms/writableAtom';
 import { Atom, DestroyableAtom } from './common';
 import { compute } from './compute';
 
@@ -68,6 +69,7 @@ export function createAtomSubject<T>(
     },
   );
 
+  const onDestroyed = state.onDestroyed;
   const destroy = () => state.destroy();
 
   const node = getAtomNode(result);
@@ -84,12 +86,14 @@ export function createAtomSubject<T>(
     next: (value: T) => state.set({ type: StateType.value, value }),
     error: (error: unknown) => state.set({ type: StateType.error, error }),
 
+    onDestroyed,
     destroy,
 
     asDestroyable: () => {
       if (!observableAtom) {
         const node = getAtomNode(result);
         observableAtom = createAtomFromFunction(node, () => result(), {
+          onDestroyed,
           destroy,
           asReadonly,
         });

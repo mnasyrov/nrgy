@@ -1,4 +1,4 @@
-import { AtomEffectNode, ComputedNode } from './common';
+import { AtomEffectNode } from './common';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -10,8 +10,6 @@ import { nextSafeInteger } from './utils/nextSafeInteger';
  */
 export class EnergyRuntime {
   private currentEffect: AtomEffectNode | undefined = undefined;
-  private trackedEffects: AtomEffectNode[] = [];
-  private visitedComputedNodes: ComputedNode<any>[] = [];
 
   private batchUpdateLock: number = 0;
   readonly asyncScheduler = createMicrotaskScheduler();
@@ -43,13 +41,6 @@ export class EnergyRuntime {
   }
 
   /**
-   * Returns the list of tracked effects
-   */
-  getTrackedEffects(): AtomEffectNode[] {
-    return this.trackedEffects;
-  }
-
-  /**
    * Sets the current effect node and tracks effects until the current effect frame is not empty
    */
   setCurrentEffect(
@@ -58,36 +49,7 @@ export class EnergyRuntime {
     const prev = this.currentEffect;
     this.currentEffect = effect;
 
-    if (effect) {
-      this.trackedEffects.push(effect);
-    } else {
-      this.trackedEffects = [];
-    }
-
     return prev;
-  }
-
-  /**
-   * Returns the list of visited computed nodes
-   */
-  getVisitedComputedNodes(): ComputedNode<any>[] {
-    return this.visitedComputedNodes;
-  }
-
-  /**
-   * Resets the list of visited computed nodes
-   */
-  resetVisitedComputedNodes() {
-    this.visitedComputedNodes = [];
-  }
-
-  /**
-   * Visits a computed node if the current effect frame is not empty
-   */
-  visitComputedNode(node: ComputedNode<any>) {
-    if (this.tracked && this.currentEffect) {
-      this.visitedComputedNodes.push(node);
-    }
   }
 
   /**
@@ -109,14 +71,15 @@ export class EnergyRuntime {
    * Run a function in an untracked context
    */
   runAsUntracked<T>(nonReactiveReadsFn: () => T): T {
+    const prevEffect = this.setCurrentEffect(undefined);
     const prevTracked = this.tracked;
+    this.tracked = false;
 
     try {
-      this.tracked = false;
-
       return nonReactiveReadsFn();
     } finally {
       this.tracked = prevTracked;
+      this.setCurrentEffect(prevEffect);
     }
   }
 

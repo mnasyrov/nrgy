@@ -1,7 +1,8 @@
 import { expectEffectContext } from '../test/matchers';
 
-import { atom } from './atom';
+import { getAtomId, getAtomNode } from './atom';
 import { AtomEffect, isComputedNodesChanged } from './atomEffect';
+import { atom } from './atoms/writableAtom';
 import { compute } from './compute';
 import { syncEffect } from './effect';
 import { ENERGY_RUNTIME, tracked } from './runtime';
@@ -80,20 +81,54 @@ describe('AtomEffect', () => {
     });
   });
 
-  describe('notifyDestroy()', () => {
-    it('should notify the effect that it must be destroyed', () => {
+  describe('notifyAccess()', () => {
+    it('should add an atom as dependency', () => {
+      const source = atom(1);
+      const atomId = getAtomId(source);
+
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
-        atom(1),
+        source,
+        () => {},
+      );
+      effect.notifyAccess(atomId);
+      expect((effect as any).referredAtomIds).toEqual([atomId]);
+    });
+
+    it('should not add an atom as dependency if the effect is destroyed', () => {
+      const source = atom(1);
+      const atomId = getAtomId(source);
+
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        source,
+        () => {},
+      );
+      effect.destroy();
+      effect.notifyAccess(atomId);
+
+      expect((effect as any).referredAtomIds).toEqual(undefined);
+    });
+  });
+
+  describe('notifyDestroy()', () => {
+    it('should notify the effect that it must be destroyed', () => {
+      const source = atom(1);
+
+      const effect = new AtomEffect(
+        createSyncTaskScheduler(),
+        source,
         () => {},
       );
 
-      effect.notifyDestroy();
+      effect.notifyDestroy(getAtomNode(source).id);
 
       expect(effect.isDestroyed).toBe(true);
     });
 
     it('should not notify the effect if it is destroyed', () => {
+      const source = atom(1);
+      const atomId = getAtomId(source);
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
         atom(1),
@@ -103,11 +138,11 @@ describe('AtomEffect', () => {
       const mockDestroy = jest.fn(effect.destroy.bind(effect));
       effect.destroy = mockDestroy;
 
-      effect.notifyDestroy();
+      effect.notifyDestroy(atomId);
       expect(mockDestroy).toHaveBeenCalledTimes(1);
 
       mockDestroy.mockClear();
-      effect.notifyDestroy();
+      effect.notifyDestroy(atomId);
       expect(mockDestroy).toHaveBeenCalledTimes(0);
     });
   });

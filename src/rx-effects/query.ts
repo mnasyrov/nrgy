@@ -1,7 +1,15 @@
 import { Observable, skip } from 'rxjs';
 
-import { Atom, compute, createScope, DestroyableAtom } from '../core';
+import {
+  Atom,
+  compute,
+  createScope,
+  DestroyableAtom,
+  destroySignal,
+  signal,
+} from '../core';
 import { createAtomFromFunction, getAtomNode } from '../core/atom';
+import { ENERGY_RUNTIME } from '../core/runtime';
 import { observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
@@ -22,7 +30,7 @@ export type Query<T> = Readonly<{
  */
 export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
-    get: () => source(),
+    get: () => ENERGY_RUNTIME.runAsUntracked(() => source()),
     value$: observe(source),
   };
 }
@@ -42,7 +50,13 @@ type State =
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
   const source = query.value$.pipe(skip(1));
 
+  const onDestroyed = signal<void>({ sync: true });
+
   const scope = createScope();
+  scope.onDestroy(() => {
+    onDestroyed();
+    destroySignal(onDestroyed);
+  });
 
   let readonlyAtom: Atom<T> | undefined = undefined;
 
@@ -74,18 +88,19 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     return readonlyAtom;
   };
 
-  scope.add(
-    source.subscribe({
-      next: () => state.set({ type: StateType.value }),
-      error: (error: unknown) => state.set({ type: StateType.error, error }),
-      complete: () => scope.destroy(),
-    }),
-  );
+  const sourceSubscription = source.subscribe({
+    next: () => state.set({ type: StateType.value }),
+    error: (error: unknown) => state.set({ type: StateType.error, error }),
+    complete: () => scope.destroy(),
+  });
+
+  scope.onDestroy(() => sourceSubscription.unsubscribe());
 
   const resultAtom: DestroyableAtom<T> = createAtomFromFunction(
     node,
     () => result(),
     {
+      onDestroyed,
       destroy: () => scope.destroy(),
       asReadonly,
     },

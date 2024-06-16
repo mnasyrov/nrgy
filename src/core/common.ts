@@ -28,6 +28,11 @@ export type Atom<T> = (() => T) & {
 export type DestroyableAtom<T> = Atom<T> &
   Readonly<{
     /**
+     * Signals that the `AtomEffect` has been destroyed
+     */
+    readonly onDestroyed: Signal<void>;
+
+    /**
      * Returns a readonly version of this atom
      */
     asReadonly(): Atom<T>;
@@ -80,6 +85,11 @@ export type ReactiveNode = Readonly<{
  */
 export type AtomNode<T> = ReactiveNode &
   Readonly<{
+    /**
+     * The id of the atom
+     */
+    id: number;
+
     /**
      * The name of the atom
      */
@@ -151,6 +161,11 @@ export type AtomEffectNode = ReactiveNode &
     clock: number;
 
     /**
+     * Notify the effect that an atom has been accessed
+     */
+    notifyAccess: (atomId: number) => void;
+
+    /**
      * Schedule the effect to be re-run
      */
     notify: () => void;
@@ -158,7 +173,12 @@ export type AtomEffectNode = ReactiveNode &
     /**
      * Notify the effect that it must be destroyed
      */
-    notifyDestroy: () => void;
+    notifyDestroy: (atomId: number) => void;
+
+    /**
+     * Register a computed node as a dependency
+     */
+    addDependency: (node: ComputedNode<any>) => void;
   }>;
 
 export type SignalNode<T> = ReactiveNode &

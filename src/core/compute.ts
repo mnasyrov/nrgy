@@ -1,4 +1,4 @@
-import { createAtomFromFunction } from './atom';
+import { createAtomFromFunction, generateAtomId } from './atom';
 import { Atom, AtomEffectNode, ComputedNode, ValueEqualityFn } from './common';
 import { defaultEquals } from './commonUtils';
 import { ENERGY_RUNTIME } from './runtime';
@@ -63,6 +63,7 @@ const ERRORED: any = Symbol('ERRORED');
  * A computation, which derives a value from a declarative reactive expression.
  */
 export class ComputedImpl<T> implements ComputedNode<T> {
+  readonly id: number = generateAtomId();
   readonly name?: string;
 
   clock: number | undefined = undefined;
@@ -129,11 +130,11 @@ export class ComputedImpl<T> implements ComputedNode<T> {
       throw new Error('Detected cycle in computations');
     }
 
-    if (trackNode) {
-      ENERGY_RUNTIME.visitComputedNode(this);
-    }
-
     const activeEffect = ENERGY_RUNTIME.getCurrentEffect();
+
+    if (trackNode && ENERGY_RUNTIME.tracked && activeEffect) {
+      activeEffect.addDependency(this);
+    }
 
     const isStale =
       this.clock !== ENERGY_RUNTIME.clock ||
