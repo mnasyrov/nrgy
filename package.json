@@ -80,8 +80,8 @@
     "publish": "npm run build && cd dist && npm publish"
   },
   "optionalDependencies": {
-    "ditox": ">=2.2",
-    "ditox-react": ">=2.2",
+    "ditox": ">=2.2 || >=3",
+    "ditox-react": ">=2.2 || >=3",
     "react": ">=17 || >=18",
     "rx-effects": ">=1.0",
     "rxjs": ">=7.0"
