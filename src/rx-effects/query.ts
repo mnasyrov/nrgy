@@ -48,8 +48,6 @@ type State =
  * Creates an Atom from a Query
  */
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
-  const source = query.value$.pipe(skip(1));
-
   const onDestroyed = signal<void>({ sync: true });
 
   const scope = createScope();
@@ -60,9 +58,15 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
 
   let readonlyAtom: Atom<T> | undefined = undefined;
 
-  const state = scope.atom<State>(
-    { type: StateType.value },
-    { onDestroy: () => scope.destroy() },
+  const state = scope.atom<State>({ type: StateType.value });
+
+  const changes$ = query.value$.pipe(skip(1));
+  scope.add(
+    changes$.subscribe({
+      next: () => state.set({ type: StateType.value }),
+      error: (error: unknown) => state.set({ type: StateType.error, error }),
+      complete: () => scope.destroy(),
+    }),
   );
 
   // The actual returned atom is a `computed` of the `State` atom, which maps the various states
@@ -87,14 +91,6 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     }
     return readonlyAtom;
   };
-
-  const sourceSubscription = source.subscribe({
-    next: () => state.set({ type: StateType.value }),
-    error: (error: unknown) => state.set({ type: StateType.error, error }),
-    complete: () => scope.destroy(),
-  });
-
-  scope.onDestroy(() => sourceSubscription.unsubscribe());
 
   const resultAtom: DestroyableAtom<T> = createAtomFromFunction(
     node,

@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom, compute, effect, isAtom, syncEffect } from '../core';
+import { atom, compute, effect, isAtom, signal, syncEffect } from '../core';
 import { getSignalNode } from '../core/signal';
 import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
@@ -55,6 +55,28 @@ describe('toQuery()', () => {
     unmount();
     act(() => x.set(4));
     await waitFor(() => expect(result.current).toBe(9));
+  });
+
+  it('should render with a current value of the subscribed atom', async () => {
+    const x = atom(1);
+    const query = toQuery(x);
+
+    const setter = signal<number>();
+    effect(setter, (value) => x.set(value));
+
+    const { result, unmount } = renderHook(() => useQuery(query));
+
+    expect(result.current).toBe(1);
+
+    act(() => setter(2));
+    await waitFor(() => expect(result.current).toBe(2));
+
+    act(() => setter(3));
+    await waitFor(() => expect(result.current).toBe(3));
+
+    unmount();
+    act(() => setter(4));
+    await waitFor(() => expect(result.current).toBe(3));
   });
 });
 
