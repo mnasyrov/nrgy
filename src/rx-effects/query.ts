@@ -56,8 +56,6 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     destroySignal(onDestroyed);
   });
 
-  let readonlyAtom: Atom<T> | undefined = undefined;
-
   const state = scope.atom<State>({ type: StateType.value });
 
   const changes$ = query.value$.pipe(skip(1));
@@ -85,22 +83,9 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
 
   const node = getAtomNode(result);
 
-  const asReadonly = (): Atom<T> => {
-    if (readonlyAtom === undefined) {
-      readonlyAtom = createAtomFromFunction(node, () => result());
-    }
-    return readonlyAtom;
-  };
-
-  const resultAtom: DestroyableAtom<T> = createAtomFromFunction(
-    node,
-    () => result(),
-    {
-      onDestroyed,
-      destroy: () => scope.destroy(),
-      asReadonly,
-    },
-  );
-
-  return resultAtom;
+  return createAtomFromFunction(node, () => result(), {
+    onDestroyed,
+    destroy: () => scope.destroy(),
+    asReadonly: () => result,
+  });
 }
