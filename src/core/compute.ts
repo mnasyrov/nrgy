@@ -75,7 +75,6 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
    */
   private value: T = UNSET;
-  private changed = false;
   private readonly equal: ValueEqualityFn<T>;
 
   /**
@@ -99,23 +98,8 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     this.lastEffectRef = undefined;
   }
 
-  isChanged(): boolean {
-    if (
-      this.clock === ENERGY_RUNTIME.clock &&
-      this.value !== UNSET &&
-      this.value !== COMPUTING
-    ) {
-      return this.changed;
-    }
-
-    const prevVersion = this.version;
-    this.accessValue(false);
-
-    return this.version !== prevVersion;
-  }
-
   get(): T {
-    this.accessValue(true);
+    this.accessValue();
 
     if (this.value === ERRORED) {
       throw this.error;
@@ -124,17 +108,13 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     return this.value;
   }
 
-  private accessValue(trackNode: boolean): void {
+  private accessValue(): void {
     if (this.value === COMPUTING) {
       // Our computation somehow led to a cyclic read of itself.
       throw new Error('Detected cycle in computations');
     }
 
     const activeEffect = ENERGY_RUNTIME.getCurrentEffect();
-
-    if (trackNode && ENERGY_RUNTIME.tracked && activeEffect) {
-      activeEffect.addDependency(this);
-    }
 
     const isStale =
       this.clock !== ENERGY_RUNTIME.clock ||
@@ -180,12 +160,10 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     ) {
       this.value = newValue;
       this.version = nextSafeInteger(this.version);
-      this.changed = true;
     } else {
       // No change to `valueVersion` - old and new values are
       // semantically equivalent.
       this.value = oldValue;
-      this.changed = false;
     }
   }
 }

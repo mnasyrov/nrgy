@@ -10,10 +10,13 @@ import { defaultEquals } from '../commonUtils';
 import { syncEffect } from '../effect';
 import { ENERGY_RUNTIME } from '../runtime';
 import { destroySignal, signal } from '../signal';
+import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 class WritableAtomImpl<T> implements AtomNode<T> {
   readonly id: number = generateAtomId();
   readonly name?: string;
+
+  version = 0;
 
   /**
    * Signals that the effect has been destroyed
@@ -136,6 +139,7 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    */
   protected producerChanged(): void {
     ENERGY_RUNTIME.updateAtomClock();
+    this.version = nextSafeInteger(this.version);
 
     for (const [effectRef, atEffectClock] of this.consumerEffects) {
       const effect = effectRef.deref();

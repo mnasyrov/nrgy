@@ -1,11 +1,11 @@
 import { expectEffectContext } from '../test/matchers';
+import { flushMicrotasks } from '../test/testUtils';
 
 import { getAtomId, getAtomNode } from './atom';
-import { AtomEffect, isComputedNodesChanged } from './atomEffect';
+import { AtomEffect } from './atomEffect';
 import { atom } from './atoms/writableAtom';
 import { compute } from './compute';
-import { syncEffect } from './effect';
-import { ENERGY_RUNTIME, tracked } from './runtime';
+import { effect, syncEffect } from './effect';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -222,28 +222,6 @@ describe('AtomEffect', () => {
       effect.run();
       expect(action).toHaveBeenCalledTimes(0);
     });
-
-    it('should run the action if seenComputedNodes is changed', () => {
-      const store = atom(1);
-      const computed = compute(() => store());
-      const scheduler = createSyncTaskScheduler();
-
-      const action = jest.fn(() => tracked(computed));
-      const effect = new AtomEffect(scheduler, atom(1), action);
-
-      effect.notify();
-      expect(action).toHaveBeenCalledTimes(1);
-
-      store.set(2);
-      action.mockClear();
-      effect.notify();
-      expect(action).toHaveBeenCalledTimes(1);
-
-      ENERGY_RUNTIME.updateAtomClock();
-      action.mockClear();
-      effect.notify();
-      expect(action).toHaveBeenCalledTimes(0);
-    });
   });
 
   describe('Context of the action', () => {
@@ -296,31 +274,49 @@ describe('AtomEffect', () => {
   });
 });
 
-describe('isComputedNodesChanged()', () => {
-  it('should return true if there are no computed nodes', () => {
-    expect(isComputedNodesChanged(undefined)).toBe(true);
+describe('Change detector bugs', () => {
+  test('Race in two syncEffect() and one effect()', async () => {
+    const history1: number[] = [];
+    const history2: number[] = [];
+    const history3: number[] = [];
+
+    const store = atom(1);
+    const computed = compute(() => store());
+
+    effect(computed, (v) => history1.push(v));
+    syncEffect(computed, (v) => history2.push(v));
+    effect(computed, (v) => history3.push(v));
+
+    await flushMicrotasks();
+
+    store.set(2);
+    await flushMicrotasks();
+
+    store.set(3);
+    await flushMicrotasks();
+
+    expect(history1).toEqual([1, 2, 3]);
+    expect(history2).toEqual([1, 2, 3]);
+    expect(history3).toEqual([1, 2, 3]); // Failed with [1]
   });
 
-  it('should return false if there are no changed computed nodes', () => {
-    expect(
-      isComputedNodesChanged({ node: { isChanged: () => false } as any }),
-    ).toBe(false);
-  });
+  test('Race in three syncEffect()', async () => {
+    const history1: number[] = [];
+    const history2: number[] = [];
+    const history3: number[] = [];
 
-  it('should return true if there are changed computed nodes', () => {
-    expect(
-      isComputedNodesChanged({ node: { isChanged: () => true } as any }),
-    ).toBe(true);
-  });
+    const store = atom(1);
+    const computed = compute(() => store());
 
-  it('should return true if there are changed computed nodes', () => {
-    const node1 = { isChanged: () => true } as any;
-    const node2 = { isChanged: () => false } as any;
-    expect(
-      isComputedNodesChanged({
-        node: node1,
-        next: { node: node2 },
-      }),
-    ).toBe(true);
+    syncEffect(computed, (v) => history1.push(v));
+    syncEffect(computed, (v) => history2.push(v));
+    syncEffect(computed, (v) => history3.push(v));
+
+    store.set(2);
+    store.set(3);
+
+    expect(history1).toEqual([1, 2, 3]);
+    expect(history2).toEqual([1, 2, 3]);
+    expect(history3).toEqual([1, 2, 3]); // Failed with [1]
   });
 });

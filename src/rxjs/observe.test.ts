@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { atom, compute, signal } from '../core';
+import { atom, compute, effect, signal } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { observe } from './observe';
@@ -201,5 +201,28 @@ describe('observe()', () => {
     source(2);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenLastCalledWith(2);
+  });
+
+  test('Race in observe() and effect()', async () => {
+    const history1: number[] = [];
+    const history2: number[] = [];
+
+    const store = atom(1);
+    const computed = compute(() => store());
+    const observable = observe(computed);
+
+    observable.subscribe((value) => history1.push(value));
+    effect(computed, (v) => history2.push(v));
+
+    await flushMicrotasks();
+
+    store.set(2);
+    await flushMicrotasks();
+
+    store.set(3);
+    await flushMicrotasks();
+
+    expect(history1).toEqual([1, 2, 3]);
+    expect(history2).toEqual([1, 2, 3]);
   });
 });

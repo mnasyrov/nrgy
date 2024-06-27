@@ -1,5 +1,16 @@
+import { nextSafeInteger } from './utils/nextSafeInteger';
+
 export type AnyObject = Record<string, any>;
 export type AnyFunction = (...args: any[]) => any;
+
+let EFFECT_ID: number = 0;
+
+/**
+ * @internal
+ */
+export function generateEffectId(): number {
+  return (EFFECT_ID = nextSafeInteger(EFFECT_ID));
+}
 
 /**
  * Symbol used to indicate that an object is an Atom
@@ -96,6 +107,11 @@ export type AtomNode<T> = ReactiveNode &
     name?: string;
 
     /**
+     * The version of the cached value
+     */
+    version: number;
+
+    /**
      * Returns the current value
      */
     get: () => T;
@@ -110,16 +126,6 @@ export type ComputedNode<T> = AtomNode<T> &
      * The clock of the last computation
      */
     clock: number | undefined;
-
-    /**
-     * The version of the cached value
-     */
-    version: number;
-
-    /**
-     * Returns true if the value has changed
-     */
-    isChanged: () => boolean;
   }>;
 
 export type AtomEffectNode = ReactiveNode &
@@ -174,11 +180,6 @@ export type AtomEffectNode = ReactiveNode &
      * Notify the effect that it must be destroyed
      */
     notifyDestroy: (atomId: number) => void;
-
-    /**
-     * Register a computed node as a dependency
-     */
-    addDependency: (node: ComputedNode<any>) => void;
   }>;
 
 export type SignalNode<T> = ReactiveNode &

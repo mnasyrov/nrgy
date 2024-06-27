@@ -560,12 +560,6 @@ describe('ComputedImpl()', () => {
     // Case 1: recalculation is triggered by result.isChanged()
     expect(result.version).toBe(0);
 
-    expect(result.isChanged()).toBe(true);
-    expect(result.version).toBe(1);
-
-    expect(result.isChanged()).toBe(true);
-    expect(result.version).toBe(1);
-
     expect(result.get()).toBe('a');
     expect(result.version).toBe(1);
 
@@ -574,9 +568,6 @@ describe('ComputedImpl()', () => {
     expect(result.version).toBe(1);
 
     expect(result.get()).toBe('b');
-    expect(result.version).toBe(2);
-
-    expect(result.isChanged()).toBe(true);
     expect(result.version).toBe(2);
 
     expect(result.get()).toBe('b');
@@ -589,13 +580,7 @@ describe('ComputedImpl()', () => {
     other.set('something 2');
     expect(result.version).toBe(2);
 
-    expect(result.isChanged()).toBe(false);
-    expect(result.version).toBe(2);
-
     expect(result.get()).toBe('b');
-    expect(result.version).toBe(2);
-
-    expect(result.isChanged()).toBe(false);
     expect(result.version).toBe(2);
   });
 

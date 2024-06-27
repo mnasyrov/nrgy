@@ -1,4 +1,5 @@
-import { Atom, AtomEffectNode, ComputedNode } from './common';
+import { getAtomNode } from './atom';
+import { Atom, AtomEffectNode, generateEffectId } from './common';
 import { EffectAction, EffectContext } from './effectTypes';
 import { ENERGY_RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
@@ -10,7 +11,6 @@ import { ListItem, removeFromList } from './utils/list';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
 type AtomListItem = ListItem<{ atomId: number }>;
-type ComputedNodeListItem = ListItem<{ node: ComputedNode<any> }>;
 
 /**
  * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
@@ -20,10 +20,13 @@ type ComputedNodeListItem = ListItem<{ node: ComputedNode<any> }>;
  * scheduling operation to coordinate calling `AtomEffect.run()`.
  */
 export class AtomEffect<T, R> implements AtomEffectNode {
+  readonly id = generateEffectId();
   readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
 
   /** Monotonically increasing version of the effect */
   clock = 0;
+
+  private lastValueVersion: number | undefined;
 
   /** Whether the effect needs to be re-run */
   dirty = false;
@@ -53,7 +56,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  private seenComputedNodes: undefined | ComputedNodeListItem;
   referredAtomIds: undefined | AtomListItem;
 
   constructor(
@@ -78,7 +80,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.scheduler = undefined;
     this.source = undefined;
     this.action = undefined;
-    this.seenComputedNodes = undefined;
     this.referredAtomIds = undefined;
 
     this.actionScope?.destroy();
@@ -92,8 +93,19 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     destroySignal(this.onDestroy);
   }
 
+  hasReferredAtom(atomId: number): boolean {
+    for (let node = this.referredAtomIds; node; node = node.next) {
+      if (node.atomId === atomId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   addReferredAtom(atomId: number) {
-    this.referredAtomIds = { atomId, next: this.referredAtomIds };
+    if (!this.hasReferredAtom(atomId)) {
+      this.referredAtomIds = { atomId, next: this.referredAtomIds };
+    }
   }
 
   removeReferredAtom(atomId: number): void {
@@ -150,10 +162,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     }
   }
 
-  addDependency(node: ComputedNode<any>): void {
-    this.seenComputedNodes = { node, next: this.seenComputedNodes };
-  }
-
   /**
    * Execute the reactive expression in the context of this `AtomEffect`.
    *
@@ -173,17 +181,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 
     const prevEffect = ENERGY_RUNTIME.setCurrentEffect(this);
 
-    const isChanged =
-      !this.seenComputedNodes || isComputedNodesChanged(this.seenComputedNodes);
-
-    if (!isChanged) {
-      ENERGY_RUNTIME.setCurrentEffect(prevEffect);
-
-      return;
-    }
-
-    this.seenComputedNodes = undefined;
-
     let errorRef: undefined | { error: unknown };
     // Unfolding `tracked()` and `untracked()` for better performance
     const prevTracked = ENERGY_RUNTIME.tracked;
@@ -193,6 +190,13 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       const value = this.source();
       ENERGY_RUNTIME.tracked = prevTracked;
 
+      const node = getAtomNode(this.source);
+      if (this.lastValueVersion === node.version) {
+        // Value is not changed
+        return;
+      }
+      this.lastValueVersion = node.version;
+
       this.actionScope?.destroy();
       result = this.action(value, this.getContext());
 
@@ -200,7 +204,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
         this.onResult(result);
       }
     } catch (error) {
-      this.seenComputedNodes = undefined;
       ENERGY_RUNTIME.tracked = prevTracked;
       errorRef = { error };
     } finally {
@@ -236,25 +239,4 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 
     return this.actionContext;
   }
-}
-
-/**
- * Checks if the computed nodes have changed
- */
-export function isComputedNodesChanged(
-  list: undefined | ComputedNodeListItem,
-): boolean {
-  type List = typeof list;
-
-  if (!list) {
-    return true;
-  }
-
-  for (let item: List = list; item; item = item.next) {
-    if (item.node.isChanged()) {
-      return true;
-    }
-  }
-
-  return false;
 }
