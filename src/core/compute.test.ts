@@ -626,7 +626,8 @@ describe('Tracked context in the computed expression with implicit dependencies'
       return value;
     });
 
-    expect(() => c()).toThrow(new AtomUpdateError('b'));
+    // It is not possible to detect explicit invocation of ComputedNode.get();
+    expect(() => c()).not.toThrow(new AtomUpdateError('b'));
 
     const fx = effect(c, () => {});
 
@@ -634,11 +635,11 @@ describe('Tracked context in the computed expression with implicit dependencies'
     effect(fx.onError, errorCallback);
 
     await flushMicrotasks();
-    expect(b()).toBe(0);
+    expect(b()).toBe(1);
 
     a.set(2);
     await flushMicrotasks();
-    expect(b()).toBe(0);
+    expect(b()).toBe(1);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
     expect(errorCallback).toHaveBeenNthCalledWith(

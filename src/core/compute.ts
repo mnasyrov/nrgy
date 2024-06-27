@@ -136,17 +136,11 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     // Switching to the tracked mode
     // Unfolding `tracked()` for better performance
 
-    const prevTracked = ENERGY_RUNTIME.tracked;
     try {
-      ENERGY_RUNTIME.tracked = true;
-
       newValue = this.computation();
     } catch (err) {
       newValue = ERRORED;
       this.error = err;
-    } finally {
-      // Switching back to the non-tracked mode
-      ENERGY_RUNTIME.tracked = prevTracked;
     }
 
     // As we're re-running the computation, update our dependent tracking version number.
