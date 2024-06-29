@@ -35,7 +35,7 @@ export type { EffectOptions } from './effect';
 export { effect, syncEffect } from './effect';
 
 export { runEffects } from './runtime';
-export { batchUpdate } from './batchUpdate';
+export { batch } from './batch';
 
 export type { TaskScheduler } from './schedulers';
 

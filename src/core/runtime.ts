@@ -11,7 +11,7 @@ import { nextSafeInteger } from './utils/nextSafeInteger';
 export class EnergyRuntime {
   private currentEffect: AtomEffectNode | undefined = undefined;
 
-  private batchUpdateLock: number = 0;
+  batchLock: number = 0;
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
@@ -83,27 +83,20 @@ export class EnergyRuntime {
     }
   }
 
-  /**
-   * Returns the current batch update lock
-   */
-  getBatchUpdateLock(): number {
-    return this.batchUpdateLock;
-  }
-
-  batchUpdate(action: () => any): void {
+  batch(action: () => any): void {
     try {
-      this.batchUpdateLock++;
+      this.batchLock++;
 
-      if (this.batchUpdateLock === 1) {
+      if (this.batchLock === 1) {
         this.syncScheduler.pause();
         this.asyncScheduler.pause();
       }
 
       action();
     } finally {
-      this.batchUpdateLock--;
+      this.batchLock--;
 
-      if (this.batchUpdateLock === 0) {
+      if (this.batchLock === 0) {
         this.syncScheduler.resume();
         this.asyncScheduler.resume();
       }
@@ -112,6 +105,8 @@ export class EnergyRuntime {
 }
 
 /**
+ * @internal
+ *
  * The energy runtime
  */
 export const ENERGY_RUNTIME = new EnergyRuntime();
@@ -121,22 +116,4 @@ export const ENERGY_RUNTIME = new EnergyRuntime();
  */
 export function runEffects(): void {
   ENERGY_RUNTIME.asyncScheduler.execute();
-}
-
-/**
- * @internal
- *
- * Run a function in a tracked context
- */
-export function tracked<T>(reactiveReadsFn: () => T): T {
-  return ENERGY_RUNTIME.runAsTracked(reactiveReadsFn);
-}
-
-/**
- * @internal
- *
- * Run a function in an untracked context
- */
-export function untracked<T>(nonReactiveReadsFn: () => T): T {
-  return ENERGY_RUNTIME.runAsUntracked(nonReactiveReadsFn);
 }

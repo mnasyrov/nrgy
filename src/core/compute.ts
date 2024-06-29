@@ -133,9 +133,6 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
     let newValue: T;
 
-    // Switching to the tracked mode
-    // Unfolding `tracked()` for better performance
-
     try {
       newValue = this.computation();
     } catch (err) {

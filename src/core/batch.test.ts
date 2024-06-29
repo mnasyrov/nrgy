@@ -2,35 +2,35 @@ import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { atom } from './atoms/writableAtom';
-import { batchUpdate } from './batchUpdate';
+import { batch } from './batch';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { ENERGY_RUNTIME } from './runtime';
 import { signal } from './signal';
 
-describe('batchUpdate()', () => {
+describe('batch()', () => {
   it('should call the specified action', () => {
     const callback = jest.fn();
-    batchUpdate(callback);
+    batch(callback);
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it('should handle inner batch updates correctly', () => {
     const locks = [];
 
-    locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+    locks.push(ENERGY_RUNTIME.batchLock);
 
-    batchUpdate(() => {
-      locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+    batch(() => {
+      locks.push(ENERGY_RUNTIME.batchLock);
 
-      batchUpdate(() => {
-        locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+      batch(() => {
+        locks.push(ENERGY_RUNTIME.batchLock);
       });
 
-      locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+      locks.push(ENERGY_RUNTIME.batchLock);
     });
 
-    locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+    locks.push(ENERGY_RUNTIME.batchLock);
 
     expect(locks).toEqual([0, 1, 2, 1, 0]);
   });
@@ -38,22 +38,22 @@ describe('batchUpdate()', () => {
   it('should release lock on errors correctly', () => {
     const locks = [];
 
-    locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+    locks.push(ENERGY_RUNTIME.batchLock);
 
     expect(() => {
-      batchUpdate(() => {
-        locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+      batch(() => {
+        locks.push(ENERGY_RUNTIME.batchLock);
 
-        batchUpdate(() => {
-          locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+        batch(() => {
+          locks.push(ENERGY_RUNTIME.batchLock);
           throw new Error();
         });
 
-        locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+        locks.push(ENERGY_RUNTIME.batchLock);
       });
     }).toThrowError();
 
-    locks.push(ENERGY_RUNTIME.getBatchUpdateLock());
+    locks.push(ENERGY_RUNTIME.batchLock);
 
     expect(locks).toEqual([0, 1, 2, 0]);
   });
@@ -69,7 +69,7 @@ describe('batchUpdate()', () => {
     expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
 
     callback.mockClear();
-    batchUpdate(() => {
+    batch(() => {
       s1.set('Hello');
       s2.set('world!');
     });
@@ -92,7 +92,7 @@ describe('batchUpdate()', () => {
     expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
 
     callback.mockClear();
-    batchUpdate(() => {
+    batch(() => {
       s1.set('Hello');
       s2.set('world!');
     });
@@ -110,7 +110,7 @@ describe('batchUpdate()', () => {
 
     syncEffect(signal1, callback);
 
-    batchUpdate(() => {
+    batch(() => {
       signal1(1);
       expect(callback).toHaveBeenCalledTimes(0);
 
@@ -133,7 +133,7 @@ describe('batchUpdate()', () => {
 
     effect(signal1, callback);
 
-    batchUpdate(() => {
+    batch(() => {
       signal1(1);
       signal1(2);
       signal1(3);
@@ -145,5 +145,19 @@ describe('batchUpdate()', () => {
     expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
     expect(callback).toHaveBeenCalledWith(2, expectEffectContext());
     expect(callback).toHaveBeenCalledWith(3, expectEffectContext());
+  });
+
+  it('should allow to create syncEffect and subscribe on its onResult signal', () => {
+    const history: number[] = [];
+    const source = atom(1);
+
+    batch(() => {
+      const fx = syncEffect(source, (v) => v + 10);
+      syncEffect(fx.onResult, (r) => history.push(r));
+    });
+
+    source.set(2);
+
+    expect(history).toEqual([11, 12]);
   });
 });

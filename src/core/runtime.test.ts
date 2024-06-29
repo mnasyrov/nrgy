@@ -1,10 +1,4 @@
-import {
-  ENERGY_RUNTIME,
-  EnergyRuntime,
-  runEffects,
-  tracked,
-  untracked,
-} from './runtime';
+import { ENERGY_RUNTIME, EnergyRuntime, runEffects } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
   it('should be defined', () => {
@@ -80,44 +74,6 @@ describe('EnergyRuntime', () => {
       });
 
       expect(runtime.tracked).toBe(true);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(false);
-      expect(result).toEqual('bar');
-    });
-  });
-});
-
-describe('tracked()', () => {
-  it('should act the same as `EnergyRuntime.runAsTracked`', () => {
-    expect(ENERGY_RUNTIME.tracked).toBe(false);
-
-    const spy = jest.fn();
-    const result = tracked(() => {
-      spy(ENERGY_RUNTIME.tracked);
-      return 'bar';
-    });
-
-    expect(ENERGY_RUNTIME.tracked).toBe(false);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(true);
-    expect(result).toEqual('bar');
-  });
-});
-
-describe('untracked()', () => {
-  it('should act the same as `EnergyRuntime.runAsUntracked`', () => {
-    ENERGY_RUNTIME.runAsTracked(() => {
-      expect(ENERGY_RUNTIME.tracked).toBe(true);
-
-      const spy = jest.fn();
-      const result = untracked(() => {
-        spy(ENERGY_RUNTIME.tracked);
-        return 'bar';
-      });
-
-      expect(ENERGY_RUNTIME.tracked).toBe(true);
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(false);
