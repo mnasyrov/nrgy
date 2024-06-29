@@ -3,7 +3,7 @@ import { AtomEffect } from './atomEffect';
 import { AtomList, combineAtoms } from './atomUtils';
 import { Atom, Signal } from './common';
 import { EffectAction, EffectSubscription } from './effectTypes';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
 
@@ -55,13 +55,13 @@ export const effect: EffectFn = <T, R>(
   options?: EffectOptions,
 ) => {
   let scheduler = options?.sync
-    ? ENERGY_RUNTIME.syncScheduler
-    : ENERGY_RUNTIME.asyncScheduler;
+    ? RUNTIME.syncScheduler
+    : RUNTIME.asyncScheduler;
 
   if (isSignal<T>(source)) {
     const node = getSignalNode<T>(source);
     if (node.sync) {
-      scheduler = ENERGY_RUNTIME.syncScheduler;
+      scheduler = RUNTIME.syncScheduler;
     }
 
     const signalEffect = new SignalEffect<T, R>(scheduler, action);

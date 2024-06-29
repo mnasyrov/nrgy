@@ -9,7 +9,7 @@ import {
   signal,
 } from '../core';
 import { createAtomFromFunction, getAtomNode } from '../core/atom';
-import { ENERGY_RUNTIME } from '../core/runtime';
+import { RUNTIME } from '../core/runtime';
 import { observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
@@ -30,7 +30,7 @@ export type Query<T> = Readonly<{
  */
 export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
-    get: () => ENERGY_RUNTIME.runAsUntracked(() => source()),
+    get: () => RUNTIME.untracked(() => source()),
     value$: observe(source),
   };
 }

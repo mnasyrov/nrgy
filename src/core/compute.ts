@@ -1,7 +1,7 @@
 import { createAtomFromFunction, generateAtomId } from './atom';
 import { Atom, AtomEffectNode, ComputedNode, ValueEqualityFn } from './common';
 import { defaultEquals } from './commonUtils';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { nextSafeInteger } from './utils/nextSafeInteger';
 
 /**
@@ -114,10 +114,10 @@ export class ComputedImpl<T> implements ComputedNode<T> {
       throw new Error('Detected cycle in computations');
     }
 
-    const activeEffect = ENERGY_RUNTIME.getCurrentEffect();
+    const activeEffect = RUNTIME.currentEffect;
 
     const isStale =
-      this.clock !== ENERGY_RUNTIME.clock ||
+      this.clock !== RUNTIME.clock ||
       this.value === UNSET ||
       (activeEffect && this.lastEffectRef !== activeEffect.ref);
 
@@ -141,7 +141,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     }
 
     // As we're re-running the computation, update our dependent tracking version number.
-    this.clock = ENERGY_RUNTIME.clock;
+    this.clock = RUNTIME.clock;
 
     if (
       oldValue === UNSET ||

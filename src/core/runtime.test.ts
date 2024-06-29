@@ -1,8 +1,8 @@
-import { ENERGY_RUNTIME, EnergyRuntime, runEffects } from './runtime';
+import { runEffects, Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
   it('should be defined', () => {
-    expect(ENERGY_RUNTIME).toBeDefined();
+    expect(RUNTIME).toBeDefined();
   });
 });
 
@@ -10,7 +10,7 @@ describe('runEffects()', () => {
   it('should runs all effects which are scheduled for the next microtask', () => {
     const spy = jest.fn();
 
-    ENERGY_RUNTIME.asyncScheduler.schedule(() => spy());
+    RUNTIME.asyncScheduler.schedule(() => spy());
     expect(spy).toHaveBeenCalledTimes(0);
 
     runEffects();
@@ -21,7 +21,7 @@ describe('runEffects()', () => {
 describe('EnergyRuntime', () => {
   describe('updateAtomClock()', () => {
     it('should update the clock of the next atom', () => {
-      const runtime = new EnergyRuntime();
+      const runtime = new Runtime();
       expect(runtime.clock).toBe(0);
 
       runtime.updateAtomClock();
@@ -32,43 +32,13 @@ describe('EnergyRuntime', () => {
     });
   });
 
-  describe('getCurrentEffect()', () => {
-    it('should return the current effect', () => {
-      const runtime = new EnergyRuntime();
-      expect(runtime.getCurrentEffect()).toBeUndefined();
-
-      runtime.setCurrentEffect({} as any);
-      expect(runtime.getCurrentEffect()).toEqual({} as any);
-    });
-  });
-
-  describe('runAsTracked()', () => {
-    it('should run an action as tracked', () => {
-      const runtime = new EnergyRuntime();
-
-      expect(runtime.tracked).toBe(false);
-
-      const spy = jest.fn();
-      const result = runtime.runAsTracked(() => {
-        spy(runtime.tracked);
-        return 'bar';
-      });
-
-      expect(runtime.tracked).toBe(false);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(true);
-      expect(result).toEqual('bar');
-    });
-  });
-
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
-      const runtime = new EnergyRuntime();
+      const runtime = new Runtime();
       runtime.tracked = true;
 
       const spy = jest.fn();
-      const result = runtime.runAsUntracked(() => {
+      const result = runtime.untracked(() => {
         spy(runtime.tracked);
         return 'bar';
       });

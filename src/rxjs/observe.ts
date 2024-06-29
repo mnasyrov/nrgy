@@ -8,7 +8,7 @@ import {
   Signal,
   syncEffect,
 } from '../core';
-import { ENERGY_RUNTIME } from '../core/runtime';
+import { RUNTIME } from '../core/runtime';
 
 /**
  * Options for `observe`
@@ -68,11 +68,11 @@ export function observe<T>(
     const effectFn = options?.sync ? scope.syncEffect : scope.effect;
 
     const fx = effectFn(source as Atom<T>, (value) => {
-      ENERGY_RUNTIME.runAsUntracked(() => subscriber.next(value));
+      RUNTIME.untracked(() => subscriber.next(value));
     });
 
     syncEffect(fx.onError, (error) =>
-      ENERGY_RUNTIME.runAsUntracked(() => subscriber.error(error)),
+      RUNTIME.untracked(() => subscriber.error(error)),
     );
 
     syncEffect(fx.onDestroy, () => scope.destroy());

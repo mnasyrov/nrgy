@@ -1,7 +1,7 @@
 import { getAtomNode } from './atom';
 import { Atom, AtomEffectNode, generateEffectId } from './common';
 import { EffectAction, EffectContext } from './effectTypes';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { BaseScope } from './scopeBase';
 import { destroySignal, signal } from './signal';
@@ -179,16 +179,17 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    const prevEffect = ENERGY_RUNTIME.setCurrentEffect(this);
+    const prevEffect = RUNTIME.currentEffect;
+    RUNTIME.currentEffect = this;
 
     let errorRef: undefined | { error: unknown };
     // Unfolding `tracked()` and `untracked()` for better performance
-    const prevTracked = ENERGY_RUNTIME.tracked;
+    const prevTracked = RUNTIME.tracked;
     let result;
     try {
-      ENERGY_RUNTIME.tracked = true;
+      RUNTIME.tracked = true;
       const value = this.source();
-      ENERGY_RUNTIME.tracked = prevTracked;
+      RUNTIME.tracked = prevTracked;
 
       const node = getAtomNode(this.source);
       if (this.lastValueVersion === node.version) {
@@ -204,10 +205,10 @@ export class AtomEffect<T, R> implements AtomEffectNode {
         this.onResult(result);
       }
     } catch (error) {
-      ENERGY_RUNTIME.tracked = prevTracked;
+      RUNTIME.tracked = prevTracked;
       errorRef = { error };
     } finally {
-      ENERGY_RUNTIME.setCurrentEffect(prevEffect);
+      RUNTIME.currentEffect = prevEffect;
 
       if (errorRef) {
         this.onError(errorRef.error);

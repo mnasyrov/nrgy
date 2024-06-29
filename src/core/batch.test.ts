@@ -5,7 +5,7 @@ import { atom } from './atoms/writableAtom';
 import { batch } from './batch';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { signal } from './signal';
 
 describe('batch()', () => {
@@ -18,19 +18,19 @@ describe('batch()', () => {
   it('should handle inner batch updates correctly', () => {
     const locks = [];
 
-    locks.push(ENERGY_RUNTIME.batchLock);
+    locks.push(RUNTIME.batchLock);
 
     batch(() => {
-      locks.push(ENERGY_RUNTIME.batchLock);
+      locks.push(RUNTIME.batchLock);
 
       batch(() => {
-        locks.push(ENERGY_RUNTIME.batchLock);
+        locks.push(RUNTIME.batchLock);
       });
 
-      locks.push(ENERGY_RUNTIME.batchLock);
+      locks.push(RUNTIME.batchLock);
     });
 
-    locks.push(ENERGY_RUNTIME.batchLock);
+    locks.push(RUNTIME.batchLock);
 
     expect(locks).toEqual([0, 1, 2, 1, 0]);
   });
@@ -38,22 +38,22 @@ describe('batch()', () => {
   it('should release lock on errors correctly', () => {
     const locks = [];
 
-    locks.push(ENERGY_RUNTIME.batchLock);
+    locks.push(RUNTIME.batchLock);
 
     expect(() => {
       batch(() => {
-        locks.push(ENERGY_RUNTIME.batchLock);
+        locks.push(RUNTIME.batchLock);
 
         batch(() => {
-          locks.push(ENERGY_RUNTIME.batchLock);
+          locks.push(RUNTIME.batchLock);
           throw new Error();
         });
 
-        locks.push(ENERGY_RUNTIME.batchLock);
+        locks.push(RUNTIME.batchLock);
       });
     }).toThrowError();
 
-    locks.push(ENERGY_RUNTIME.batchLock);
+    locks.push(RUNTIME.batchLock);
 
     expect(locks).toEqual([0, 1, 2, 0]);
   });

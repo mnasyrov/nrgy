@@ -8,12 +8,14 @@ import { nextSafeInteger } from './utils/nextSafeInteger';
 /**
  * @internal
  */
-export class EnergyRuntime {
-  private currentEffect: AtomEffectNode | undefined = undefined;
-
-  batchLock: number = 0;
+export class Runtime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
+
+  currentEffect: AtomEffectNode | undefined = undefined;
+
+  /** @readonly */
+  batchLock: number = 0;
 
   /**
    * Marks the current computation context as tracked
@@ -34,56 +36,24 @@ export class EnergyRuntime {
   }
 
   /**
-   * Returns the current effect node
-   */
-  getCurrentEffect(): AtomEffectNode | undefined {
-    return this.currentEffect;
-  }
-
-  /**
-   * Sets the current effect node and tracks effects until the current effect frame is not empty
-   */
-  setCurrentEffect(
-    effect: AtomEffectNode | undefined,
-  ): AtomEffectNode | undefined {
-    const prev = this.currentEffect;
-    this.currentEffect = effect;
-
-    return prev;
-  }
-
-  /**
-   * Run a function in a tracked context
-   */
-  runAsTracked<T>(reactiveReadsFn: () => T): T {
-    const prevTracked = this.tracked;
-
-    try {
-      this.tracked = true;
-
-      return reactiveReadsFn();
-    } finally {
-      this.tracked = prevTracked;
-    }
-  }
-
-  /**
    * Run a function in an untracked context
    */
-  runAsUntracked<T>(nonReactiveReadsFn: () => T): T {
-    const prevEffect = this.setCurrentEffect(undefined);
+  untracked<T>(fn: () => T): T {
+    const prevEffect = this.currentEffect;
+    this.currentEffect = undefined;
+
     const prevTracked = this.tracked;
     this.tracked = false;
 
     try {
-      return nonReactiveReadsFn();
+      return fn();
     } finally {
       this.tracked = prevTracked;
-      this.setCurrentEffect(prevEffect);
+      this.currentEffect = prevEffect;
     }
   }
 
-  batch(action: () => any): void {
+  batch<T>(fn: () => T): T {
     try {
       this.batchLock++;
 
@@ -92,7 +62,7 @@ export class EnergyRuntime {
         this.asyncScheduler.pause();
       }
 
-      action();
+      return fn();
     } finally {
       this.batchLock--;
 
@@ -109,11 +79,11 @@ export class EnergyRuntime {
  *
  * The energy runtime
  */
-export const ENERGY_RUNTIME = new EnergyRuntime();
+export const RUNTIME = new Runtime();
 
 /**
  * Runs all effects which are scheduled for the next microtask
  */
 export function runEffects(): void {
-  ENERGY_RUNTIME.asyncScheduler.execute();
+  RUNTIME.asyncScheduler.execute();
 }

@@ -8,7 +8,7 @@ import {
 import { Atom, AtomEffectNode, AtomNode, ValueEqualityFn } from '../common';
 import { defaultEquals } from '../commonUtils';
 import { syncEffect } from '../effect';
-import { ENERGY_RUNTIME } from '../runtime';
+import { RUNTIME } from '../runtime';
 import { destroySignal, signal } from '../signal';
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 
@@ -129,7 +129,7 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Checks if the atom can be updated in the current context
    */
   protected producerBeforeChange(): void {
-    if (ENERGY_RUNTIME.tracked) {
+    if (RUNTIME.tracked) {
       throw new AtomUpdateError(this.name);
     }
   }
@@ -138,7 +138,7 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Notify all consumers of this producer that its value is changed.
    */
   protected producerChanged(): void {
-    ENERGY_RUNTIME.updateAtomClock();
+    RUNTIME.updateAtomClock();
     this.version = nextSafeInteger(this.version);
 
     for (const [effectRef, atEffectClock] of this.consumerEffects) {
@@ -174,11 +174,11 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Mark that this producer node has been accessed in the current reactive context.
    */
   protected producerAccessed(): void {
-    if (!ENERGY_RUNTIME.tracked) {
+    if (!RUNTIME.tracked) {
       return;
     }
 
-    const effect = ENERGY_RUNTIME.getCurrentEffect();
+    const effect = RUNTIME.currentEffect;
     if (effect && !effect.isDestroyed) {
       this.consumerEffects.set(effect.ref, effect.clock);
       effect.notifyAccess(this.id);

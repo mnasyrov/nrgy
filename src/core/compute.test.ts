@@ -11,7 +11,7 @@ import { createAtomSubject } from './atomSubject';
 import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { signal } from './signal';
 import { signalChanges } from './signalUtils';
 
@@ -467,10 +467,10 @@ describe('compute()', () => {
     await flushMicrotasks();
 
     // Expect that the runtime in empty
-    expect(ENERGY_RUNTIME.getCurrentEffect()).toBe(undefined);
+    expect(RUNTIME.currentEffect).toBe(undefined);
     // expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
-    expect(ENERGY_RUNTIME.asyncScheduler.isEmpty()).toBe(true);
-    expect(ENERGY_RUNTIME.syncScheduler.isEmpty()).toBe(true);
+    expect(RUNTIME.asyncScheduler.isEmpty()).toBe(true);
+    expect(RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
     const store = atom({ a: 0, result: { value: 0 } });
 

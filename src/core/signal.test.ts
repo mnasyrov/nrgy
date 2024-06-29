@@ -2,7 +2,7 @@ import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { effect, syncEffect } from './effect';
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import {
   destroySignal,
   getSignalName,
@@ -80,10 +80,7 @@ describe('signal()', () => {
     const a = signal<number>();
     const node = getSignalNode(a);
 
-    const signalEffect = new SignalEffect(
-      ENERGY_RUNTIME.syncScheduler,
-      callback,
-    );
+    const signalEffect = new SignalEffect(RUNTIME.syncScheduler, callback);
     node.subscribe(signalEffect.ref);
 
     node.emit(10);
@@ -103,10 +100,7 @@ describe('signal()', () => {
     const a = signal<number>({ onUnsubscribe });
     const node = getSignalNode(a);
 
-    const signalEffect = new SignalEffect(
-      ENERGY_RUNTIME.syncScheduler,
-      () => {},
-    );
+    const signalEffect = new SignalEffect(RUNTIME.syncScheduler, () => {});
     node.subscribe(signalEffect.ref);
 
     node.emit(10);

@@ -1,4 +1,4 @@
-import { ENERGY_RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 
 /**
  * Run a function in a batch update context.
@@ -6,5 +6,5 @@ import { ENERGY_RUNTIME } from './runtime';
  * It will defer all effect notifications until the function is finished.
  */
 export function batch(action: () => any): void {
-  ENERGY_RUNTIME.batch(action);
+  RUNTIME.batch(action);
 }
