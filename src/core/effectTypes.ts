@@ -1,4 +1,5 @@
-import { Signal } from './common';
+import { AtomList } from './atomTypes';
+import { Atom, Signal } from './common';
 
 /**
  * A reactive effect, which can be manually destroyed.
@@ -33,3 +34,39 @@ export type EffectAction<T, R> = (
   value: T,
   context: EffectContext,
 ) => R | Promise<R>;
+
+/**
+ * Options for an effect
+ */
+export type EffectOptions = {
+  sync?: boolean;
+};
+
+/**
+ * An effect function
+ */
+export interface EffectFn {
+  /**
+   * Creates a new effect for a signal
+   */ <T, R>(
+    source: Signal<T>,
+    action: EffectAction<T, R>,
+    options?: EffectOptions,
+  ): EffectSubscription<R>;
+
+  /**
+   * Creates a new effect for an atom
+   */ <T, R>(
+    source: Atom<T>,
+    action: EffectAction<T, R>,
+    options?: EffectOptions,
+  ): EffectSubscription<R>;
+
+  /**
+   * Creates a new effect for a list of atoms
+   */ <TValues extends unknown[], R>(
+    sources: AtomList<TValues>,
+    action: EffectAction<TValues, R>,
+    options?: EffectOptions,
+  ): EffectSubscription<R>;
+}

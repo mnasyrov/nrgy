@@ -1,50 +1,12 @@
 import { isAtom } from './atom';
 import { AtomEffect } from './atomEffect';
-import { AtomList, combineAtoms } from './atomUtils';
+import { AtomList } from './atomTypes';
+import { combineAtoms } from './atomUtils';
 import { Atom, Signal } from './common';
-import { EffectAction, EffectSubscription } from './effectTypes';
+import { EffectAction, EffectFn, EffectOptions } from './effectTypes';
 import { RUNTIME } from './runtime';
 import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
-
-/**
- * Options for an effect
- */
-export type EffectOptions = {
-  sync?: boolean;
-};
-
-/**
- * An effect function
- */
-export interface EffectFn {
-  /**
-   * Creates a new effect for a signal
-   */
-  <T, R>(
-    source: Signal<T>,
-    action: EffectAction<T, R>,
-    options?: EffectOptions,
-  ): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for an atom
-   */
-  <T, R>(
-    source: Atom<T>,
-    action: EffectAction<T, R>,
-    options?: EffectOptions,
-  ): EffectSubscription<R>;
-
-  /**
-   * Creates a new effect for a list of atoms
-   */
-  <TValues extends unknown[], R>(
-    sources: AtomList<TValues>,
-    action: EffectAction<TValues, R>,
-    options?: EffectOptions,
-  ): EffectSubscription<R>;
-}
 
 /**
  * Creates a new effect

@@ -8,29 +8,38 @@ type TeardownList = ListItem<{ teardown: ScopeTeardown }>;
 /**
  * @internal
  */
-export class BaseScope {
+export class BaseScope implements Destroyable {
   private subscriptions: undefined | TeardownList;
 
+  /**
+   * Registers a callback or unsubscribable resource which will be called when `destroy()` is called
+   */
   onDestroy(teardown: ScopeTeardown): void {
     this.subscriptions = { teardown, next: this.subscriptions };
   }
 
+  /**
+   * Registers an unsubscribable resource which will be called when `destroy()` is called
+   */
   add<T extends Unsubscribable | Destroyable>(resource: T): T {
     this.subscriptions = { teardown: resource, next: this.subscriptions };
     return resource;
   }
 
+  /**
+   * Destroys the scope
+   */
   destroy(): void {
     if (!this.subscriptions) {
       return;
     }
 
     let errors: unknown[] | undefined;
-    let item: undefined | TeardownList = this.subscriptions;
+    let list: undefined | TeardownList = this.subscriptions;
     this.subscriptions = undefined;
 
-    while (item) {
-      const { teardown } = item;
+    while (list) {
+      const { teardown } = list;
 
       try {
         if ('unsubscribe' in teardown) {
@@ -47,7 +56,7 @@ export class BaseScope {
         errors.push(error);
       }
 
-      item = item.next;
+      list = list.next;
     }
 
     if (errors) {

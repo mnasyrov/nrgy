@@ -1,8 +1,9 @@
 import { createAtomSubject } from './atomSubject';
 import { Atom, DestroyableAtom, Signal } from './common';
-import { effect } from './effect';
-import { createScope } from './scope/createScope';
-import { isSignal, signal, SignalOptions } from './signal';
+import { effect, syncEffect } from './effect';
+import { BaseScope } from './scope/baseScope';
+import { isSignal, signal } from './signal';
+import { SignalOptions } from './signalTypes';
 
 /**
  * Returns an atom which remembers the last emitter value.
@@ -45,15 +46,15 @@ export function keepLastValue<T>(
   source: Signal<T>,
   initialValue?: T,
 ): DestroyableAtom<T> {
-  const scope = createScope();
+  const scope = new BaseScope();
 
   const subject = createAtomSubject<T>(initialValue as T, {
     onDestroy: scope.destroy,
   });
 
-  const sub = scope.syncEffect(source, subject.next);
-  scope.syncEffect(sub.onError, subject.error);
-  scope.syncEffect(sub.onDestroy, subject.destroy);
+  const sub = scope.add(syncEffect(source, subject.next));
+  scope.add(syncEffect(sub.onError, subject.error));
+  scope.add(syncEffect(sub.onDestroy, subject.destroy));
 
   return subject.asDestroyable();
 }
@@ -68,29 +69,31 @@ export function signalChanges<T>(
   source: Atom<T>,
   options?: SignalOptions<T>,
 ): Signal<T> {
-  const scope = createScope();
+  const scope = new BaseScope();
 
   if (options?.onDestroy) {
     scope.onDestroy(options.onDestroy);
   }
 
-  const s = scope.signal<T>({
+  const s = signal<T>({
     ...options,
     onDestroy: () => scope.destroy(),
   });
 
   let first = true;
 
-  scope.effect(
-    source,
-    (value) => {
-      if (first) {
-        first = false;
-      } else {
-        s(value);
-      }
-    },
-    { sync: options?.sync },
+  scope.add(
+    effect(
+      source,
+      (value) => {
+        if (first) {
+          first = false;
+        } else {
+          s(value);
+        }
+      },
+      { sync: options?.sync },
+    ),
   );
 
   return s;

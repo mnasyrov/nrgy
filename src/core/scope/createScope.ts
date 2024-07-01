@@ -1,51 +1,38 @@
 import { atom } from '../atoms/writableAtom';
 import { AnyFunction } from '../common';
-import { effect, EffectFn, syncEffect } from '../effect';
+import { effect, syncEffect } from '../effect';
 import { destroySignal, signal } from '../signal';
 
-import { Scope } from './scope';
-import { BaseScope } from './scopeBase';
-
-/**
- * `SharedScope` and `Scope` types allow to distinct which third-party code can invoke `destroy()` method.
- */
-export type SharedScope = Omit<Scope, 'destroy'>;
-
-class ScopeImpl extends BaseScope implements Scope {
-  signal<T>(...args: Parameters<typeof signal<T>>) {
-    const emitter = signal<T>(...args);
-    this.onDestroy(() => destroySignal(emitter));
-    return emitter;
-  }
-
-  atom<T>(...args: Parameters<typeof atom<T>>) {
-    return this.add(atom(...args));
-  }
-
-  effect: EffectFn = (...args: any[]) => {
-    return this.add((effect as AnyFunction)(...args));
-  };
-
-  syncEffect: EffectFn = (...args: any[]) => {
-    return this.add((syncEffect as AnyFunction)(...args));
-  };
-}
+import { BaseScope } from './baseScope';
+import { Scope } from './types';
 
 /**
  * Creates `Scope` instance.
  */
 export function createScope(): Scope {
-  const scope = new ScopeImpl();
+  const scope = new BaseScope();
 
   return {
-    destroy: scope.destroy.bind(scope),
     onDestroy: scope.onDestroy.bind(scope),
-
     add: scope.add.bind(scope),
+    destroy: scope.destroy.bind(scope),
 
-    signal: scope.signal.bind(scope),
-    atom: scope.atom.bind(scope),
-    effect: scope.effect.bind(scope),
-    syncEffect: scope.syncEffect.bind(scope),
+    signal: (...args: any[]) => {
+      const emitter = (signal as AnyFunction)(...args);
+      scope.onDestroy(() => destroySignal(emitter));
+      return emitter;
+    },
+
+    atom: (...args: any[]) => {
+      return scope.add((atom as AnyFunction)(...args));
+    },
+
+    effect: (...args: any[]) => {
+      return scope.add((effect as AnyFunction)(...args));
+    },
+
+    syncEffect: (...args: any[]) => {
+      return scope.add((syncEffect as AnyFunction)(...args));
+    },
   };
 }

@@ -1,3 +1,4 @@
+import { AtomList } from './atomTypes';
 import { Atom } from './common';
 import { compute, ComputeOptions } from './compute';
 
@@ -27,13 +28,6 @@ export function mergeAtoms<TValues extends unknown[], TResult>(
     return computation(...(values as TValues));
   }, options);
 }
-
-/**
- * Type for an array of atoms
- */
-export type AtomList<TValues extends unknown[]> = [
-  ...{ [K in keyof TValues]: Atom<TValues[K]> },
-];
 
 /**
  * Creates a new Atom which takes the latest values from source atoms

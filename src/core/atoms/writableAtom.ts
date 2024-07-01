@@ -12,6 +12,8 @@ import { RUNTIME } from '../runtime';
 import { destroySignal, signal } from '../signal';
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 
+import { AtomFn } from './types';
+
 class WritableAtomImpl<T> implements AtomNode<T> {
   readonly id: number = generateAtomId();
   readonly name?: string;
@@ -187,12 +189,12 @@ class WritableAtomImpl<T> implements AtomNode<T> {
 }
 
 /**
- * Create a `Atom` that can be set or updated directly.
+ * Factory to create a writable `Atom` that can be set or updated directly.
  */
-export function atom<T>(
+export const atom: AtomFn = <T>(
   initialValue: T,
   options?: AtomOptions<T>,
-): WritableAtom<T> {
+): WritableAtom<T> => {
   const node = new WritableAtomImpl<T>(initialValue, options);
 
   const result: WritableAtom<T> = createAtomFromFunction(
@@ -211,4 +213,4 @@ export function atom<T>(
   );
 
   return result;
-}
+};

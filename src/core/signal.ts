@@ -1,40 +1,6 @@
 import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from './common';
+import { SignalFn, SignalOptions } from './signalTypes';
 import { createWeakRef } from './utils/createWeakRef';
-
-/**
- * Options passed to the `signal` creation function.
- */
-export type SignalOptions<TEvent> = {
-  /**
-   * Signal's name
-   */
-  name?: string;
-
-  /**
-   * If true, the signal forces usage of "sync" scheduler.
-   */
-  sync?: boolean;
-
-  /**
-   * Callback is called at the same time when the signal is called
-   */
-  onEvent?: (event: TEvent) => void;
-
-  /**
-   * Callback is called when an effect is subscribed.
-   */
-  onSubscribe?: () => void;
-
-  /**
-   * Callback is called when an effect is unsubscribed.
-   */
-  onUnsubscribe?: (isEmpty: boolean) => void;
-
-  /**
-   * Callback is called when the signal is destroyed.
-   */
-  onDestroy?: () => void;
-};
 
 /**
  * Checks if the given `value` is a reactive `Signal`.
@@ -191,11 +157,16 @@ class SignalImpl<T> implements SignalNode<T> {
   }
 }
 
-export function signal<T = void>(options?: SignalOptions<T>): Signal<T> {
+/**
+ * Factory to create `Signal`
+ */
+export const signal: SignalFn = <T = void>(
+  options?: SignalOptions<T>,
+): Signal<T> => {
   const node = new SignalImpl<T>(options);
 
   const result = (value: T) => node.emit(value);
   (result as any)[SIGNAL_SYMBOL] = node;
 
   return result as Signal<T>;
-}
+};

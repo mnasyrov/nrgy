@@ -1,9 +1,9 @@
-import { createScope } from './createScope';
+import { BaseScope } from './baseScope';
 import { ScopeDestructionError } from './scopeDestructionError';
 
 describe('ScopeDestructionError', () => {
   it('should be thrown when one or more errors have occurred during the `destroy`', () => {
-    const scope = createScope();
+    const scope = new BaseScope();
 
     const teardown1 = jest.fn(() => {
       throw new Error('test error 1');
