@@ -68,11 +68,11 @@ export function observe<T>(
     const effectFn = options?.sync ? scope.syncEffect : scope.effect;
 
     const fx = effectFn(source as Atom<T>, (value) => {
-      RUNTIME.untracked(() => subscriber.next(value));
+      RUNTIME.runAsUntracked(() => subscriber.next(value));
     });
 
     syncEffect(fx.onError, (error) =>
-      RUNTIME.untracked(() => subscriber.error(error)),
+      RUNTIME.runAsUntracked(() => subscriber.error(error)),
     );
 
     syncEffect(fx.onDestroy, () => scope.destroy());

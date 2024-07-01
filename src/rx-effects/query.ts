@@ -30,7 +30,7 @@ export type Query<T> = Readonly<{
  */
 export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
-    get: () => RUNTIME.untracked(() => source()),
+    get: () => RUNTIME.runAsUntracked(() => source()),
     value$: observe(source),
   };
 }

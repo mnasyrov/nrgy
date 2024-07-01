@@ -38,7 +38,7 @@ describe('EnergyRuntime', () => {
       runtime.tracked = true;
 
       const spy = jest.fn();
-      const result = runtime.untracked(() => {
+      const result = runtime.runAsUntracked(() => {
         spy(runtime.tracked);
         return 'bar';
       });

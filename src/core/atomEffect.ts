@@ -179,17 +179,10 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    const prevEffect = RUNTIME.currentEffect;
-    RUNTIME.currentEffect = this;
-
-    let errorRef: undefined | { error: unknown };
-    // Unfolding `tracked()` and `untracked()` for better performance
-    const prevTracked = RUNTIME.tracked;
     let result;
+
     try {
-      RUNTIME.tracked = true;
-      const value = this.source();
-      RUNTIME.tracked = prevTracked;
+      const value = RUNTIME.runAsTracked(this, this.source);
 
       const node = getAtomNode(this.source);
       if (this.lastValueVersion === node.version) {
@@ -199,30 +192,18 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       this.lastValueVersion = node.version;
 
       this.actionScope?.destroy();
+
       result = this.action(value, this.getContext());
-
-      if (!isPromise(result)) {
-        this.onResult(result);
-      }
     } catch (error) {
-      RUNTIME.tracked = prevTracked;
-      errorRef = { error };
-    } finally {
-      RUNTIME.currentEffect = prevEffect;
-
-      if (errorRef) {
-        this.onError(errorRef.error);
-      }
+      this.onError(error);
     }
 
     if (isPromise(result)) {
       result
-        .then((result) => {
-          this.onResult(result);
-        })
-        .catch((error) => {
-          this.onError(error);
-        });
+        .then((value) => this.onResult(value))
+        .catch((error) => this.onError(error));
+    } else {
+      this.onResult(result as any);
     }
   }
 
