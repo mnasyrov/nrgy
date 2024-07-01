@@ -1,7 +1,7 @@
 import { createAtomSubject } from './atomSubject';
 import { Atom, DestroyableAtom, Signal } from './common';
 import { effect } from './effect';
-import { createScope } from './scope';
+import { createScope } from './scope/createScope';
 import { isSignal, signal, SignalOptions } from './signal';
 
 /**

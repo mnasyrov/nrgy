@@ -3,7 +3,7 @@ import { Atom, AtomEffectNode, generateEffectId } from './common';
 import { EffectAction, EffectContext } from './effectTypes';
 import { RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
-import { BaseScope } from './scopeBase';
+import { BaseScope } from './scope/scopeBase';
 import { destroySignal, signal } from './signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { isPromise } from './utils/isPromise';

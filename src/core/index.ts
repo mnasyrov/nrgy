@@ -39,7 +39,8 @@ export { batch } from './batch';
 
 export type { TaskScheduler } from './schedulers';
 
-export type { Scope, SharedScope } from './scope';
-export { createScope } from './scope';
-export { ScopeDestructionError } from './scopeTypes';
-export type { Destroyable, ScopeTeardown, Unsubscribable } from './scopeTypes';
+export type { SharedScope } from './scope/createScope';
+export { createScope } from './scope/createScope';
+export { ScopeDestructionError } from './scope/scopeDestructionError';
+export type { Destroyable, ScopeTeardown, Unsubscribable } from './scope/types';
+export type { Scope } from './scope/scope';

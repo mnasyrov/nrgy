@@ -1,10 +1,7 @@
-import {
-  Destroyable,
-  ScopeDestructionError,
-  ScopeTeardown,
-  Unsubscribable,
-} from './scopeTypes';
-import { ListItem } from './utils/list';
+import { ListItem } from '../utils/list';
+
+import { ScopeDestructionError } from './scopeDestructionError';
+import { Destroyable, ScopeTeardown, Unsubscribable } from './types';
 
 type TeardownList = ListItem<{ teardown: ScopeTeardown }>;
 
