@@ -1,14 +1,14 @@
 import { getAtomNode } from '../atom';
 import { Atom, AtomEffectNode, generateEffectId } from '../common';
+import { createWeakRef } from '../internals/createWeakRef';
+import { isPromise } from '../internals/isPromise';
+import { ListItem, removeFromList } from '../internals/list';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../runtime';
 import { TaskScheduler } from '../schedulers';
 import { BaseScope } from '../scope/baseScope';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';
-import { createWeakRef } from '../utils/createWeakRef';
-import { isPromise } from '../utils/isPromise';
-import { ListItem, removeFromList } from '../utils/list';
-import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import { EffectAction, EffectContext } from './types';
 

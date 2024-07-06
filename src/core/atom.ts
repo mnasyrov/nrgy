@@ -8,7 +8,7 @@ import {
   Signal,
   ValueEqualityFn,
 } from './common';
-import { nextSafeInteger } from './utils/nextSafeInteger';
+import { nextSafeInteger } from './internals/nextSafeInteger';
 
 let ATOM_ID: number = 0;
 

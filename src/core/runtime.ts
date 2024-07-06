@@ -1,9 +1,9 @@
 import { AtomEffectNode } from './common';
+import { nextSafeInteger } from './internals/nextSafeInteger';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { nextSafeInteger } from './utils/nextSafeInteger';
 
 /**
  * @internal

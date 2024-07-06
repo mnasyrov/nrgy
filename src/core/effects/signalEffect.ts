@@ -1,10 +1,10 @@
 import { SignalEffectNode } from '../common';
+import { createWeakRef } from '../internals/createWeakRef';
+import { isPromise } from '../internals/isPromise';
 import { TaskScheduler } from '../schedulers';
 import { BaseScope } from '../scope/baseScope';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';
-import { createWeakRef } from '../utils/createWeakRef';
-import { isPromise } from '../utils/isPromise';
 
 import { EffectAction, EffectContext } from './types';
 

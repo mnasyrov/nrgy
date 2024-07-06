@@ -1,4 +1,4 @@
-import { ListItem } from '../utils/list';
+import { ListItem } from '../internals/list';
 
 import { ScopeDestructionError } from './scopeDestructionError';
 import { Destroyable, ScopeTeardown, Unsubscribable } from './types';

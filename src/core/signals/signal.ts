@@ -1,5 +1,5 @@
 import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from '../common';
-import { createWeakRef } from '../utils/createWeakRef';
+import { createWeakRef } from '../internals/createWeakRef';
 
 import { SignalFn, SignalOptions } from './types';
 

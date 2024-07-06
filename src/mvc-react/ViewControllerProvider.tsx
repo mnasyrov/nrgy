@@ -1,6 +1,6 @@
 import React, { createContext, PropsWithChildren, useContext } from 'react';
 
-import { createWeakMap } from '../core/utils/createWeakMap';
+import { createWeakMap } from '../core/internals/createWeakMap';
 import {
   BaseControllerContext,
   BaseService,

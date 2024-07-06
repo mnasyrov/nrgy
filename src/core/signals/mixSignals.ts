@@ -1,7 +1,7 @@
 import { Signal } from '../common';
 import { effect } from '../effects/effect';
 import { EffectSubscription } from '../effects/types';
-import { ListItem } from '../utils/list';
+import { ListItem } from '../internals/list';
 
 import { signal } from './signal';
 import { SignalOptions } from './types';

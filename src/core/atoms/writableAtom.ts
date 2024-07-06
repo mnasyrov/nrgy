@@ -8,10 +8,10 @@ import {
 import { Atom, AtomEffectNode, AtomNode, ValueEqualityFn } from '../common';
 import { defaultEquals } from '../commonUtils';
 import { syncEffect } from '../effects/effect';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../runtime';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';
-import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import { AtomFn } from './types';
 

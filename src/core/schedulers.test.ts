@@ -5,12 +5,12 @@ import {
   createSyncTaskScheduler,
 } from './schedulers';
 
-jest.mock('./utils/reportError', () => {
+jest.mock('./internals/reportError', () => {
   (globalThis as any).reportError = (error: any) => {
     (globalThis as any)?.onerror?.(error);
   };
 
-  const originalModule = jest.requireActual('./utils/reportError');
+  const originalModule = jest.requireActual('./internals/reportError');
 
   return {
     __esModule: true,

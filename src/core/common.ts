@@ -1,4 +1,4 @@
-import { nextSafeInteger } from './utils/nextSafeInteger';
+import { nextSafeInteger } from './internals/nextSafeInteger';
 
 export type AnyObject = Record<string, any>;
 export type AnyFunction = (...args: any[]) => any;

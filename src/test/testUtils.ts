@@ -1,7 +1,7 @@
 import { defer, finalize, MonoTypeOperatorFunction, noop } from 'rxjs';
 
 import { Atom, createScope } from '../core';
-import { createLatch } from '../core/utils/latch';
+import { createLatch } from '../core/internals/latch';
 
 export function promiseTimeout(interval: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, interval));
