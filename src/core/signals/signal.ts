@@ -95,7 +95,6 @@ class SignalImpl<T> implements SignalNode<T> {
     this.producerDestroyed();
 
     this.consumerEffects.clear();
-    this.onUnsubscribe?.(true);
     this.onDestroy?.();
 
     this.onEvent = undefined;

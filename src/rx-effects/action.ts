@@ -26,6 +26,11 @@ export function toAction<T>(
 export function fromAction<T>(action: Action<T>): Signal<T> {
   let subscription: Subscription | undefined;
 
+  function unsubscribe() {
+    subscription?.unsubscribe();
+    subscription = undefined;
+  }
+
   const s = signal<T>({
     onSubscribe: () => {
       if (!subscription) {
@@ -35,9 +40,12 @@ export function fromAction<T>(action: Action<T>): Signal<T> {
 
     onUnsubscribe: (isEmpty) => {
       if (isEmpty) {
-        subscription?.unsubscribe();
-        subscription = undefined;
+        unsubscribe();
       }
+    },
+
+    onDestroy: () => {
+      unsubscribe();
     },
   });
 

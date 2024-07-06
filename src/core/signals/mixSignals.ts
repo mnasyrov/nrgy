@@ -1,7 +1,9 @@
 import { Signal } from '../common';
 import { effect } from '../effect';
+import { EffectSubscription } from '../effectTypes';
+import { ListItem } from '../utils/list';
 
-import { isSignal, signal } from './signal';
+import { signal } from './signal';
 import { SignalOptions } from './types';
 
 type MixSignalsSources<TValues extends unknown[]> = [
@@ -16,14 +18,50 @@ export function mixSignals<TValues extends unknown[]>(
   options?: SignalOptions<TValues[number]>,
 ): Signal<TValues[number]> {
   type TResult = TValues[number];
+  type SubscriptionList = ListItem<{ subscription: EffectSubscription<any> }>;
 
-  const resultSignal = signal<TResult>(options);
+  let subscriptionList: undefined | SubscriptionList;
 
-  for (const source of sources) {
-    if (isSignal(source)) {
-      effect(source, resultSignal, { sync: options?.sync });
+  function subscribeSources() {
+    if (subscriptionList === undefined) {
+      for (const source of sources) {
+        const fx = effect(source, resultSignal, { sync: options?.sync });
+        subscriptionList = { subscription: fx, next: subscriptionList };
+      }
     }
   }
+
+  function unsubscribeSources() {
+    for (let item = subscriptionList; item; item = item.next) {
+      item.subscription.destroy();
+    }
+
+    subscriptionList = undefined;
+  }
+
+  const resultSignal = signal<TResult>({
+    ...options,
+
+    onSubscribe: () => {
+      subscribeSources();
+
+      options?.onSubscribe?.();
+    },
+
+    onUnsubscribe: (isEmpty) => {
+      if (isEmpty) {
+        unsubscribeSources();
+      }
+
+      options?.onUnsubscribe?.(isEmpty);
+    },
+
+    onDestroy: () => {
+      unsubscribeSources();
+
+      options?.onDestroy?.();
+    },
+  });
 
   return resultSignal;
 }
