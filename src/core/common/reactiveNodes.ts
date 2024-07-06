@@ -1,89 +1,8 @@
-import { nextSafeInteger } from './internals/nextSafeInteger';
-
-export type AnyObject = Record<string, any>;
-export type AnyFunction = (...args: any[]) => any;
-
-let EFFECT_ID: number = 0;
+import { Signal } from './types';
 
 /**
  * @internal
- */
-export function generateEffectId(): number {
-  return (EFFECT_ID = nextSafeInteger(EFFECT_ID));
-}
-
-/**
- * Symbol used to indicate that an object is an Atom
- */
-export const ATOM_SYMBOL = Symbol.for('ngry.atom');
-
-/**
- * Symbol used to indicate that an object is a Signal
- */
-export const SIGNAL_SYMBOL = Symbol.for('ngry.signal');
-
-/**
- * A reactive value which notifies consumers of any changes.
  *
- * Atoms are functions which returns their current value. To access the current value of an atom,
- * call it.
- */
-export type Atom<T> = (() => T) & {
-  /** @internal */
-  readonly [ATOM_SYMBOL]: unknown;
-};
-
-/**
- * An Atom that can be destroyed
- */
-export type DestroyableAtom<T> = Atom<T> &
-  Readonly<{
-    /**
-     * Signals that the `AtomEffect` has been destroyed
-     */
-    readonly onDestroyed: Signal<void>;
-
-    /**
-     * Returns a readonly version of this atom
-     */
-    asReadonly(): Atom<T>;
-
-    /**
-     * Destroys the atom, notifies any dependents and calls `onDestroy` callback.
-     */
-    destroy(): void;
-  }>;
-
-/**
- * Signal is an event emitter. It can be called to notify listeners of events.
- *
- * @example
- * ```ts
- * // Create the signal
- * const submitForm = signal<{login: string, password: string}>();
- *
- * // Call the signal
- * submitForm({login: 'foo', password: 'bar'});
- *
- * // Handle signal's events
- * effect(submitForm, (formData) => {
- *   // Process the formData
- * });
- * ```
- */
-export type Signal<Event> = {
-  (event: Event): void;
-  readonly [SIGNAL_SYMBOL]: unknown;
-} & ([Event] extends [undefined | void]
-  ? { (event?: Event): void }
-  : { (event: Event): void });
-
-/**
- * A comparison function which can determine if two values are equal.
- */
-export type ValueEqualityFn<T> = (a: T, b: T) => boolean;
-
-/**
  * A reactive node
  */
 export type ReactiveNode = Readonly<{
@@ -92,6 +11,8 @@ export type ReactiveNode = Readonly<{
 }>;
 
 /**
+ * @internal
+ *
  * An atom node
  */
 export type AtomNode<T> = ReactiveNode &
@@ -118,6 +39,8 @@ export type AtomNode<T> = ReactiveNode &
   }>;
 
 /**
+ * @internal
+ *
  * A computed node
  */
 export type ComputedNode<T> = AtomNode<T> &
@@ -128,6 +51,9 @@ export type ComputedNode<T> = AtomNode<T> &
     clock: number | undefined;
   }>;
 
+/**
+ * @internal
+ */
 export type AtomEffectNode = ReactiveNode &
   Readonly<{
     /**
@@ -182,6 +108,9 @@ export type AtomEffectNode = ReactiveNode &
     notifyDestroy: (atomId: number) => void;
   }>;
 
+/**
+ * @internal
+ */
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
     ref: WeakRef<SignalNode<T>>;
@@ -223,6 +152,8 @@ export type SignalNode<T> = ReactiveNode &
   }>;
 
 /**
+ * @internal
+ *
  * A signal effect node
  */
 export type SignalEffectNode<T> = ReactiveNode &

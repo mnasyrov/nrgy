@@ -1,18 +1,19 @@
+import { defaultEquals } from '../common/defaultEquals';
+import { AtomEffectNode, AtomNode } from '../common/reactiveNodes';
+import { Atom, ValueEqualityFn } from '../common/types';
+import { syncEffect } from '../effects/effect';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
+import { RUNTIME } from '../internals/runtime';
+import { destroySignal } from '../signals/common';
+import { signal } from '../signals/signal';
+
 import {
   AtomOptions,
   AtomUpdateError,
   createAtomFromFunction,
   generateAtomId,
   WritableAtom,
-} from '../atom';
-import { Atom, AtomEffectNode, AtomNode, ValueEqualityFn } from '../common';
-import { defaultEquals } from '../commonUtils';
-import { syncEffect } from '../effects/effect';
-import { nextSafeInteger } from '../internals/nextSafeInteger';
-import { RUNTIME } from '../runtime';
-import { destroySignal } from '../signals/common';
-import { signal } from '../signals/signal';
-
+} from './atom';
 import { AtomFn } from './types';
 
 class WritableAtomImpl<T> implements AtomNode<T> {

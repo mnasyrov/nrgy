@@ -1,10 +1,9 @@
-import { Signal } from '../common';
+import { Signal } from '../common/types';
 import { effect } from '../effects/effect';
 import { EffectSubscription } from '../effects/types';
 import { ListItem } from '../internals/list';
-
-import { signal } from './signal';
-import { SignalOptions } from './types';
+import { signal } from '../signals/signal';
+import { SignalOptions } from '../signals/types';
 
 type MixSignalsSources<TValues extends unknown[]> = [
   ...{ [K in keyof TValues]: Signal<TValues[K]> },

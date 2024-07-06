@@ -8,7 +8,7 @@ import {
   Signal,
   syncEffect,
 } from '../core';
-import { RUNTIME } from '../core/runtime';
+import { RUNTIME } from '../core/internals/runtime';
 
 /**
  * Options for `observe`

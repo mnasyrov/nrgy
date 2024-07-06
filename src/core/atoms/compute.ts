@@ -1,8 +1,10 @@
+import { defaultEquals } from '../common/defaultEquals';
+import { AtomEffectNode, ComputedNode } from '../common/reactiveNodes';
+import { Atom, ValueEqualityFn } from '../common/types';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
+import { RUNTIME } from '../internals/runtime';
+
 import { createAtomFromFunction, generateAtomId } from './atom';
-import { Atom, AtomEffectNode, ComputedNode, ValueEqualityFn } from './common';
-import { defaultEquals } from './commonUtils';
-import { nextSafeInteger } from './internals/nextSafeInteger';
-import { RUNTIME } from './runtime';
 
 /**
  * A pure function that returns a value.

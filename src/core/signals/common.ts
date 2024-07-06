@@ -1,4 +1,6 @@
-import { Signal, SIGNAL_SYMBOL, SignalNode } from '../common';
+import { SignalNode } from '../common/reactiveNodes';
+import { SIGNAL_SYMBOL } from '../common/symbols';
+import { Signal } from '../common/types';
 
 /**
  * Checks if the given `value` is a reactive `Signal`.

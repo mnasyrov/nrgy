@@ -1,4 +1,4 @@
-import { RUNTIME } from './runtime';
+import { RUNTIME } from '../internals/runtime';
 
 /**
  * Run a function in a batch update context.

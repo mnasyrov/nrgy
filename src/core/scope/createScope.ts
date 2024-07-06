@@ -1,5 +1,5 @@
 import { atom } from '../atoms/writableAtom';
-import { AnyFunction } from '../common';
+import { AnyFunction } from '../common/utilityTypes';
 import { effect, syncEffect } from '../effects/effect';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';

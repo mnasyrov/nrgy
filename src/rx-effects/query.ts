@@ -8,8 +8,8 @@ import {
   destroySignal,
   signal,
 } from '../core';
-import { createAtomFromFunction, getAtomNode } from '../core/atom';
-import { RUNTIME } from '../core/runtime';
+import { createAtomFromFunction, getAtomNode } from '../core/atoms/atom';
+import { RUNTIME } from '../core/internals/runtime';
 import { observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.

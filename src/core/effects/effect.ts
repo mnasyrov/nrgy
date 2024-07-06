@@ -1,9 +1,9 @@
-import { isAtom } from '../atom';
-import { AtomList } from '../atomTypes';
-import { combineAtoms } from '../atomUtils';
-import { Atom, Signal } from '../common';
-import { RUNTIME } from '../runtime';
+import { isAtom } from '../atoms/atom';
+import { AtomList } from '../atoms/atomTypes';
+import { Atom, Signal } from '../common/types';
+import { RUNTIME } from '../internals/runtime';
 import { getSignalNode, isSignal } from '../signals/common';
+import { combineAtoms } from '../utils/combineAtoms';
 
 import { AtomEffect } from './atomEffect';
 import { SignalEffect } from './signalEffect';

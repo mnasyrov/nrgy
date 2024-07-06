@@ -1,8 +1,8 @@
-import { expectEffectContext } from '../test/matchers';
+import { expectEffectContext } from '../../test/matchers';
+import { isAtom } from '../atoms/atom';
+import { syncEffect } from '../effects/effect';
 
-import { isAtom } from './atom';
 import { createAtomSubject } from './atomSubject';
-import { syncEffect } from './effects/effect';
 
 describe('AtomSubject', () => {
   describe('createAtomSubject()', () => {

@@ -1,14 +1,13 @@
+import { AtomNode, ReactiveNode } from '../common/reactiveNodes';
+import { ATOM_SYMBOL } from '../common/symbols';
 import {
-  AnyObject,
   Atom,
-  ATOM_SYMBOL,
-  AtomNode,
   DestroyableAtom,
-  ReactiveNode,
   Signal,
   ValueEqualityFn,
-} from './common';
-import { nextSafeInteger } from './internals/nextSafeInteger';
+} from '../common/types';
+import { AnyObject } from '../common/utilityTypes';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 let ATOM_ID: number = 0;
 

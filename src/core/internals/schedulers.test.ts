@@ -1,16 +1,16 @@
-import { flushMicrotasks } from '../test/testUtils';
+import { flushMicrotasks } from '../../test/testUtils';
 
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
 
-jest.mock('./internals/reportError', () => {
+jest.mock('./reportError', () => {
   (globalThis as any).reportError = (error: any) => {
     (globalThis as any)?.onerror?.(error);
   };
 
-  const originalModule = jest.requireActual('./internals/reportError');
+  const originalModule = jest.requireActual('./reportError');
 
   return {
     __esModule: true,

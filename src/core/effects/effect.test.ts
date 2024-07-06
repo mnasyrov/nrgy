@@ -1,11 +1,11 @@
 import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks, promiseTimeout } from '../../test/testUtils';
-import { AtomUpdateError } from '../atom';
+import { AtomUpdateError } from '../atoms/atom';
+import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
-import { compute } from '../compute';
 import { getSignalNode } from '../signals/common';
-import { keepLastValue } from '../signals/keepLastValue';
 import { signal } from '../signals/signal';
+import { keepLastValue } from '../utils/keepLastValue';
 
 import { effect, syncEffect } from './effect';
 

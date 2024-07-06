@@ -1,9 +1,9 @@
 import { expectEffectContext } from '../../test/matchers';
 import { collectChanges, flushMicrotasks } from '../../test/testUtils';
-import { isAtom, WritableAtom } from '../atom';
 import { syncEffect } from '../effects/effect';
 import { getSignalNode } from '../signals/common';
 
+import { isAtom, WritableAtom } from './atom';
 import { atom } from './writableAtom';
 
 describe('WritableAtom', () => {

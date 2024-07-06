@@ -1,24 +1,46 @@
-export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
+//
+// Common
+//
+
+export type {
+  Atom,
+  DestroyableAtom,
+  Signal,
+  ValueEqualityFn,
+} from './common/types';
+export { defaultEquals } from './common/defaultEquals';
+
+//
+// Signals
+//
 
 export type { SignalOptions, SignalFn } from './signals/types';
+export {
+  isSignalSubscribed,
+  isSignalDestroyed,
+  destroySignal,
+  getSignalName,
+  isSignal,
+} from './signals/common';
 export { signal } from './signals/signal';
 
-export { keepLastValue } from './signals/keepLastValue';
+//
+// Atoms
+//
 
-export type { AtomOptions, WritableAtom } from './atom';
-export { isAtom, getAtomName, AtomUpdateError } from './atom';
 export type { AtomFn } from './atoms/types';
+
+export type { AtomOptions, WritableAtom } from './atoms/atom';
+export { isAtom, getAtomName, AtomUpdateError } from './atoms/atom';
+
 export { atom } from './atoms/writableAtom';
 
-export type { AtomSubject } from './atomSubject';
-export { createAtomSubject } from './atomSubject';
+export type { Computation, ComputeOptions } from './atoms/compute';
+export { compute } from './atoms/compute';
 
-export { objectEquals, defaultEquals } from './commonUtils';
-
-export type { Computation, ComputeOptions } from './compute';
-export { compute } from './compute';
-
-export { combineAtoms, mapAtom, mergeAtoms } from './atomUtils';
+//
+// Effects
+//
 
 export type {
   EffectAction,
@@ -29,10 +51,9 @@ export type {
 } from './effects/types';
 export { effect, syncEffect } from './effects/effect';
 
-export { runEffects } from './runtime';
-export { batch } from './batch';
-
-export type { TaskScheduler } from './schedulers';
+//
+// Scope
+//
 
 export type {
   Destroyable,
@@ -43,10 +64,20 @@ export type {
 } from './scope/types';
 export { ScopeDestructionError } from './scope/scopeDestructionError';
 export { createScope } from './scope/createScope';
-export { mixSignals } from './signals/mixSignals';
-export { signalChanges } from './signals/signalChanges';
-export { isSignalSubscribed } from './signals/common';
-export { isSignalDestroyed } from './signals/common';
-export { destroySignal } from './signals/common';
-export { getSignalName } from './signals/common';
-export { isSignal } from './signals/common';
+
+//
+// Utilities
+//
+
+export type { AtomSubject } from './utils/atomSubject';
+export { createAtomSubject } from './utils/atomSubject';
+
+export { batch } from './utils/batch';
+export { combineAtoms } from './utils/combineAtoms';
+export { keepLastValue } from './utils/keepLastValue';
+export { mapAtom } from './utils/mapAtom';
+export { mergeAtoms } from './utils/mergeAtoms';
+export { mixSignals } from './utils/mixSignals';
+export { objectEquals } from './utils/objectEquals';
+export { runEffects } from './utils/runEffects';
+export { signalChanges } from './utils/signalChanges';

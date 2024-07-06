@@ -1,19 +1,19 @@
-import { expectEffectContext } from '../test/matchers';
+import { expectEffectContext } from '../../test/matchers';
 import {
   collectChanges,
   collectHistory,
   flushMicrotasks,
-} from '../test/testUtils';
+} from '../../test/testUtils';
+import { Atom } from '../common/types';
+import { effect, syncEffect } from '../effects/effect';
+import { RUNTIME } from '../internals/runtime';
+import { signal } from '../signals/signal';
+import { createAtomSubject } from '../utils/atomSubject';
+import { signalChanges } from '../utils/signalChanges';
 
 import { AtomUpdateError, getAtomName } from './atom';
-import { atom } from './atoms/writableAtom';
-import { createAtomSubject } from './atomSubject';
-import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
-import { effect, syncEffect } from './effects/effect';
-import { RUNTIME } from './runtime';
-import { signal } from './signals/signal';
-import { signalChanges } from './signals/signalChanges';
+import { atom } from './writableAtom';
 
 describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {

@@ -1,20 +1,8 @@
-import { runEffects, Runtime, RUNTIME } from './runtime';
+import { Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
   it('should be defined', () => {
     expect(RUNTIME).toBeDefined();
-  });
-});
-
-describe('runEffects()', () => {
-  it('should runs all effects which are scheduled for the next microtask', () => {
-    const spy = jest.fn();
-
-    RUNTIME.asyncScheduler.schedule(() => spy());
-    expect(spy).toHaveBeenCalledTimes(0);
-
-    runEffects();
-    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
 

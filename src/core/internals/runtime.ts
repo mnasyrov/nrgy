@@ -1,5 +1,6 @@
-import { AtomEffectNode } from './common';
-import { nextSafeInteger } from './internals/nextSafeInteger';
+import { AtomEffectNode } from '../common/reactiveNodes';
+
+import { nextSafeInteger } from './nextSafeInteger';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -98,10 +99,3 @@ export class Runtime {
  * The energy runtime
  */
 export const RUNTIME = new Runtime();
-
-/**
- * Runs all effects which are scheduled for the next microtask
- */
-export function runEffects(): void {
-  RUNTIME.asyncScheduler.execute();
-}

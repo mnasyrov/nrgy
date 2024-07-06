@@ -1,4 +1,4 @@
-import { Atom } from './common';
+import { Atom } from '../common/types';
 
 /**
  * Type for an array of atoms

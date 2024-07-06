@@ -1,6 +1,6 @@
 import { AtomUpdateError, getAtomName, getAtomNode, isAtom } from './atom';
-import { atom } from './atoms/writableAtom';
 import { compute } from './compute';
+import { atom } from './writableAtom';
 
 describe('isAtom()', () => {
   it('should return "true" in case a value is Atom', () => {

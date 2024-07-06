@@ -2,7 +2,7 @@ import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
 import { effect, syncEffect } from '../effects/effect';
 import { SignalEffect } from '../effects/signalEffect';
-import { RUNTIME } from '../runtime';
+import { RUNTIME } from '../internals/runtime';
 
 import { destroySignal, getSignalNode } from './common';
 import { signal } from './signal';

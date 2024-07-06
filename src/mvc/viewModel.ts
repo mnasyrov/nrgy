@@ -1,5 +1,5 @@
 import { Atom } from '../core';
-import { AnyObject } from '../core/common';
+import { AnyObject } from '../core/common/utilityTypes';
 
 import {
   BaseController,

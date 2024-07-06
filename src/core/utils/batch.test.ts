@@ -1,12 +1,12 @@
-import { expectEffectContext } from '../test/matchers';
-import { flushMicrotasks } from '../test/testUtils';
+import { expectEffectContext } from '../../test/matchers';
+import { flushMicrotasks } from '../../test/testUtils';
+import { compute } from '../atoms/compute';
+import { atom } from '../atoms/writableAtom';
+import { effect, syncEffect } from '../effects/effect';
+import { RUNTIME } from '../internals/runtime';
+import { signal } from '../signals/signal';
 
-import { atom } from './atoms/writableAtom';
 import { batch } from './batch';
-import { compute } from './compute';
-import { effect, syncEffect } from './effects/effect';
-import { RUNTIME } from './runtime';
-import { signal } from './signals/signal';
 
 describe('batch()', () => {
   it('should call the specified action', () => {

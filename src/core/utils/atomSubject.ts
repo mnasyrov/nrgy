@@ -1,7 +1,11 @@
-import { AtomOptions, createAtomFromFunction, getAtomNode } from './atom';
-import { atom } from './atoms/writableAtom';
-import { Atom, DestroyableAtom } from './common';
-import { compute } from './compute';
+import {
+  AtomOptions,
+  createAtomFromFunction,
+  getAtomNode,
+} from '../atoms/atom';
+import { compute } from '../atoms/compute';
+import { atom } from '../atoms/writableAtom';
+import { Atom, DestroyableAtom } from '../common/types';
 
 const enum StateType {
   value,

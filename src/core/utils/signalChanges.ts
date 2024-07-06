@@ -1,9 +1,8 @@
-import { Atom, Signal } from '../common';
+import { Atom, Signal } from '../common/types';
 import { effect } from '../effects/effect';
 import { BaseScope } from '../scope/baseScope';
-
-import { signal } from './signal';
-import { SignalOptions } from './types';
+import { signal } from '../signals/signal';
+import { SignalOptions } from '../signals/types';
 
 /**
  * Returns a signal that emits the changes of the source atom.

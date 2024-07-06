@@ -2,7 +2,7 @@ import { expectEffectContext } from '../../test/matchers';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from '../schedulers';
+} from '../internals/schedulers';
 import { getSignalNode } from '../signals/common';
 
 import { syncEffect } from './effect';

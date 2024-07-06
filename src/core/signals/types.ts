@@ -1,4 +1,4 @@
-import { Signal } from '../common';
+import { Signal } from '../common/types';
 
 /**
  * Options passed to the `signal` creation function.

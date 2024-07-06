@@ -1,7 +1,7 @@
-import { SignalEffectNode } from '../common';
+import { SignalEffectNode } from '../common/reactiveNodes';
 import { createWeakRef } from '../internals/createWeakRef';
 import { isPromise } from '../internals/isPromise';
-import { TaskScheduler } from '../schedulers';
+import { TaskScheduler } from '../internals/schedulers';
 import { BaseScope } from '../scope/baseScope';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';

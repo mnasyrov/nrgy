@@ -1,7 +1,8 @@
-import { createAtomSubject } from '../atomSubject';
-import { DestroyableAtom, Signal } from '../common';
+import { DestroyableAtom, Signal } from '../common/types';
 import { syncEffect } from '../effects/effect';
 import { BaseScope } from '../scope/baseScope';
+
+import { createAtomSubject } from './atomSubject';
 
 /**
  * Returns an atom which remembers the last emitter value.

@@ -1,4 +1,6 @@
-import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from '../common';
+import { SignalEffectNode, SignalNode } from '../common/reactiveNodes';
+import { SIGNAL_SYMBOL } from '../common/symbols';
+import { Signal } from '../common/types';
 import { createWeakRef } from '../internals/createWeakRef';
 
 import { SignalFn, SignalOptions } from './types';

@@ -1,12 +1,12 @@
 import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
-import { getAtomId, getAtomNode } from '../atom';
+import { getAtomId, getAtomNode } from '../atoms/atom';
+import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
-import { compute } from '../compute';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from '../schedulers';
+} from '../internals/schedulers';
 import { getSignalNode } from '../signals/common';
 
 import { AtomEffect } from './atomEffect';

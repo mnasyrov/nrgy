@@ -1,4 +1,4 @@
-import { AtomOptions, WritableAtom } from '../atom';
+import { AtomOptions, WritableAtom } from './atom';
 
 /**
  * Factory to create a writable `Atom` that can be set or updated directly.

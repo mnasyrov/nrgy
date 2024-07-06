@@ -1,9 +1,5 @@
-import { ValueEqualityFn } from './common';
-
-/**
- * The default equality function used for `atom` and `compute`, which treats values using identity semantics.
- */
-export const defaultEquals: ValueEqualityFn<unknown> = Object.is;
+import { defaultEquals } from '../common/defaultEquals';
+import { ValueEqualityFn } from '../common/types';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
