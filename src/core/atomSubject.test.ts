@@ -2,7 +2,7 @@ import { expectEffectContext } from '../test/matchers';
 
 import { isAtom } from './atom';
 import { createAtomSubject } from './atomSubject';
-import { syncEffect } from './effect';
+import { syncEffect } from './effects/effect';
 
 describe('AtomSubject', () => {
   describe('createAtomSubject()', () => {

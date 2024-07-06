@@ -1,12 +1,13 @@
-import { expectEffectContext } from '../test/matchers';
-import { flushMicrotasks, promiseTimeout } from '../test/testUtils';
+import { expectEffectContext } from '../../test/matchers';
+import { flushMicrotasks, promiseTimeout } from '../../test/testUtils';
+import { AtomUpdateError } from '../atom';
+import { atom } from '../atoms/writableAtom';
+import { compute } from '../compute';
+import { getSignalNode } from '../signals/common';
+import { keepLastValue } from '../signals/keepLastValue';
+import { signal } from '../signals/signal';
 
-import { AtomUpdateError } from './atom';
-import { atom } from './atoms/writableAtom';
-import { compute } from './compute';
 import { effect, syncEffect } from './effect';
-import { keepLastValue } from './signals/keepLastValue';
-import { getSignalNode, signal } from './signals/signal';
 
 describe('effect()', () => {
   it('should subscribe to a signal', async () => {

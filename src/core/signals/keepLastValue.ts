@@ -1,6 +1,6 @@
 import { createAtomSubject } from '../atomSubject';
 import { DestroyableAtom, Signal } from '../common';
-import { syncEffect } from '../effect';
+import { syncEffect } from '../effects/effect';
 import { BaseScope } from '../scope/baseScope';
 
 /**

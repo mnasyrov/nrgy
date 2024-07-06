@@ -1,5 +1,5 @@
 import { Atom, Signal } from '../common';
-import { effect } from '../effect';
+import { effect } from '../effects/effect';
 import { BaseScope } from '../scope/baseScope';
 
 import { signal } from './signal';

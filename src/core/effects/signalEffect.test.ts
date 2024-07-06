@@ -1,12 +1,12 @@
-import { expectEffectContext } from '../test/matchers';
-
-import { syncEffect } from './effect';
+import { expectEffectContext } from '../../test/matchers';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from './schedulers';
+} from '../schedulers';
+import { getSignalNode } from '../signals/common';
+
+import { syncEffect } from './effect';
 import { SignalEffect } from './signalEffect';
-import { getSignalNode } from './signals/signal';
 
 describe('SignalEffect', () => {
   describe('destroy()', () => {

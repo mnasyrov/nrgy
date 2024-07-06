@@ -1,12 +1,13 @@
-import { isAtom } from './atom';
+import { isAtom } from '../atom';
+import { AtomList } from '../atomTypes';
+import { combineAtoms } from '../atomUtils';
+import { Atom, Signal } from '../common';
+import { RUNTIME } from '../runtime';
+import { getSignalNode, isSignal } from '../signals/common';
+
 import { AtomEffect } from './atomEffect';
-import { AtomList } from './atomTypes';
-import { combineAtoms } from './atomUtils';
-import { Atom, Signal } from './common';
-import { EffectAction, EffectFn, EffectOptions } from './effectTypes';
-import { RUNTIME } from './runtime';
 import { SignalEffect } from './signalEffect';
-import { getSignalNode, isSignal } from './signals/signal';
+import { EffectAction, EffectFn, EffectOptions } from './types';
 
 /**
  * Creates a new effect
@@ -66,6 +67,9 @@ export const effect: EffectFn = <T, R>(
   throw new Error('Unexpected the first argument');
 };
 
+/**
+ * Creates a new synchronous effect
+ */
 export const syncEffect: EffectFn = <T, R>(
   source: Signal<T> | Atom<T> | AtomList<T[]>,
   action: EffectAction<T, R>,

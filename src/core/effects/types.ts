@@ -1,5 +1,5 @@
-import { AtomList } from './atomTypes';
-import { Atom, Signal } from './common';
+import { AtomList } from '../atomTypes';
+import { Atom, Signal } from '../common';
 
 /**
  * A reactive effect, which can be manually destroyed.

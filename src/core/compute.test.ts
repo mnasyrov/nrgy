@@ -10,7 +10,7 @@ import { atom } from './atoms/writableAtom';
 import { createAtomSubject } from './atomSubject';
 import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
-import { effect, syncEffect } from './effect';
+import { effect, syncEffect } from './effects/effect';
 import { RUNTIME } from './runtime';
 import { signal } from './signals/signal';
 import { signalChanges } from './signals/signalChanges';

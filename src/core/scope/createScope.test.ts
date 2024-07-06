@@ -1,6 +1,6 @@
 import { atom } from '../atoms/writableAtom';
-import { syncEffect } from '../effect';
-import { getSignalNode } from '../signals/signal';
+import { syncEffect } from '../effects/effect';
+import { getSignalNode } from '../signals/common';
 
 import { createScope } from './createScope';
 

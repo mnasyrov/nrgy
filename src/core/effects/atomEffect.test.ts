@@ -1,16 +1,16 @@
-import { expectEffectContext } from '../test/matchers';
-import { flushMicrotasks } from '../test/testUtils';
-
-import { getAtomId, getAtomNode } from './atom';
-import { AtomEffect } from './atomEffect';
-import { atom } from './atoms/writableAtom';
-import { compute } from './compute';
-import { effect, syncEffect } from './effect';
+import { expectEffectContext } from '../../test/matchers';
+import { flushMicrotasks } from '../../test/testUtils';
+import { getAtomId, getAtomNode } from '../atom';
+import { atom } from '../atoms/writableAtom';
+import { compute } from '../compute';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from './schedulers';
-import { getSignalNode } from './signals/signal';
+} from '../schedulers';
+import { getSignalNode } from '../signals/common';
+
+import { AtomEffect } from './atomEffect';
+import { effect, syncEffect } from './effect';
 
 describe('AtomEffect', () => {
   describe('destroy()', () => {

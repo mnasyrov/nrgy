@@ -5,7 +5,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
 import { atom, compute, effect, isAtom, signal, syncEffect } from '../core';
-import { getSignalNode } from '../core/signals/signal';
+import { getSignalNode } from '../core/signals/common';
 import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 

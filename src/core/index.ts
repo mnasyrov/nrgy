@@ -1,14 +1,7 @@
 export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
 
 export type { SignalOptions, SignalFn } from './signals/types';
-export {
-  signal,
-  getSignalName,
-  isSignal,
-  destroySignal,
-  isSignalSubscribed,
-  isSignalDestroyed,
-} from './signals/signal';
+export { signal } from './signals/signal';
 
 export { keepLastValue } from './signals/keepLastValue';
 
@@ -33,8 +26,8 @@ export type {
   EffectFn,
   EffectOptions,
   EffectSubscription,
-} from './effectTypes';
-export { effect, syncEffect } from './effect';
+} from './effects/types';
+export { effect, syncEffect } from './effects/effect';
 
 export { runEffects } from './runtime';
 export { batch } from './batch';
@@ -52,3 +45,8 @@ export { ScopeDestructionError } from './scope/scopeDestructionError';
 export { createScope } from './scope/createScope';
 export { mixSignals } from './signals/mixSignals';
 export { signalChanges } from './signals/signalChanges';
+export { isSignalSubscribed } from './signals/common';
+export { isSignalDestroyed } from './signals/common';
+export { destroySignal } from './signals/common';
+export { getSignalName } from './signals/common';
+export { isSignal } from './signals/common';

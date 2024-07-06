@@ -1,5 +1,5 @@
 import { AtomFn } from '../atoms/types';
-import { EffectFn } from '../effectTypes';
+import { EffectFn } from '../effects/types';
 import { SignalFn } from '../signals/types';
 
 /**

@@ -4,7 +4,7 @@ import { flushMicrotasks } from '../test/testUtils';
 import { atom } from './atoms/writableAtom';
 import { batch } from './batch';
 import { compute } from './compute';
-import { effect, syncEffect } from './effect';
+import { effect, syncEffect } from './effects/effect';
 import { RUNTIME } from './runtime';
 import { signal } from './signals/signal';
 
