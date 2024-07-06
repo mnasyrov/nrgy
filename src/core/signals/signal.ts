@@ -1,6 +1,7 @@
-import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from './common';
-import { SignalFn, SignalOptions } from './signalTypes';
-import { createWeakRef } from './utils/createWeakRef';
+import { Signal, SIGNAL_SYMBOL, SignalEffectNode, SignalNode } from '../common';
+import { createWeakRef } from '../utils/createWeakRef';
+
+import { SignalFn, SignalOptions } from './types';
 
 /**
  * Checks if the given `value` is a reactive `Signal`.
@@ -10,6 +11,8 @@ export function isSignal<T>(value: unknown): value is Signal<T> {
 }
 
 /**
+ * @internal
+ *
  * Returns `SignalNode` from the given Signal.
  */
 export function getSignalNode<T>(value: Signal<T>): SignalNode<T> {

@@ -1,7 +1,7 @@
 import { atom } from '../atoms/writableAtom';
 import { AnyFunction } from '../common';
 import { effect, syncEffect } from '../effect';
-import { destroySignal, signal } from '../signal';
+import { destroySignal, signal } from '../signals/signal';
 
 import { BaseScope } from './baseScope';
 import { Scope } from './types';

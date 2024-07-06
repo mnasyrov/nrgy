@@ -1,10 +1,10 @@
 import { atom } from '../atoms/writableAtom';
 import { syncEffect } from '../effect';
-import { getSignalNode } from '../signal';
+import { getSignalNode } from '../signals/signal';
 
 import { createScope } from './createScope';
 
-describe('Scope', () => {
+describe('createScope()', () => {
   describe('onDestroy()', () => {
     it('should be called when the scope is destroyed', () => {
       const scope = createScope();

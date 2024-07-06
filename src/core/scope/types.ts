@@ -1,6 +1,6 @@
 import { AtomFn } from '../atoms/types';
 import { EffectFn } from '../effectTypes';
-import { SignalFn } from '../signalTypes';
+import { SignalFn } from '../signals/types';
 
 /**
  * An object which can be unsubscribed from

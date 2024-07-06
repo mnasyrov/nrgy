@@ -2,7 +2,7 @@ import { expectEffectContext } from '../../test/matchers';
 import { collectChanges, flushMicrotasks } from '../../test/testUtils';
 import { isAtom, WritableAtom } from '../atom';
 import { syncEffect } from '../effect';
-import { getSignalNode } from '../signal';
+import { getSignalNode } from '../signals/signal';
 
 import { atom } from './writableAtom';
 

@@ -5,8 +5,8 @@ import { combineAtoms } from './atomUtils';
 import { Atom, Signal } from './common';
 import { EffectAction, EffectFn, EffectOptions } from './effectTypes';
 import { RUNTIME } from './runtime';
-import { getSignalNode, isSignal } from './signal';
 import { SignalEffect } from './signalEffect';
+import { getSignalNode, isSignal } from './signals/signal';
 
 /**
  * Creates a new effect

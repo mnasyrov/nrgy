@@ -12,8 +12,8 @@ import { Atom } from './common';
 import { compute, ComputedImpl } from './compute';
 import { effect, syncEffect } from './effect';
 import { RUNTIME } from './runtime';
-import { signal } from './signal';
-import { signalChanges } from './signalUtils';
+import { signal } from './signals/signal';
+import { signalChanges } from './signals/signalChanges';
 
 describe('compute()', () => {
   it('should calculate the benchmark with async effect', async () => {

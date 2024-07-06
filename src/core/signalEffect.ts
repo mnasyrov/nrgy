@@ -2,7 +2,7 @@ import { SignalEffectNode } from './common';
 import { EffectAction, EffectContext } from './effectTypes';
 import { TaskScheduler } from './schedulers';
 import { BaseScope } from './scope/baseScope';
-import { destroySignal, signal } from './signal';
+import { destroySignal, signal } from './signals/signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { isPromise } from './utils/isPromise';
 

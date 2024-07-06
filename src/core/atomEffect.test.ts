@@ -10,7 +10,7 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { getSignalNode } from './signal';
+import { getSignalNode } from './signals/signal';
 
 describe('AtomEffect', () => {
   describe('destroy()', () => {

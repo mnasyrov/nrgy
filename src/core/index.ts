@@ -1,6 +1,6 @@
 export type { Atom, DestroyableAtom, Signal, ValueEqualityFn } from './common';
 
-export type { SignalOptions, SignalFn } from './signalTypes';
+export type { SignalOptions, SignalFn } from './signals/types';
 export {
   signal,
   getSignalName,
@@ -8,9 +8,9 @@ export {
   destroySignal,
   isSignalSubscribed,
   isSignalDestroyed,
-} from './signal';
+} from './signals/signal';
 
-export { keepLastValue, mixSignals, signalChanges } from './signalUtils';
+export { keepLastValue } from './signals/keepLastValue';
 
 export type { AtomOptions, WritableAtom } from './atom';
 export { isAtom, getAtomName, AtomUpdateError } from './atom';
@@ -50,3 +50,5 @@ export type {
 } from './scope/types';
 export { ScopeDestructionError } from './scope/scopeDestructionError';
 export { createScope } from './scope/createScope';
+export { mixSignals } from './signals/mixSignals';
+export { signalChanges } from './signals/signalChanges';

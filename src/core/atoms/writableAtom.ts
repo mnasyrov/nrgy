@@ -9,7 +9,7 @@ import { Atom, AtomEffectNode, AtomNode, ValueEqualityFn } from '../common';
 import { defaultEquals } from '../commonUtils';
 import { syncEffect } from '../effect';
 import { RUNTIME } from '../runtime';
-import { destroySignal, signal } from '../signal';
+import { destroySignal, signal } from '../signals/signal';
 import { nextSafeInteger } from '../utils/nextSafeInteger';
 
 import { AtomFn } from './types';

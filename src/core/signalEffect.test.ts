@@ -5,8 +5,8 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { getSignalNode } from './signal';
 import { SignalEffect } from './signalEffect';
+import { getSignalNode } from './signals/signal';
 
 describe('SignalEffect', () => {
   describe('destroy()', () => {

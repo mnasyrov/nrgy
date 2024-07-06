@@ -6,7 +6,7 @@ import { batch } from './batch';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { RUNTIME } from './runtime';
-import { signal } from './signal';
+import { signal } from './signals/signal';
 
 describe('batch()', () => {
   it('should call the specified action', () => {

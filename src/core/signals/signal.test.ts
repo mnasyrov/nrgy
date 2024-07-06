@@ -1,8 +1,9 @@
-import { expectEffectContext } from '../test/matchers';
-import { flushMicrotasks } from '../test/testUtils';
+import { expectEffectContext } from '../../test/matchers';
+import { flushMicrotasks } from '../../test/testUtils';
+import { effect, syncEffect } from '../effect';
+import { RUNTIME } from '../runtime';
+import { SignalEffect } from '../signalEffect';
 
-import { effect, syncEffect } from './effect';
-import { RUNTIME } from './runtime';
 import {
   destroySignal,
   getSignalName,
@@ -10,7 +11,6 @@ import {
   isSignalDestroyed,
   signal,
 } from './signal';
-import { SignalEffect } from './signalEffect';
 
 describe('getSignalName()', () => {
   it('should return a name of writable and read-only atoms', () => {

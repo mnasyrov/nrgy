@@ -5,8 +5,8 @@ import { AtomUpdateError } from './atom';
 import { atom } from './atoms/writableAtom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
-import { getSignalNode, signal } from './signal';
-import { keepLastValue } from './signalUtils';
+import { keepLastValue } from './signals/keepLastValue';
+import { getSignalNode, signal } from './signals/signal';
 
 describe('effect()', () => {
   it('should subscribe to a signal', async () => {

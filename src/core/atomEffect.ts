@@ -4,7 +4,7 @@ import { EffectAction, EffectContext } from './effectTypes';
 import { RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { BaseScope } from './scope/baseScope';
-import { destroySignal, signal } from './signal';
+import { destroySignal, signal } from './signals/signal';
 import { createWeakRef } from './utils/createWeakRef';
 import { isPromise } from './utils/isPromise';
 import { ListItem, removeFromList } from './utils/list';

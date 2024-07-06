@@ -2,7 +2,7 @@ import { createAction } from 'rx-effects';
 import { Subject } from 'rxjs';
 
 import { destroySignal, isSignal, signal, syncEffect } from '../core';
-import { getSignalNode, isSignalSubscribed } from '../core/signal';
+import { getSignalNode, isSignalSubscribed } from '../core/signals/signal';
 import { expectEffectContext } from '../test/matchers';
 
 import { fromAction, toAction } from './action';
