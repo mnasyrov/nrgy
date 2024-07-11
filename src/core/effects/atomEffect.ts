@@ -1,4 +1,3 @@
-import { generateEffectId } from '../../effects/effectId';
 import { getAtomNode } from '../atoms/atom';
 import { AtomEffectNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
@@ -12,6 +11,7 @@ import { BaseScope } from '../scope/baseScope';
 import { destroySignal } from '../signals/common';
 import { signal } from '../signals/signal';
 
+import { generateEffectId } from './effectId';
 import { EffectAction, EffectContext } from './types';
 
 type AtomListItem = ListItem<{ atomId: number }>;

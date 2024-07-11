@@ -13,7 +13,7 @@ The energy for reactive programming with MVC/MVVM patterns
 ## Overview
 
 The library provides components for programming with reactive state and effects
-using MVC and MVVM-like design patterns.
+using MVC/MVVM design patterns.
 
 Core components include Atoms (stores), Signals (event emitters), Scopes and
 Effects (subscriptions), which form an efficient computation graph.
@@ -47,15 +47,34 @@ server applications, libraries and CLI tools.
 
 - Reactive state and effects
 - Fast and efficient computation graph
-- Tools for MVVM or MVC patterns
+- Tools for MVC/MVVM patterns
 - Framework-agnostic core components
 - Developer-friendly functional API
 - Typescript typings
 
-## Usage
+## Installation
 
-### Installation
+Nrgy is the all-in-one package with optional dependencies for particular
+integrations.
 
 ```
 npm install nrgy
 ```
+
+Install additional dependencies according to the following table:
+
+| Import             | Dependencies       | Command             |
+| ------------------ | ------------------ | ------------------- |
+| `nrgy`             | No dependencies    |                     |
+| `nrgy/mvc`         | No dependencies    |                     |
+| `nrgy/mvc-react`   | React.js           | `npm i react`       |
+| `nrgy/react`       | React.js           | `npm i react`       |
+| `nrgy/ditox`       | Ditox.js           | `npm i ditox`       |
+| `nrgy/ditox-react` | Ditox.js, React.js | `npm i ditox react` |
+| `nrgy/rx-effects`  | RxJS, RxEffects    | `npm i rx-effects`  |
+| `nrgy/rxjs`        | RxJS               | `npm i rxjs`        |
+| `nrgy/rxjs-react`  | RxJS, React.js     | `npm i rxjs react`  |
+
+## Documentation
+
+Find more docs at https://nrgy.js.org

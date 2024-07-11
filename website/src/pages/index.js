@@ -2,8 +2,10 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
+import MDXContent from '@theme/MDXContent';
 import styles from './index.module.css';
 import OverviewContent from './_overview.mdx';
+import UsageExampleContent from './_usage-example.mdx';
 
 import LogoIcon from '@site/static/img/logo.svg';
 import AddonExtensionIcon from '@site/static/icons/addon-extension-icon.svg';
@@ -21,14 +23,20 @@ export default function Home() {
     <Layout>
       <HomepageHeader />
       <main>
-        <FeaturesSection />
         <OverviewSection />
+        <FeaturesSection />
+        <UsageExampleSection />
 
-        <div className="container margin-vert--lg">
-          <Link className="button button--primary button--lg" to="/docs/intro">
-            Get started
-          </Link>
-        </div>
+        <section>
+          <div className="container margin-vert--lg">
+            <Link
+              className="button button--primary button--lg"
+              to="/docs/intro"
+            >
+              Get started
+            </Link>
+          </div>
+        </section>
       </main>
     </Layout>
   );
@@ -49,7 +57,7 @@ function HomepageHeader() {
         <p className={styles.heroTagline}>Energy for reactive programming</p>
 
         <p className={styles.heroSubtitle}>
-          State and effect management, MVC and MVVM patterns
+          State and effect management with MVC/MVVM patterns
         </p>
 
         <div className={styles.buttons}>
@@ -176,7 +184,21 @@ function OverviewSection() {
   return (
     <section>
       <div className="container">
-        <OverviewContent />
+        <MDXContent>
+          <OverviewContent />
+        </MDXContent>
+      </div>
+    </section>
+  );
+}
+
+function UsageExampleSection() {
+  return (
+    <section>
+      <div className="container">
+        <MDXContent>
+          <UsageExampleContent />
+        </MDXContent>
       </div>
     </section>
   );

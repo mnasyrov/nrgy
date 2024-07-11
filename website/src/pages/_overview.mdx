@@ -1,32 +1,18 @@
 # Overview
 
 The library provides components for programming with reactive state and effects
-using MVC and MVVM-like design patterns.
+using MVC/MVVM design patterns.
 
-Core components include Atoms (stores), Signals (event emitters), Scopes and
-Effects (subscriptions), which form an efficient computation graph.
+Core components form an efficient computation graph which includes:
 
-Additionally, the library includes an MVC/MVVM feature, that provides building
-blocks for programming Controllers for a business layer and View Models for a
-presentation layer. Controllers and view models can be extended using other
-features in an optional way.
+- **Atom** - a state store
+- **Signal** - an event emitter
+- **Effect** - a subscription to Atom or Signal
+- **Scope** - a sink of subscriptions
 
-Other parts of the library include integrations with third-party tools and
-frameworks. At the moment the following are supported:
+The library has tools for MVC/MVVM design pattern to program **Controller** as
+business logic and **View Model** as a presentation layer independently of UI
+framework.
 
-- [React][link:react] - a library for creating web user interfaces
-- [Ditox.js][link:ditox] - a dependency injection container and modules
-- [RxJS][link:rxjs] - a reactive programming library for composing asynchronous
-  or callback-based code
-- [RxEffects][link:rx-effects] - the predecessor of Nrgy.js, a reactive state
-  and effect management library based on RxJS
-
-All of these integrations are optional and can be used independently.
-
-The core and MVC components are framework-agnostic and can be used by web and
-server applications, libraries and CLI tools.
-
-[link:react]: https://react.dev
-[link:ditox]: https://github.com/mnasyrov/ditox
-[link:rxjs]: https://github.com/ReactiveX/rxjs
-[link:rx-effects]: https://github.com/mnasyrov/rx-effects
+Controllers and view models can be extended to use additional features, as
+example, to use a dependency injection container.

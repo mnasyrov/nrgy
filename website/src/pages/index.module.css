@@ -46,12 +46,6 @@ p.heroSubtitle {
   line-height: 28px;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
-}
-
 .buttons {
   display: flex;
   align-items: center;
@@ -61,6 +55,22 @@ p.heroSubtitle {
 .features {
   display: flex;
   align-items: center;
-  padding: 2rem 0;
   width: 100%;
+}
+
+section {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+
+  section,
+  .features {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }

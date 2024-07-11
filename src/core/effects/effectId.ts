@@ -1,4 +1,4 @@
-import { nextSafeInteger } from '../core/internals/nextSafeInteger';
+import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 let EFFECT_ID: number = 0;
 

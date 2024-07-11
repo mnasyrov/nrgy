@@ -1,0 +1,103 @@
+# Example code
+
+A picture is worth a thousand words
+
+## Core toos
+
+Reactive state and effects:
+
+```ts
+import { atom, compute, effect, signal } from 'nrgy';
+
+const name = atom<string>('World');
+const greetings = compute(() => `Hello ${name()}!`);
+
+console.log(greetings());
+// console: Hello World!
+
+name.update((value) => value.toUpperCase());
+effect(greetings, (value) => console.log(value));
+// console: Hello WORLD!
+
+const changeName = signal<string>();
+effect(changeName, (nextValue) => name.set(nextValue));
+
+changeName('UserName');
+// console: Hello UserName!
+```
+
+## MVVM pattern
+
+Separating presentation logic from a view:
+
+```ts title="types.ts"
+import { Atom } from 'nrgy';
+import { ViewModel } from 'nrgy/mvc';
+
+export type CounterViewModelType = ViewModel<{
+  props: { initialValue: Atom<number> };
+
+  state: { counter: Atom<number> };
+
+  increase(): void;
+}>;
+```
+
+```tsx title="counter.viewModel.ts"
+import { declareViewModel } from 'nrgy/mvc';
+
+import { CounterViewModelType } from './types.ts';
+
+export const CounterViewModel = declareViewModel<CounterViewModelType>(
+  ({ scope, view }) => {
+    const { initialValue } = view.props;
+
+    const counter = scope.atom(initialValue());
+
+    scope.effect(counter, (value) => {
+      // Performing a side effect
+      console.log('counter', value);
+    });
+
+    return {
+      state: { counter: counter.asReadonly() },
+
+      increase: () => counter.update((prev) => prev + 1),
+    };
+  },
+);
+```
+
+```tsx title="counter.view.tsx"
+import { useAtoms } from 'nrgy/react';
+import { FC } from 'react';
+
+import { CounterViewModelType } from './types.ts';
+
+export const CounterView: FC<{
+  viewModel: CounterViewModelType;
+  label: string;
+}> = ({ viewModel, label }) => {
+  const { value } = useAtoms(viewModel.state);
+
+  return (
+    <>
+      <span>
+        {label}: {value}
+      </span>
+
+      <button onClick={() => viewModel.increase()} />
+    </>
+  );
+};
+```
+
+```tsx title="Counter.tsx"
+import { withViewModel } from 'nrgy/mvc-react';
+
+import { CounterView } from './counter.view.tsx';
+import { CounterViewModel } from './counter.viewModel.tsx';
+
+// HOC component combines the view and the view model
+export const Counter = withViewModel(CounterViewModel)(CounterView);
+```

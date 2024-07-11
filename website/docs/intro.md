@@ -2,54 +2,32 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+The library provides components for programming with reactive state and effects
+using MVC/MVVM design patterns.
 
-## Getting Started
+Core components form an efficient computation graph which includes:
 
-Get started by **creating a new site**.
+- **Atom** - a state store
+- **Signal** - an event emitter
+- **Effect** - a subscription to Atom or Signal
+- **Scope** - a sink of subscriptions
 
-Or **try Docusaurus immediately** with
-**[docusaurus.new](https://docusaurus.new)**.
+The library provides building blocks for MVC/MVVM design pattern to program
+Controllers as business logic and View Models as a presentation layer
+independently of UI framework. Controllers and view models can be extended to
+use additional features, as example, to use a dependency injection container.
 
-### What you'll need
+Supported optional integrations with third-party tools and frameworks:
 
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related
-    to dependencies.
+- [React](https://react.dev) - a library for creating web user interfaces
+- [Ditox.js](https://github.com/mnasyrov/ditox) - a dependency injection
+  container and modules
+- [RxJS](https://github.com/ReactiveX/rxjs) - a reactive programming library for
+  composing asynchronous or callback-based code
+- [RxEffects](https://github.com/mnasyrov/rx-effects) - the predecessor of
+  Nrgy.js, a reactive state and effect management library based on RxJS
 
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run
-the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any
-other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work
-with your newly created Docusaurus site, you'll need to navigate the terminal
-there.
-
-The `npm run start` command builds your website locally and serves it through a
-development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads
-automatically** and displays your changes.
+The core and MVC/MVVM components are framework-agnostic and can be used by web
+and server applications, libraries and CLI tools.
