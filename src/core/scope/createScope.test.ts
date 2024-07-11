@@ -68,6 +68,35 @@ describe('createScope()', () => {
     });
   });
 
+  describe('createScope()', () => {
+    it('should creates a child scope', () => {
+      const onParentDestroy = jest.fn();
+      const onChildDestroy1 = jest.fn();
+      const onChildDestroy2 = jest.fn();
+
+      const parent = createScope();
+      parent.onDestroy(onParentDestroy);
+
+      const child1 = parent.createScope();
+      child1.onDestroy(onChildDestroy1);
+
+      const child2 = parent.createScope();
+      child2.onDestroy(onChildDestroy2);
+
+      child1.destroy();
+      expect(onParentDestroy).toHaveBeenCalledTimes(0);
+      expect(onChildDestroy1).toHaveBeenCalledTimes(1);
+      expect(onChildDestroy2).toHaveBeenCalledTimes(0);
+
+      onChildDestroy1.mockClear();
+
+      parent.destroy();
+      expect(onParentDestroy).toHaveBeenCalledTimes(1);
+      expect(onChildDestroy1).toHaveBeenCalledTimes(0);
+      expect(onChildDestroy2).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('signal()', () => {
     it('should create and register a signal', () => {
       const scope = createScope();

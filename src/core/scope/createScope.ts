@@ -18,6 +18,10 @@ export function createScope(): Scope {
     add: scope.add.bind(scope),
     destroy: scope.destroy.bind(scope),
 
+    createScope: () => {
+      return scope.add(createScope());
+    },
+
     signal: (...args: any[]) => {
       const emitter = (signal as AnyFunction)(...args);
       scope.onDestroy(() => destroySignal(emitter));

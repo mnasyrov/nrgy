@@ -44,6 +44,11 @@ export interface Scope extends Destroyable {
   destroy: () => void;
 
   /**
+   * Creates a child scope
+   */
+  createScope: () => Scope;
+
+  /**
    * Creates a new atom and registers it for later disposal
    */
   atom: AtomFn;
