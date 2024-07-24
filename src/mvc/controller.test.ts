@@ -304,7 +304,7 @@ describe('createControllerContext', () => {
   });
 });
 
-describe('ControllerContext', () => {
+describe('ControllerContext in Controller', () => {
   describe('create()', () => {
     const SquareController = declareController().apply(() => ({
       pow: (x: number) => x * x,

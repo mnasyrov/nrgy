@@ -5,6 +5,7 @@ import {
   BaseController,
   BaseControllerContext,
   Controller,
+  ControllerContext,
   ControllerDeclaration,
   createControllerDeclaration,
   ExtensionFn,
@@ -28,7 +29,7 @@ export type InferViewModelProps<TViewModel extends BaseViewModel> =
 export type ViewModelFactory<
   TContext extends BaseControllerContext,
   TViewModel extends BaseViewModel,
-> = (context: TContext) => Omit<TViewModel, 'props'>;
+> = (context: ControllerContext<TContext>) => Omit<TViewModel, 'props'>;
 
 export abstract class BaseViewController<
   TViewModel extends BaseViewModel,
