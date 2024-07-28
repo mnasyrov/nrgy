@@ -31,7 +31,7 @@ export default function Home() {
           <div className="container margin-vert--lg">
             <Link
               className="button button--primary button--lg"
-              to="/docs/intro"
+              to="/docs/introduction"
             >
               Get started
             </Link>
@@ -61,7 +61,10 @@ function HomepageHeader() {
         </p>
 
         <div className={styles.buttons}>
-          <Link className="button button--primary button--lg" to="/docs/intro">
+          <Link
+            className="button button--primary button--lg"
+            to="/docs/introduction"
+          >
             Get started
           </Link>
         </div>
