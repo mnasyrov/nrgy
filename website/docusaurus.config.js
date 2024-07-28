@@ -40,11 +40,6 @@ const config = {
   // onBrokenMarkdownLinks: 'warn',
   // onDuplicateRoutes: 'throw',
 
-  i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
-  },
-
   presets: [
     [
       'classic',
