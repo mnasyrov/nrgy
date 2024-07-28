@@ -4,14 +4,10 @@ import tsup from 'tsup';
 import pkg from './package.json';
 
 const entries = [
-  // Core libs
   { entry: 'index', source: 'src/core' },
   { entry: 'mvc', source: 'src/mvc' },
   { entry: 'mvc-react', source: 'src/mvc-react' },
   { entry: 'react', source: 'src/react' },
-  { entry: 'store', source: 'src/store' },
-
-  // Extensions
   { entry: 'ditox', source: 'src/ditox' },
   { entry: 'ditox-react', source: 'src/ditox-react' },
   { entry: 'rx-effects', source: 'src/rx-effects' },

@@ -7,12 +7,11 @@ import userEvent from '@testing-library/user-event';
 import { createContainer, token } from 'ditox';
 import { CustomDependencyContainer } from 'ditox-react';
 
-import { Atom } from '../core';
+import { Atom, declareStore } from '../core';
 import { withInjections } from '../ditox';
 import { DitoxNrgyExtension } from '../ditox-react';
 import { declareViewModel, ViewModel } from '../mvc';
 import { useAtom, useAtoms } from '../react';
-import { declareStore } from '../store';
 
 import { useProvidedViewController } from './ViewControllerProvider';
 import { withViewModel } from './withViewModel';

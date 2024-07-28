@@ -66,6 +66,26 @@ export { ScopeDestructionError } from './scope/scopeDestructionError';
 export { createScope } from './scope/createScope';
 
 //
+// Store
+//
+
+export type {
+  Store,
+  StoreUpdate,
+  StoreUpdates,
+  StateUpdates,
+  StateMutation,
+} from './store/store';
+export {
+  createStore,
+  createStoreUpdates,
+  declareStateUpdates,
+} from './store/store';
+
+export type { StoreFactory, DeclareStoreOptions } from './store/declareStore';
+export { declareStore } from './store/declareStore';
+
+//
 // Utilities
 //
 

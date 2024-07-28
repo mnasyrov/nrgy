@@ -1,4 +1,5 @@
-import { atom, AtomOptions, WritableAtom } from '../core';
+import { AtomOptions, WritableAtom } from '../atoms/atom';
+import { atom } from '../atoms/writableAtom';
 
 /**
  * A function to update a state.
@@ -60,18 +61,6 @@ export function declareStateUpdates<
   }
 
   return (updates) => updates;
-}
-
-/**
- * Returns a mutation which applies all provided mutations for a state.
- *
- * You can use this helper to apply multiple changes at the same time.
- */
-export function pipeStateMutations<State>(
-  mutations: ReadonlyArray<StateMutation<State>>,
-): StateMutation<State> {
-  return (state) =>
-    mutations.reduce((nextState, mutation) => mutation(nextState), state);
 }
 
 /**

@@ -1,30 +1,15 @@
-import { atom, compute, effect, objectEquals } from '../core';
-import { collectChanges, flushMicrotasks } from '../test/testUtils';
+import { collectChanges, flushMicrotasks } from '../../test/testUtils';
+import { compute } from '../atoms/compute';
+import { atom } from '../atoms/writableAtom';
+import { effect } from '../effects/effect';
+import { objectEquals } from '../utils/objectEquals';
 
 import {
   createStore,
   createStoreUpdates,
   declareStateUpdates,
-  pipeStateMutations,
-  StateMutation,
   StateUpdates,
 } from './store';
-
-describe('pipeStateMutations()', () => {
-  type State = { value: number };
-
-  it('should compose the provided mutations to a single mutation', () => {
-    const composedMutation: StateMutation<State> = pipeStateMutations([
-      () => ({ value: 10 }),
-      (state) => ({ value: state.value + 1 }),
-      (state) => ({ value: state.value * 2 }),
-    ]);
-
-    const value = atom({ value: 0 });
-    value.update(composedMutation);
-    expect(value()).toStrictEqual({ value: 22 });
-  });
-});
 
 describe('Concurrent Store updates', () => {
   it('should update the store and apply derived updates until completing the current one', async () => {

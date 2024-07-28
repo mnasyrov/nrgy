@@ -4,9 +4,8 @@ import {
   futureOperation,
   FutureResult,
 } from '../experiments/futures/futureOperation';
-import { Atom, compute, signal } from '../src/core';
+import { Atom, compute, declareStore, signal } from '../src/core';
 import { declareController } from '../src/mvc';
-import { declareStore } from '../src/store';
 
 // The state and a factory for the store
 type CartState = Readonly<{ orders: Array<string> }>;
