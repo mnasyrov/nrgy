@@ -53,6 +53,25 @@ export type ComputedNode<T> = AtomNode<T> &
 
 /**
  * @internal
+ *
+ * An atom node
+ */
+export type WritableAtomNode<T> = ReactiveNode &
+  AtomNode<T> &
+  Readonly<{
+    /**
+     * Subscribe to the atom
+     */
+    subscribe: (effect: AtomEffectNode) => void;
+
+    // /**
+    //  * Unsubscribe from the atom
+    //  */
+    // unsubscribe: (effect: AtomEffectNode) => void;
+  }>;
+
+/**
+ * @internal
  */
 export type AtomEffectNode = ReactiveNode &
   Readonly<{
@@ -143,12 +162,12 @@ export type SignalNode<T> = ReactiveNode &
     /**
      * Subscribe to this signal
      */
-    subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
+    subscribe: (effect: SignalEffectNode<T>) => void;
 
     /**
      * Unsubscribe from this signal
      */
-    unsubscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
+    unsubscribe: (effect: SignalEffectNode<T>) => void;
   }>;
 
 /**
