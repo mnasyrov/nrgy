@@ -14,7 +14,7 @@
     "start": "npm run -w nrgy build -- --silent && tsx ./index.ts"
   },
   "devDependencies": {
-    "nrgy-reference": "npm:nrgy@0.0.27",
+    "nrgy-reference": "npm:nrgy@0.0.45",
     "tinybench": "2.8.0"
   }
 }
