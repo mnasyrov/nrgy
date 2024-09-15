@@ -65,13 +65,13 @@ class SignalImpl<T> implements SignalNode<T> {
     return this.consumerEffects.size > 0;
   }
 
-  subscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
-    this.consumerEffects.add(effectRef);
+  subscribe(effect: SignalEffectNode<T>): void {
+    this.consumerEffects.add(effect.ref);
     this.onSubscribe?.();
   }
 
-  unsubscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
-    if (this.consumerEffects.delete(effectRef)) {
+  unsubscribe(effect: SignalEffectNode<T>): void {
+    if (this.consumerEffects.delete(effect.ref)) {
       this.onUnsubscribe?.(this.consumerEffects.size === 0);
     }
   }

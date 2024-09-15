@@ -1,5 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { AtomEffectNode, AtomNode } from '../common/reactiveNodes';
+import { AtomEffectNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
 import { syncEffect } from '../effects/effect';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
@@ -16,7 +16,7 @@ import {
 } from './atom';
 import { AtomFn } from './types';
 
-class WritableAtomImpl<T> implements AtomNode<T> {
+class WritableAtomImpl<T> implements WritableAtomNode<T> {
   readonly id: number = generateAtomId();
   readonly name?: string;
 
@@ -178,14 +178,18 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Mark that this producer node has been accessed in the current reactive context.
    */
   protected producerAccessed(): void {
-    if (!RUNTIME.tracked) {
-      return;
+    if (RUNTIME.tracked) {
+      const effect = RUNTIME.currentEffect;
+      if (effect && !effect.isDestroyed) {
+        this.subscribe(effect);
+        effect.notifyAccess(this.id);
+      }
     }
+  }
 
-    const effect = RUNTIME.currentEffect;
-    if (effect && !effect.isDestroyed) {
+  subscribe(effect: AtomEffectNode): void {
+    if (!effect.isDestroyed) {
       this.consumerEffects.set(effect.ref, effect.clock);
-      effect.notifyAccess(this.id);
     }
   }
 }
