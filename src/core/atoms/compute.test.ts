@@ -3,6 +3,7 @@ import {
   collectChanges,
   collectHistory,
   flushMicrotasks,
+  promiseTimeout,
 } from '../../test/testUtils';
 import { Atom } from '../common/types';
 import { effect, syncEffect } from '../effects/effect';
@@ -548,6 +549,34 @@ describe('compute()', () => {
 
     // Tear down the only subscription.
     subscription.destroy();
+  });
+
+  it('should recalculate once', async () => {
+    const counter = atom(1);
+    let i = 1;
+    let j = 1;
+
+    // Create derived computation
+    const doubled = compute(() => {
+      console.log('doubled', i++);
+      return counter() * 2;
+    });
+    const formula = compute(() => {
+      console.log('formula', j++);
+      return counter() + doubled();
+    });
+
+    // !!! TODO: Remove console.log
+    effect(formula, (value) => console.log('f1', value));
+    effect(formula, (value) => console.log('f2', value));
+
+    // Update
+    setTimeout(() => counter.set(2), 100);
+
+    await promiseTimeout(200);
+
+    expect(i).toBe(3);
+    expect(j).toBe(3);
   });
 });
 
