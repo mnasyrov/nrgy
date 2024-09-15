@@ -40,17 +40,18 @@ export class Runtime {
    * Run a function in a tracked context
    */
   runAsTracked<T>(effect: AtomEffectNode, fn: () => T): T {
-    const prevEffect = this.currentEffect;
-    this.currentEffect = effect;
+    if (this.tracked || this.currentEffect) {
+      throw new Error('Tracking context is already activated');
+    }
 
-    const prevTracked = this.tracked;
+    this.currentEffect = effect;
     this.tracked = true;
 
     try {
       return fn();
     } finally {
-      this.currentEffect = prevEffect;
-      this.tracked = prevTracked;
+      this.currentEffect = undefined;
+      this.tracked = false;
     }
   }
 
@@ -58,16 +59,12 @@ export class Runtime {
    * Run a function in an untracked context
    */
   runAsUntracked<T>(fn: () => T): T {
-    const prevEffect = this.currentEffect;
-    this.currentEffect = undefined;
-
     const prevTracked = this.tracked;
     this.tracked = false;
 
     try {
       return fn();
     } finally {
-      this.currentEffect = prevEffect;
       this.tracked = prevTracked;
     }
   }
