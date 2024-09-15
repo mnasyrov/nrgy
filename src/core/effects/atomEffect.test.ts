@@ -3,6 +3,7 @@ import { flushMicrotasks } from '../../test/testUtils';
 import { getAtomId, getAtomNode } from '../atoms/atom';
 import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
+import { WritableAtomNode } from '../common/reactiveNodes';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -84,14 +85,14 @@ describe('AtomEffect', () => {
   describe('notifyAccess()', () => {
     it('should add an atom as dependency', () => {
       const source = atom(1);
-      const atomId = getAtomId(source);
+      const atomNode = getAtomNode(source) as WritableAtomNode<number>;
 
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
         source,
         () => {},
       );
-      effect.notifyAccess(atomId);
+      effect.notifyAccess(atomNode);
       expect((effect as any).referredAtomIds).toEqual({
         atomId: 6,
         next: undefined,
@@ -100,7 +101,7 @@ describe('AtomEffect', () => {
 
     it('should not add an atom as dependency if the effect is destroyed', () => {
       const source = atom(1);
-      const atomId = getAtomId(source);
+      const atomNode = getAtomNode(source) as WritableAtomNode<number>;
 
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
@@ -108,7 +109,7 @@ describe('AtomEffect', () => {
         () => {},
       );
       effect.destroy();
-      effect.notifyAccess(atomId);
+      effect.notifyAccess(atomNode);
 
       expect((effect as any).referredAtomIds).toEqual(undefined);
     });

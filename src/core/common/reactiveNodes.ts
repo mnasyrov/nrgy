@@ -114,7 +114,7 @@ export type AtomEffectNode = ReactiveNode &
     /**
      * Notify the effect that an atom has been accessed
      */
-    notifyAccess: (atomId: number) => void;
+    notifyAccess: (atom: WritableAtomNode<unknown>) => void;
 
     /**
      * Schedule the effect to be re-run

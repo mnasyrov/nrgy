@@ -1,5 +1,5 @@
 import { getAtomNode } from '../atoms/atom';
-import { AtomEffectNode } from '../common/reactiveNodes';
+import { AtomEffectNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
 import { createWeakRef } from '../internals/createWeakRef';
 import { isPromise } from '../internals/isPromise';
@@ -126,12 +126,13 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   /**
    * Notify the effect that an atom has been accessed
    */
-  notifyAccess(atomId: number): void {
+  notifyAccess(atom: WritableAtomNode<unknown>): void {
     if (this.isDestroyed) {
       return;
     }
 
-    this.addReferredAtom(atomId);
+    atom.subscribe(this);
+    this.addReferredAtom(atom.id);
   }
 
   /**
