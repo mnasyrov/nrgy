@@ -3,7 +3,6 @@ import { AtomEffectNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
 import { createWeakRef } from '../internals/createWeakRef';
 import { isPromise } from '../internals/isPromise';
-import { ListItem, removeFromList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
 import { TaskScheduler } from '../internals/schedulers';
@@ -13,8 +12,6 @@ import { signal } from '../signals/signal';
 
 import { generateEffectId } from './effectId';
 import { EffectAction, EffectContext } from './types';
-
-type AtomListItem = ListItem<{ atomId: number }>;
 
 /**
  * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
@@ -60,7 +57,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  referredAtomIds: undefined | AtomListItem;
+  private subscribedAtomCount = 0;
 
   constructor(
     scheduler: TaskScheduler,
@@ -84,7 +81,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.scheduler = undefined;
     this.source = undefined;
     this.action = undefined;
-    this.referredAtomIds = undefined;
+    this.subscribedAtomCount = 0;
 
     this.actionScope?.destroy();
     this.actionScope = undefined;
@@ -97,32 +94,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     destroySignal(this.onDestroy);
   }
 
-  hasReferredAtom(atomId: number): boolean {
-    for (let node = this.referredAtomIds; node; node = node.next) {
-      if (node.atomId === atomId) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  addReferredAtom(atomId: number) {
-    if (!this.hasReferredAtom(atomId)) {
-      this.referredAtomIds = { atomId, next: this.referredAtomIds };
-    }
-  }
-
-  removeReferredAtom(atomId: number): void {
-    if (!this.referredAtomIds) {
-      return;
-    }
-
-    this.referredAtomIds = removeFromList(
-      this.referredAtomIds,
-      (node) => node.atomId === atomId,
-    );
-  }
-
   /**
    * Notify the effect that an atom has been accessed
    */
@@ -131,8 +102,9 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    atom.subscribe(this);
-    this.addReferredAtom(atom.id);
+    if (atom.subscribe(this)) {
+      this.subscribedAtomCount++;
+    }
   }
 
   /**
@@ -155,14 +127,16 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   /**
    * Notify the effect that it must be destroyed
    */
-  notifyDestroy(atomId: number): void {
+  notifyDestroy(): void {
     if (this.isDestroyed) {
       return;
     }
 
-    this.removeReferredAtom(atomId);
+    if (this.subscribedAtomCount > 0) {
+      this.subscribedAtomCount--;
+    }
 
-    if (!this.referredAtomIds) {
+    if (this.subscribedAtomCount === 0) {
       this.destroy();
     }
   }
