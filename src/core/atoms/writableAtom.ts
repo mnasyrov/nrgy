@@ -181,8 +181,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     if (RUNTIME.tracked) {
       const effect = RUNTIME.currentEffect;
       if (effect && !effect.isDestroyed) {
-        this.subscribe(effect);
-        effect.notifyAccess(this.id);
+        effect.notifyAccess(this);
       }
     }
   }
