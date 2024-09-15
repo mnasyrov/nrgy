@@ -1,10 +1,8 @@
 import { getAtomNode } from '../atoms/atom';
 import { AtomEffectNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
-import { createWeakRef } from '../internals/createWeakRef';
+import { DataRef } from '../common/utilityTypes';
 import { isPromise } from '../internals/isPromise';
-import { ListItem, removeFromList } from '../internals/list';
-import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
 import { TaskScheduler } from '../internals/schedulers';
 import { BaseScope } from '../scope/baseScope';
@@ -13,8 +11,6 @@ import { signal } from '../signals/signal';
 
 import { generateEffectId } from './effectId';
 import { EffectAction, EffectContext } from './types';
-
-type AtomListItem = ListItem<{ atomId: number }>;
 
 /**
  * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
@@ -25,12 +21,16 @@ type AtomListItem = ListItem<{ atomId: number }>;
  */
 export class AtomEffect<T, R> implements AtomEffectNode {
   readonly id = generateEffectId();
-  readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
 
-  /** Monotonically increasing version of the effect */
-  clock = 0;
+  private _ref: DataRef<AtomEffectNode> | undefined;
+
+  get ref(): DataRef<AtomEffectNode> {
+    if (!this._ref) this._ref = { value: this };
+    return this._ref;
+  }
 
   private lastValueVersion: number | undefined;
+  private notifiedAt: number | undefined;
 
   /** Whether the effect needs to be re-run */
   dirty = false;
@@ -60,8 +60,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  referredAtomIds: undefined | AtomListItem;
-
   constructor(
     scheduler: TaskScheduler,
     source: Atom<T>,
@@ -84,7 +82,12 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.scheduler = undefined;
     this.source = undefined;
     this.action = undefined;
-    this.referredAtomIds = undefined;
+    this.notifiedAt = undefined;
+
+    if (this._ref) {
+      this._ref.value = undefined;
+      this._ref = undefined;
+    }
 
     this.actionScope?.destroy();
     this.actionScope = undefined;
@@ -97,72 +100,24 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     destroySignal(this.onDestroy);
   }
 
-  hasReferredAtom(atomId: number): boolean {
-    for (let node = this.referredAtomIds; node; node = node.next) {
-      if (node.atomId === atomId) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  addReferredAtom(atomId: number) {
-    if (!this.hasReferredAtom(atomId)) {
-      this.referredAtomIds = { atomId, next: this.referredAtomIds };
-    }
-  }
-
-  removeReferredAtom(atomId: number): void {
-    if (!this.referredAtomIds) {
-      return;
-    }
-
-    this.referredAtomIds = removeFromList(
-      this.referredAtomIds,
-      (node) => node.atomId === atomId,
-    );
-  }
-
-  /**
-   * Notify the effect that an atom has been accessed
-   */
-  notifyAccess(atomId: number): void {
-    if (this.isDestroyed) {
-      return;
-    }
-
-    this.addReferredAtom(atomId);
-  }
-
   /**
    * Schedule the effect to be re-run
    */
   notify(): void {
+    if (this.notifiedAt === RUNTIME.clock) {
+      return;
+    }
+    this.notifiedAt = RUNTIME.clock;
+
     if (this.isDestroyed) {
       return;
     }
 
-    this.clock = nextSafeInteger(this.clock);
     const needsSchedule = !this.dirty;
     this.dirty = true;
 
     if (needsSchedule && this.scheduler) {
       this.scheduler.schedule(() => this.run());
-    }
-  }
-
-  /**
-   * Notify the effect that it must be destroyed
-   */
-  notifyDestroy(atomId: number): void {
-    if (this.isDestroyed) {
-      return;
-    }
-
-    this.removeReferredAtom(atomId);
-
-    if (!this.referredAtomIds) {
-      this.destroy();
     }
   }
 
@@ -178,15 +133,28 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     }
 
     this.dirty = false;
+    this.notifiedAt = undefined;
 
     if (this.isDestroyed || !this.action || !this.source) {
       return;
     }
 
-    let result;
+    let sourceValue: any;
+    let resultValue;
+    let resultError;
+    let isResultError;
 
     try {
-      const value = RUNTIME.runAsTracked(this, this.source);
+      sourceValue = RUNTIME.runAsTracked(this, this.source);
+    } catch (error) {
+      isResultError = true;
+      resultError = error;
+    }
+
+    try {
+      if (this.isDestroyed) {
+        return;
+      }
 
       const node = getAtomNode(this.source);
       if (this.lastValueVersion === node.version) {
@@ -197,17 +165,25 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 
       this.actionScope?.destroy();
 
-      result = this.action(value, this.getContext());
+      if (!isResultError) {
+        resultValue = this.action(sourceValue, this.getContext());
+      }
     } catch (error) {
-      this.onError(error);
+      isResultError = true;
+      resultError = error;
     }
 
-    if (isPromise(result)) {
-      result
+    if (isResultError) {
+      this.onError(resultError);
+      return;
+    }
+
+    if (isPromise(resultValue)) {
+      resultValue
         .then((value) => this.onResult(value))
         .catch((error) => this.onError(error));
     } else {
-      this.onResult(result as any);
+      this.onResult(resultValue as any);
     }
   }
 

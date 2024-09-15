@@ -1,3 +1,6 @@
+import { compute } from '../atoms/compute';
+import { AtomEffect } from '../effects/atomEffect';
+
 import { Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
@@ -23,7 +26,11 @@ describe('EnergyRuntime', () => {
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
       const runtime = new Runtime();
-      runtime.tracked = true;
+      runtime.activeEffect = new AtomEffect(
+        RUNTIME.asyncScheduler,
+        compute(() => 1),
+        () => {},
+      );
 
       const spy = jest.fn();
       const result = runtime.runAsUntracked(() => {

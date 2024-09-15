@@ -1,5 +1,5 @@
 import { SignalEffectNode } from '../common/reactiveNodes';
-import { createWeakRef } from '../internals/createWeakRef';
+import { DataRef } from '../common/utilityTypes';
 import { isPromise } from '../internals/isPromise';
 import { TaskScheduler } from '../internals/schedulers';
 import { BaseScope } from '../scope/baseScope';
@@ -12,7 +12,12 @@ import { EffectAction, EffectContext } from './types';
  * SignalEffect represents a subscription to a signal
  */
 export class SignalEffect<T, R> implements SignalEffectNode<any> {
-  readonly ref: WeakRef<SignalEffectNode<T>> = createWeakRef(this);
+  private _ref: DataRef<SignalEffectNode<T>> | undefined;
+
+  get ref(): DataRef<SignalEffectNode<T>> {
+    if (!this._ref) this._ref = { value: this };
+    return this._ref;
+  }
 
   isDestroyed = false;
 
@@ -53,6 +58,11 @@ export class SignalEffect<T, R> implements SignalEffectNode<any> {
     this.actionScope?.destroy();
     this.actionScope = undefined;
     this.actionContext = undefined;
+
+    if (this._ref) {
+      this._ref.value = undefined;
+      this._ref = undefined;
+    }
 
     this.onDestroy();
 

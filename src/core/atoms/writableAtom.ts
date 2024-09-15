@@ -1,7 +1,9 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { AtomEffectNode, AtomNode } from '../common/reactiveNodes';
+import { AtomConsumer, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
+import { DataRef } from '../common/utilityTypes';
 import { syncEffect } from '../effects/effect';
+import { LinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
 import { destroySignal } from '../signals/common';
@@ -16,7 +18,16 @@ import {
 } from './atom';
 import { AtomFn } from './types';
 
-class WritableAtomImpl<T> implements AtomNode<T> {
+const ATOM_STATE_ALIVE = 0;
+const ATOM_STATE_PREDESTROY = 1;
+const ATOM_STATE_DESTROYED = 2;
+
+type AtomState =
+  | typeof ATOM_STATE_ALIVE
+  | typeof ATOM_STATE_PREDESTROY
+  | typeof ATOM_STATE_DESTROYED;
+
+class WritableAtomImpl<T> implements WritableAtomNode<T> {
   readonly id: number = generateAtomId();
   readonly name?: string;
 
@@ -29,9 +40,10 @@ class WritableAtomImpl<T> implements AtomNode<T> {
 
   private readonlyAtom: Atom<T> | undefined;
   private readonly equal: ValueEqualityFn<T>;
-  private readonly consumerEffects = new Map<WeakRef<AtomEffectNode>, number>();
 
-  private isDestroyed = false;
+  private consumers = new LinkedList<DataRef<AtomConsumer>>();
+
+  private state: AtomState = ATOM_STATE_ALIVE;
 
   constructor(
     private value: T,
@@ -46,8 +58,10 @@ class WritableAtomImpl<T> implements AtomNode<T> {
   }
 
   get(): T {
-    if (!this.isDestroyed) {
-      this.producerAccessed();
+    // Mark that this producer node has been accessed in the current reactive context.
+    // RUNTIME.trackAtom(this);
+    if (this.state === ATOM_STATE_ALIVE && RUNTIME.activeEffect) {
+      this.consumers.add(RUNTIME.activeEffect.ref);
     }
 
     return this.value;
@@ -63,7 +77,7 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Returns `true` if the value was changed.
    */
   set(newValue: T): boolean {
-    if (this.isDestroyed) {
+    if (this.state === ATOM_STATE_DESTROYED) {
       return false;
     }
 
@@ -96,7 +110,7 @@ class WritableAtomImpl<T> implements AtomNode<T> {
    * Calls `mutator` on the current value and assumes that it has been mutated.
    */
   mutate(mutator: (value: T) => void): void {
-    if (this.isDestroyed) {
+    if (this.state === ATOM_STATE_DESTROYED) {
       return;
     }
 
@@ -116,17 +130,19 @@ class WritableAtomImpl<T> implements AtomNode<T> {
   }
 
   destroy() {
-    if (this.isDestroyed) {
+    if (this.state !== ATOM_STATE_ALIVE) {
       return;
     }
 
-    this.producerDestroyed();
-    this.consumerEffects.clear();
+    this.state = ATOM_STATE_PREDESTROY;
+
+    this.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
+    this.consumers.clear();
 
     this.onDestroyed();
     destroySignal(this.onDestroyed);
 
-    this.isDestroyed = true;
+    this.state = ATOM_STATE_DESTROYED;
   }
 
   /**
@@ -145,47 +161,13 @@ class WritableAtomImpl<T> implements AtomNode<T> {
     RUNTIME.updateAtomClock();
     this.version = nextSafeInteger(this.version);
 
-    for (const [effectRef, atEffectClock] of this.consumerEffects) {
-      const effect = effectRef.deref();
+    if (this.state === ATOM_STATE_ALIVE && !this.consumers.isEmpty()) {
+      const consumerRefs = this.consumers.clonePointers();
+      this.consumers.clear();
 
-      if (
-        !effect ||
-        effect.isDestroyed ||
-        (!effect.dirty && effect.clock !== atEffectClock)
-      ) {
-        this.consumerEffects.delete(effectRef);
-        continue;
-      }
-
-      effect.notify();
-    }
-  }
-
-  /**
-   * Notify all consumers of this producer that it is destroyed
-   */
-  protected producerDestroyed(): void {
-    for (const [effectRef] of this.consumerEffects) {
-      const effect = effectRef.deref();
-
-      if (effect && !effect.isDestroyed) {
-        effect.notifyDestroy(this.id);
-      }
-    }
-  }
-
-  /**
-   * Mark that this producer node has been accessed in the current reactive context.
-   */
-  protected producerAccessed(): void {
-    if (!RUNTIME.tracked) {
-      return;
-    }
-
-    const effect = RUNTIME.currentEffect;
-    if (effect && !effect.isDestroyed) {
-      this.consumerEffects.set(effect.ref, effect.clock);
-      effect.notifyAccess(this.id);
+      RUNTIME.syncScheduler.schedule(() => {
+        consumerRefs.forEach(({ value: consumer }) => consumer?.notify());
+      });
     }
   }
 }

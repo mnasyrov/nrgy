@@ -66,7 +66,7 @@ describe('signal()', () => {
     const node = getSignalNode(a);
 
     const signalEffect = new SignalEffect(RUNTIME.syncScheduler, callback);
-    node.subscribe(signalEffect.ref);
+    node.subscribe(signalEffect);
 
     node.emit(10);
     expect(callback).toHaveBeenCalledTimes(1);
@@ -86,7 +86,7 @@ describe('signal()', () => {
     const node = getSignalNode(a);
 
     const signalEffect = new SignalEffect(RUNTIME.syncScheduler, () => {});
-    node.subscribe(signalEffect.ref);
+    node.subscribe(signalEffect);
 
     node.emit(10);
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);

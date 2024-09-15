@@ -1,4 +1,4 @@
-import { AtomEffectNode } from '../common/reactiveNodes';
+import { AtomConsumer } from '../common/reactiveNodes';
 
 import { nextSafeInteger } from './nextSafeInteger';
 import {
@@ -13,7 +13,10 @@ export class Runtime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
-  currentEffect: AtomEffectNode | undefined = undefined;
+  /**
+   * Active effect in a tracking context
+   */
+  activeEffect: AtomConsumer | undefined;
 
   /** @readonly */
   batchLock: number = 0;
@@ -21,7 +24,9 @@ export class Runtime {
   /**
    * Marks the current computation context as tracked
    */
-  tracked: boolean = false;
+  get tracked(): boolean {
+    return !!this.activeEffect;
+  }
 
   /**
    * @readonly
@@ -39,18 +44,14 @@ export class Runtime {
   /**
    * Run a function in a tracked context
    */
-  runAsTracked<T>(effect: AtomEffectNode, fn: () => T): T {
-    const prevEffect = this.currentEffect;
-    this.currentEffect = effect;
-
-    const prevTracked = this.tracked;
-    this.tracked = true;
+  runAsTracked<T>(effect: AtomConsumer, fn: () => T): T {
+    const prevEffect = this.activeEffect;
+    this.activeEffect = effect;
 
     try {
       return fn();
     } finally {
-      this.currentEffect = prevEffect;
-      this.tracked = prevTracked;
+      this.activeEffect = prevEffect;
     }
   }
 
@@ -58,17 +59,13 @@ export class Runtime {
    * Run a function in an untracked context
    */
   runAsUntracked<T>(fn: () => T): T {
-    const prevEffect = this.currentEffect;
-    this.currentEffect = undefined;
-
-    const prevTracked = this.tracked;
-    this.tracked = false;
+    const prevEffect = this.activeEffect;
+    this.activeEffect = undefined;
 
     try {
       return fn();
     } finally {
-      this.currentEffect = prevEffect;
-      this.tracked = prevTracked;
+      this.activeEffect = prevEffect;
     }
   }
 

@@ -1,6 +1,6 @@
 import { expectEffectContext } from '../../test/matchers';
 import { collectChanges, flushMicrotasks } from '../../test/testUtils';
-import { syncEffect } from '../effects/effect';
+import { effect, syncEffect } from '../effects/effect';
 import { getSignalNode } from '../signals/common';
 
 import { isAtom, WritableAtom } from './atom';
@@ -95,7 +95,6 @@ describe('WritableAtom', () => {
       const statePromise = collectChanges(store, () => {
         store.update((state) => state);
       });
-      store.destroy();
 
       expect(await statePromise).toEqual([{ value: 1 }]);
     });
@@ -175,18 +174,21 @@ describe('WritableAtom', () => {
 
   describe('destroy()', () => {
     it('should complete an internal store', async () => {
+      const changes: number[] = [];
       const store = atom<number>(1);
 
-      const changes = await collectChanges(store, async () => {
-        store.set(2);
-        await flushMicrotasks();
+      effect(store, (value) => changes.push(value));
+      await flushMicrotasks();
 
-        store.set(3);
-        store.destroy();
-        store.set(4);
-      });
+      store.set(2);
+      await flushMicrotasks();
 
-      expect(changes).toEqual([1, 2]);
+      store.set(3);
+      store.destroy();
+      store.set(4);
+      await flushMicrotasks();
+
+      expect(changes).toEqual([1, 2, 3]);
     });
 
     it('should call `onDestroy` callback', async () => {

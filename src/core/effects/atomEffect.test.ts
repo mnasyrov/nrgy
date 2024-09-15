@@ -1,6 +1,5 @@
 import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
-import { getAtomId, getAtomNode } from '../atoms/atom';
 import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
 import {
@@ -61,7 +60,6 @@ describe('AtomEffect', () => {
 
       effect.notify();
       expect(effect.dirty).toBe(true);
-      expect(effect.clock).toBe(1);
 
       expect(scheduler.isEmpty()).toBe(false);
       scheduler.execute();
@@ -76,77 +74,7 @@ describe('AtomEffect', () => {
 
       effect.notify();
       expect(effect.dirty).toBe(false);
-      expect(effect.clock).toBe(0);
       expect(scheduler.isEmpty()).toBe(true);
-    });
-  });
-
-  describe('notifyAccess()', () => {
-    it('should add an atom as dependency', () => {
-      const source = atom(1);
-      const atomId = getAtomId(source);
-
-      const effect = new AtomEffect(
-        createSyncTaskScheduler(),
-        source,
-        () => {},
-      );
-      effect.notifyAccess(atomId);
-      expect((effect as any).referredAtomIds).toEqual({
-        atomId: 6,
-        next: undefined,
-      });
-    });
-
-    it('should not add an atom as dependency if the effect is destroyed', () => {
-      const source = atom(1);
-      const atomId = getAtomId(source);
-
-      const effect = new AtomEffect(
-        createSyncTaskScheduler(),
-        source,
-        () => {},
-      );
-      effect.destroy();
-      effect.notifyAccess(atomId);
-
-      expect((effect as any).referredAtomIds).toEqual(undefined);
-    });
-  });
-
-  describe('notifyDestroy()', () => {
-    it('should notify the effect that it must be destroyed', () => {
-      const source = atom(1);
-
-      const effect = new AtomEffect(
-        createSyncTaskScheduler(),
-        source,
-        () => {},
-      );
-
-      effect.notifyDestroy(getAtomNode(source).id);
-
-      expect(effect.isDestroyed).toBe(true);
-    });
-
-    it('should not notify the effect if it is destroyed', () => {
-      const source = atom(1);
-      const atomId = getAtomId(source);
-      const effect = new AtomEffect(
-        createSyncTaskScheduler(),
-        atom(1),
-        () => {},
-      );
-
-      const mockDestroy = jest.fn(effect.destroy.bind(effect));
-      effect.destroy = mockDestroy;
-
-      effect.notifyDestroy(atomId);
-      expect(mockDestroy).toHaveBeenCalledTimes(1);
-
-      mockDestroy.mockClear();
-      effect.notifyDestroy(atomId);
-      expect(mockDestroy).toHaveBeenCalledTimes(0);
     });
   });
 

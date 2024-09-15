@@ -156,10 +156,6 @@ describe('effect()', () => {
     const source = signal();
 
     const node = getSignalNode(source);
-    let refValue: any = node;
-    (node as any).ref = {
-      deref: () => refValue,
-    };
 
     const fx = effect(source, () => {});
 
@@ -168,7 +164,7 @@ describe('effect()', () => {
     syncEffect(fx.onDestroy, onDestroy);
     expect(onDestroy).toHaveBeenCalledTimes(0);
 
-    refValue = undefined;
+    node.ref.value = undefined;
     expect(() => fx.destroy()).not.toThrow();
     expect(onDestroy).toHaveBeenCalledTimes(1);
   });
@@ -387,13 +383,13 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     const a = atom(1, { name: 'a' });
     const b = atom(0, { name: 'b' });
 
-    const fx = effect(
-      compute(() => {
-        const value = a();
-        b.set(value);
-      }),
-      () => {},
-    );
+    const c = compute(() => {
+      const value = a();
+      b.set(value);
+      return value;
+    });
+
+    const fx = effect(c, () => {});
 
     const errorCallback = jest.fn();
     effect(fx.onError, errorCallback);

@@ -1,4 +1,5 @@
 import { Signal } from './types';
+import { DataRef } from './utilityTypes';
 
 /**
  * @internal
@@ -44,6 +45,7 @@ export type AtomNode<T> = ReactiveNode &
  * A computed node
  */
 export type ComputedNode<T> = AtomNode<T> &
+  AtomConsumer &
   Readonly<{
     /**
      * The clock of the last computation
@@ -53,13 +55,37 @@ export type ComputedNode<T> = AtomNode<T> &
 
 /**
  * @internal
+ *
+ * An atom node
  */
-export type AtomEffectNode = ReactiveNode &
+export type WritableAtomNode<T> = ReactiveNode & AtomNode<T>;
+
+/**
+ * @internal
+ */
+export type AtomConsumer = ReactiveNode &
   Readonly<{
     /**
      * The reference to this effect node
      */
-    ref: WeakRef<AtomEffectNode>;
+    ref: DataRef<AtomConsumer>;
+
+    /**
+     * Schedule the effect to be re-run
+     */
+    notify: () => void;
+  }>;
+
+/**
+ * @internal
+ */
+export type AtomEffectNode = ReactiveNode &
+  AtomConsumer &
+  Readonly<{
+    /**
+     * The reference to this effect node
+     */
+    ref: DataRef<AtomEffectNode>;
 
     /**
      * Indicates that the `AtomEffect` has been destroyed
@@ -87,25 +113,9 @@ export type AtomEffectNode = ReactiveNode &
     onDestroy: Signal<void>;
 
     /**
-     * Monotonically increasing counter representing a version of this `Consumer`'s
-     * dependencies.
-     */
-    clock: number;
-
-    /**
-     * Notify the effect that an atom has been accessed
-     */
-    notifyAccess: (atomId: number) => void;
-
-    /**
      * Schedule the effect to be re-run
      */
     notify: () => void;
-
-    /**
-     * Notify the effect that it must be destroyed
-     */
-    notifyDestroy: (atomId: number) => void;
   }>;
 
 /**
@@ -113,7 +123,7 @@ export type AtomEffectNode = ReactiveNode &
  */
 export type SignalNode<T> = ReactiveNode &
   Readonly<{
-    ref: WeakRef<SignalNode<T>>;
+    ref: DataRef<SignalNode<T>>;
 
     /**
      * The name of the signal
@@ -143,12 +153,12 @@ export type SignalNode<T> = ReactiveNode &
     /**
      * Subscribe to this signal
      */
-    subscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
+    subscribe: (effect: SignalEffectNode<T>) => void;
 
     /**
      * Unsubscribe from this signal
      */
-    unsubscribe: (effectRef: WeakRef<SignalEffectNode<T>>) => void;
+    unsubscribe: (effect: SignalEffectNode<T>) => void;
   }>;
 
 /**
@@ -161,7 +171,7 @@ export type SignalEffectNode<T> = ReactiveNode &
     /**
      * The reference to this effect node
      */
-    ref: WeakRef<SignalEffectNode<T>>;
+    ref: DataRef<SignalEffectNode<T>>;
 
     /**
      * Indicates that the `SignalEffect` has been destroyed

@@ -1,12 +1,17 @@
 import { SignalEffectNode, SignalNode } from '../common/reactiveNodes';
 import { SIGNAL_SYMBOL } from '../common/symbols';
 import { Signal } from '../common/types';
-import { createWeakRef } from '../internals/createWeakRef';
+import { DataRef } from '../common/utilityTypes';
 
 import { SignalFn, SignalOptions } from './types';
 
 class SignalImpl<T> implements SignalNode<T> {
-  readonly ref: WeakRef<SignalNode<T>> = createWeakRef(this);
+  private _ref: DataRef<SignalNode<T>> | undefined;
+
+  get ref(): DataRef<SignalNode<T>> {
+    if (!this._ref) this._ref = { value: this };
+    return this._ref;
+  }
 
   readonly name?: string;
 
@@ -14,7 +19,7 @@ class SignalImpl<T> implements SignalNode<T> {
   private onSubscribe?: SignalOptions<T>['onSubscribe'];
   private onUnsubscribe?: SignalOptions<T>['onUnsubscribe'];
   private onDestroy?: SignalOptions<T>['onDestroy'];
-  private readonly consumerEffects = new Set<WeakRef<SignalEffectNode<T>>>();
+  private readonly consumerEffects = new Set<DataRef<SignalEffectNode<T>>>();
 
   readonly sync?: boolean;
   isDestroyed = false;
@@ -59,19 +64,24 @@ class SignalImpl<T> implements SignalNode<T> {
     this.onSubscribe = undefined;
     this.onUnsubscribe = undefined;
     this.onDestroy = undefined;
+
+    if (this._ref) {
+      this._ref.value = undefined;
+      this._ref = undefined;
+    }
   }
 
   isSubscribed(): boolean {
     return this.consumerEffects.size > 0;
   }
 
-  subscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
-    this.consumerEffects.add(effectRef);
+  subscribe(effect: SignalEffectNode<T>): void {
+    this.consumerEffects.add(effect.ref);
     this.onSubscribe?.();
   }
 
-  unsubscribe(effectRef: WeakRef<SignalEffectNode<T>>): void {
-    if (this.consumerEffects.delete(effectRef)) {
+  unsubscribe(effect: SignalEffectNode<T>): void {
+    if (this.consumerEffects.delete(effect.ref)) {
       this.onUnsubscribe?.(this.consumerEffects.size === 0);
     }
   }
@@ -86,8 +96,8 @@ class SignalImpl<T> implements SignalNode<T> {
 
     let hasDeletion = false;
 
-    for (const effectRef of this.consumerEffects) {
-      const effect = effectRef.deref();
+    for (const effectRef of [...this.consumerEffects]) {
+      const effect = effectRef.value;
 
       if (!effect || effect.isDestroyed) {
         hasDeletion = true;
@@ -107,8 +117,8 @@ class SignalImpl<T> implements SignalNode<T> {
    * Notify all consumers of this producer that it is destroyed
    */
   protected producerDestroyed(): void {
-    for (const effectRef of this.consumerEffects) {
-      const effect = effectRef.deref();
+    for (const effectRef of [...this.consumerEffects]) {
+      const effect = effectRef.value;
 
       if (effect && !effect.isDestroyed) {
         effect.notifyDestroy();

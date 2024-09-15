@@ -30,7 +30,7 @@ export const effect: EffectFn = <T, R>(
     const signalEffect = new SignalEffect<T, R>(scheduler, action);
 
     const nodeRef = node.ref;
-    node.subscribe(signalEffect.ref);
+    node.subscribe(signalEffect);
 
     return {
       onResult: signalEffect.onResult,
@@ -38,7 +38,7 @@ export const effect: EffectFn = <T, R>(
       onDestroy: signalEffect.onDestroy,
 
       destroy: () => {
-        nodeRef.deref()?.unsubscribe(signalEffect.ref);
+        nodeRef?.value?.unsubscribe(signalEffect);
         signalEffect.destroy();
       },
     };

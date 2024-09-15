@@ -1,14 +1,14 @@
 import { expectEffectContext } from '../../test/matchers';
 import {
   collectChanges,
-  collectHistory,
   flushMicrotasks,
+  promiseTimeout,
 } from '../../test/testUtils';
 import { Atom } from '../common/types';
 import { effect, syncEffect } from '../effects/effect';
 import { RUNTIME } from '../internals/runtime';
+import { createScope } from '../scope/createScope';
 import { signal } from '../signals/signal';
-import { createAtomSubject } from '../utils/atomSubject';
 import { signalChanges } from '../utils/signalChanges';
 
 import { AtomUpdateError, getAtomName } from './atom';
@@ -98,7 +98,11 @@ describe('compute()', () => {
     a.set('a4');
     await flushMicrotasks();
 
-    expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4']);
+    i = 6;
+    a.set('a5');
+    await flushMicrotasks();
+
+    expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4', 'b3, i5']);
   });
 
   it('should not compute external dependencies in an atom was not changed', async () => {
@@ -216,15 +220,19 @@ describe('compute()', () => {
 
     expect(b()).toEqual(2);
 
-    const changes = await collectChanges(b, async () => {
-      entry.set(1);
-      expect(b()).toEqual(3);
+    const changes: number[] = [];
+    effect(b, (value) => changes.push(value));
+    await flushMicrotasks();
 
-      await flushMicrotasks();
+    entry.set(1);
+    expect(b()).toEqual(3);
 
-      entry.set(2);
-      expect(b()).toEqual(4);
-    });
+    await flushMicrotasks();
+
+    entry.set(2);
+    expect(b()).toEqual(4);
+
+    await flushMicrotasks();
 
     expect(changes).toEqual([2, 3, 4]);
   });
@@ -304,38 +312,59 @@ describe('compute()', () => {
 
     expect(() => result()).toThrow(new Error('Detected cycle in computations'));
 
-    const history = await collectHistory(result, () => {});
-    expect(history).toEqual([
-      {
-        type: 'error',
-        error: new Error('Detected cycle in computations'),
-      },
-    ]);
+    const onErrorCallback = jest.fn();
+    const fx = effect(result, () => {});
+    effect(fx.onError, onErrorCallback);
+
+    await flushMicrotasks();
+    expect(onErrorCallback).toHaveBeenNthCalledWith(
+      1,
+      new Error('Detected cycle in computations'),
+      expectEffectContext(),
+    );
   });
 
   it('should propagate "error" event from a source to observers', async () => {
-    const source = createAtomSubject<number>(1);
+    let errorId = 0;
+    const source = atom(1);
 
-    const query1 = compute(() => source() + 1);
+    const query1 = compute(() => {
+      const result = source() + 1;
+      if (errorId > 0) throw `Test error ${errorId}`;
+      return result;
+    });
     const query2 = compute(() => query1() * 2);
 
-    const history1 = await collectHistory(query2, async () => {
-      await flushMicrotasks();
+    const fxScope = createScope();
 
-      source.error('Test error 1');
-    });
-    expect(history1).toEqual([
-      { type: 'value', value: 4 },
-      { type: 'error', error: 'Test error 1' },
-    ]);
+    const history1: any[] = [];
+    const fx1 = fxScope.effect(query2, (value) => history1.push({ value }));
+    fxScope.effect(fx1.onError, (error: any) => history1.push({ error }));
 
-    const history2 = await collectHistory(query2, () => {
-      source.error('Test error 2');
-    });
+    await flushMicrotasks();
+
+    errorId++;
+    source.set(2);
+    await flushMicrotasks();
+
+    expect(history1).toEqual([{ value: 4 }, { error: 'Test error 1' }]);
+    fxScope.destroy();
+
+    const history2: any[] = [];
+    const fx2 = fxScope.effect(query2, (value) => history2.push({ value }));
+    fxScope.effect(fx2.onError, (error: any) => history2.push({ error }));
+
+    await flushMicrotasks();
+
+    errorId++;
+    source.set(3);
+    await flushMicrotasks();
+
     expect(history2).toEqual([
-      { type: 'error', error: 'Test error 1' },
-      { type: 'error', error: 'Test error 2' },
+      { error: 'Test error 1' },
+      { error: 'Test error 2' },
     ]);
+    fxScope.destroy();
   });
 
   it('should throw an error on subscription to an incorrect dependency', async () => {
@@ -343,13 +372,17 @@ describe('compute()', () => {
       throw new Error('Some error');
     });
 
-    const history = await collectHistory(query1, () => {});
-    expect(history).toEqual([
-      {
-        type: 'error',
-        error: expect.any(Error),
-      },
-    ]);
+    const onErrorCallback = jest.fn();
+    const fx = effect(query1, () => {});
+    effect(fx.onError, onErrorCallback);
+
+    await flushMicrotasks();
+
+    expect(onErrorCallback).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Error),
+      expectEffectContext(),
+    );
   });
 
   it('should notify an observer only once on subscribe', async () => {
@@ -467,8 +500,7 @@ describe('compute()', () => {
     await flushMicrotasks();
 
     // Expect that the runtime in empty
-    expect(RUNTIME.currentEffect).toBe(undefined);
-    // expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
+    expect(RUNTIME.activeEffect).toBe(undefined);
     expect(RUNTIME.asyncScheduler.isEmpty()).toBe(true);
     expect(RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
@@ -548,6 +580,41 @@ describe('compute()', () => {
 
     // Tear down the only subscription.
     subscription.destroy();
+  });
+
+  it('should recalculate once', async () => {
+    const source = atom(1);
+    let compute1CallCounts = 1;
+    let compute2CallCounts = 1;
+
+    // Create derived computation
+    const compute1 = compute(() => {
+      compute1CallCounts++;
+      return source() * 2;
+    });
+    const compute2 = compute(() => {
+      compute2CallCounts++;
+      return source() + compute1();
+    });
+
+    // Fake subscriptions
+    const callback = jest.fn();
+    effect(compute2, (value) => callback('fx1', value));
+    effect(compute2, (value) => callback('fx2', value));
+
+    // Update
+    setTimeout(() => source.set(2), 100);
+
+    await promiseTimeout(200);
+
+    expect(callback).toHaveBeenNthCalledWith(1, 'fx1', 3);
+    expect(callback).toHaveBeenNthCalledWith(2, 'fx2', 3);
+    expect(callback).toHaveBeenNthCalledWith(3, 'fx1', 6);
+    expect(callback).toHaveBeenNthCalledWith(4, 'fx2', 6);
+    expect(callback).toHaveBeenCalledTimes(4);
+
+    expect(compute1CallCounts).toBe(3);
+    expect(compute2CallCounts).toBe(3);
   });
 });
 
@@ -702,5 +769,30 @@ describe('Leaking tracked effects by compute()', () => {
 
     expect(callback).toHaveBeenCalledTimes(3);
     expect(results).toEqual([10, 10, 10]);
+  });
+});
+
+describe('One source and two computed atoms', () => {
+  test('One source and two computed atoms', async () => {
+    const a1 = atom(1);
+    const c1 = compute(() => a1());
+    const c2 = compute(() => a1() * 10);
+    const result = compute(() => c1() + c2());
+
+    const history1: number[] = [];
+    const history2: number[] = [];
+    effect(result, (value) => history1.push(value));
+    effect(result, (value) => history2.push(value));
+
+    await flushMicrotasks();
+
+    a1.set(2);
+    await flushMicrotasks();
+
+    a1.set(3);
+    await flushMicrotasks();
+
+    expect(history1).toEqual([11, 22, 33]);
+    expect(history2).toEqual([11, 22, 33]);
   });
 });

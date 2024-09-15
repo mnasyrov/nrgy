@@ -1,6 +1,8 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { AtomEffectNode, ComputedNode } from '../common/reactiveNodes';
+import { AtomConsumer, ComputedNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
+import { DataRef } from '../common/utilityTypes';
+import { LinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
 
@@ -68,6 +70,13 @@ export class ComputedImpl<T> implements ComputedNode<T> {
   readonly id: number = generateAtomId();
   readonly name?: string;
 
+  private _ref: DataRef<ComputedNode<T>> | undefined;
+
+  get ref(): DataRef<ComputedNode<T>> {
+    if (!this._ref) this._ref = { value: this };
+    return this._ref;
+  }
+
   clock: number | undefined = undefined;
   version = 0;
 
@@ -85,7 +94,8 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
-  private lastEffectRef: WeakRef<AtomEffectNode> | undefined;
+  private consumers = new LinkedList<DataRef<AtomConsumer>>();
+  private notifiedAt: number | undefined;
 
   constructor(
     private computation: Computation<T>,
@@ -97,11 +107,19 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   destroy(): void {
     this.value = UNSET;
-    this.lastEffectRef = undefined;
+    this.notifiedAt = undefined;
+
+    this.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
+    this.consumers.clear();
+
+    if (this._ref) {
+      this._ref.value = undefined;
+      this._ref = undefined;
+    }
   }
 
   get(): T {
-    this.accessValue();
+    this.accessValue(!!RUNTIME.activeEffect);
 
     if (this.value === ERRORED) {
       throw this.error;
@@ -110,33 +128,46 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     return this.value;
   }
 
-  private accessValue(): void {
+  notify(): void {
+    if (this.notifiedAt === RUNTIME.clock) {
+      return;
+    }
+    this.notifiedAt = RUNTIME.clock;
+
+    const consumerRefs = this.consumers.clonePointers();
+    this.consumers.clear();
+
+    consumerRefs.forEach((consumerRef) => consumerRef.value?.notify());
+  }
+
+  private accessValue(trackingMode: boolean): void {
     if (this.value === COMPUTING) {
       // Our computation somehow led to a cyclic read of itself.
       throw new Error('Detected cycle in computations');
     }
 
-    const activeEffect = RUNTIME.currentEffect;
+    const isStale = this.clock !== RUNTIME.clock || this.value === UNSET;
+    const mustRenewSource = RUNTIME.activeEffect && this.consumers.isEmpty();
 
-    const isStale =
-      this.clock !== RUNTIME.clock ||
-      this.value === UNSET ||
-      (activeEffect && this.lastEffectRef !== activeEffect.ref);
+    if (RUNTIME.activeEffect) {
+      this.consumers.add(RUNTIME.activeEffect.ref);
+    }
 
-    if (isStale) {
-      this.lastEffectRef = activeEffect?.ref;
-      this.recomputeValue();
+    if (isStale || mustRenewSource) {
+      this.recomputeValue(trackingMode);
     }
   }
 
-  private recomputeValue(): void {
+  private recomputeValue(trackingMode: boolean): void {
     const oldValue = this.value;
     this.value = COMPUTING;
 
     let newValue: T;
 
     try {
-      newValue = this.computation();
+      newValue = trackingMode
+        ? RUNTIME.runAsTracked(this, this.computation)
+        : this.computation();
     } catch (err) {
       newValue = ERRORED;
       this.error = err;
