@@ -169,7 +169,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
       const effect = effectRef.deref();
 
       if (effect && !effect.isDestroyed) {
-        effect.notifyDestroy(this.id);
+        effect.notifyDestroy();
       }
     }
   }
@@ -186,10 +186,15 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     }
   }
 
-  subscribe(effect: AtomEffectNode): void {
+  subscribe(effect: AtomEffectNode): boolean {
     if (!effect.isDestroyed) {
+      const prevSize = this.consumerEffects.size;
       this.consumerEffects.set(effect.ref, effect.clock);
+
+      const isAdded = this.consumerEffects.size > prevSize;
+      return isAdded;
     }
+    return false;
   }
 }
 

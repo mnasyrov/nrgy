@@ -62,7 +62,7 @@ export type WritableAtomNode<T> = ReactiveNode &
     /**
      * Subscribe to the atom
      */
-    subscribe: (effect: AtomEffectNode) => void;
+    subscribe: (effect: AtomEffectNode) => boolean;
 
     // /**
     //  * Unsubscribe from the atom
@@ -122,9 +122,9 @@ export type AtomEffectNode = ReactiveNode &
     notify: () => void;
 
     /**
-     * Notify the effect that it must be destroyed
+     * Notify the effect that it may be destroyed
      */
-    notifyDestroy: (atomId: number) => void;
+    notifyDestroy: () => void;
   }>;
 
 /**
