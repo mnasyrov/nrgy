@@ -1,5 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { AtomEffectNode, ComputedNode } from '../common/reactiveNodes';
+import { ComputedNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
@@ -85,7 +85,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
-  private lastEffectRef: WeakRef<AtomEffectNode> | undefined;
+  private atomSources: WritableAtomNode<unknown>[] | undefined;
 
   constructor(
     private computation: Computation<T>,
@@ -97,7 +97,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   destroy(): void {
     this.value = UNSET;
-    this.lastEffectRef = undefined;
+    this.atomSources = undefined;
   }
 
   get(): T {
@@ -116,16 +116,30 @@ export class ComputedImpl<T> implements ComputedNode<T> {
       throw new Error('Detected cycle in computations');
     }
 
-    const activeEffect = RUNTIME.currentEffect;
-
-    const isStale =
-      this.clock !== RUNTIME.clock ||
-      this.value === UNSET ||
-      (activeEffect && this.lastEffectRef !== activeEffect.ref);
+    const isStale = this.clock !== RUNTIME.clock || this.value === UNSET;
 
     if (isStale) {
-      this.lastEffectRef = activeEffect?.ref;
       this.recomputeValue();
+    }
+
+    if (RUNTIME.tracked && RUNTIME.computeLevel === 0) {
+      if (RUNTIME.atomSources) {
+        this.atomSources = RUNTIME.atomSources;
+      } else {
+        if (!this.atomSources && this.value !== ERRORED) {
+          RUNTIME.computeLevel++;
+          try {
+            this.computation();
+          } catch (_error) {
+            // Do nothing
+          }
+          RUNTIME.computeLevel--;
+        }
+
+        if (this.atomSources) {
+          RUNTIME.atomSources = this.atomSources;
+        }
+      }
     }
   }
 

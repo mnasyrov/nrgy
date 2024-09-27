@@ -1,4 +1,4 @@
-import { AtomEffectNode } from '../common/reactiveNodes';
+import { WritableAtomNode } from '../common/reactiveNodes';
 
 import { nextSafeInteger } from './nextSafeInteger';
 import {
@@ -13,7 +13,7 @@ export class Runtime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
-  currentEffect: AtomEffectNode | undefined = undefined;
+  atomSources: WritableAtomNode<unknown>[] | undefined;
 
   /** @readonly */
   batchLock: number = 0;
@@ -39,18 +39,17 @@ export class Runtime {
   /**
    * Run a function in a tracked context
    */
-  runAsTracked<T>(effect: AtomEffectNode, fn: () => T): T {
-    if (this.tracked || this.currentEffect) {
+  runAsTracked<T>(fn: () => T): T {
+    if (this.tracked) {
       throw new Error('Tracking context is already activated');
     }
 
-    this.currentEffect = effect;
     this.tracked = true;
+    this.atomSources = [];
 
     try {
       return fn();
     } finally {
-      this.currentEffect = undefined;
       this.tracked = false;
     }
   }

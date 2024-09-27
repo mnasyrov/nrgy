@@ -3,7 +3,6 @@ import { AtomEffectNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
 import { createWeakRef } from '../internals/createWeakRef';
 import { isPromise } from '../internals/isPromise';
-import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
 import { TaskScheduler } from '../internals/schedulers';
 import { BaseScope } from '../scope/baseScope';
@@ -23,9 +22,6 @@ import { EffectAction, EffectContext } from './types';
 export class AtomEffect<T, R> implements AtomEffectNode {
   readonly id = generateEffectId();
   readonly ref: WeakRef<AtomEffectNode> = createWeakRef(this);
-
-  /** Monotonically increasing version of the effect */
-  clock = 0;
 
   private lastValueVersion: number | undefined;
 
@@ -57,7 +53,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  private subscribedAtomCount = 0;
+  private deps: WritableAtomNode<unknown>[] | undefined;
 
   constructor(
     scheduler: TaskScheduler,
@@ -81,7 +77,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.scheduler = undefined;
     this.source = undefined;
     this.action = undefined;
-    this.subscribedAtomCount = 0;
+    this.deps = undefined;
 
     this.actionScope?.destroy();
     this.actionScope = undefined;
@@ -95,19 +91,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   }
 
   /**
-   * Notify the effect that an atom has been accessed
-   */
-  notifyAccess(atom: WritableAtomNode<unknown>): void {
-    if (this.isDestroyed) {
-      return;
-    }
-
-    if (atom.subscribe(this)) {
-      this.subscribedAtomCount++;
-    }
-  }
-
-  /**
    * Schedule the effect to be re-run
    */
   notify(): void {
@@ -115,7 +98,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    this.clock = nextSafeInteger(this.clock);
     const needsSchedule = !this.dirty;
     this.dirty = true;
 
@@ -127,16 +109,16 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   /**
    * Notify the effect that it must be destroyed
    */
-  notifyDestroy(): void {
+  notifyDestroy(atom: WritableAtomNode<unknown>): void {
     if (this.isDestroyed) {
       return;
     }
 
-    if (this.subscribedAtomCount > 0) {
-      this.subscribedAtomCount--;
+    if (this.deps) {
+      this.deps = this.deps.filter((item) => item !== atom);
     }
 
-    if (this.subscribedAtomCount === 0) {
+    if (!this.deps || this.deps.length === 0) {
       this.destroy();
     }
   }
@@ -161,7 +143,14 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     let result;
 
     try {
-      const value = RUNTIME.runAsTracked(this, this.source);
+      this.deps?.forEach((dependency) => dependency.unsubscribe(this));
+
+      const value = RUNTIME.runAsTracked(this.source);
+
+      this.deps = RUNTIME.atomSources;
+      RUNTIME.atomSources = undefined;
+
+      this.deps?.forEach((item) => item.subscribe(this));
 
       const node = getAtomNode(this.source);
       if (this.lastValueVersion === node.version) {

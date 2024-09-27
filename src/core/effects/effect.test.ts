@@ -405,14 +405,9 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     await flushMicrotasks();
     expect(b()).toBe(0);
 
-    expect(errorCallback).toHaveBeenCalledTimes(2);
+    expect(errorCallback).toHaveBeenCalledTimes(1);
     expect(errorCallback).toHaveBeenNthCalledWith(
       1,
-      new AtomUpdateError('b'),
-      expectEffectContext(),
-    );
-    expect(errorCallback).toHaveBeenNthCalledWith(
-      2,
       new AtomUpdateError('b'),
       expectEffectContext(),
     );
