@@ -29,7 +29,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
 
   private readonlyAtom: Atom<T> | undefined;
   private readonly equal: ValueEqualityFn<T>;
-  private readonly consumerEffects = new Map<WeakRef<AtomEffectNode>, number>();
+  private readonly consumerEffects = new Set<WeakRef<AtomEffectNode>>();
 
   private isDestroyed = false;
 
@@ -145,14 +145,10 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     RUNTIME.updateAtomClock();
     this.version = nextSafeInteger(this.version);
 
-    for (const [effectRef, atEffectClock] of this.consumerEffects) {
+    for (const effectRef of this.consumerEffects) {
       const effect = effectRef.deref();
 
-      if (
-        !effect ||
-        effect.isDestroyed ||
-        (!effect.dirty && effect.clock !== atEffectClock)
-      ) {
+      if (!effect || effect.isDestroyed) {
         this.consumerEffects.delete(effectRef);
         continue;
       }
@@ -165,12 +161,8 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
    * Notify all consumers of this producer that it is destroyed
    */
   protected producerDestroyed(): void {
-    for (const [effectRef] of this.consumerEffects) {
-      const effect = effectRef.deref();
-
-      if (effect && !effect.isDestroyed) {
-        effect.notifyDestroy();
-      }
+    for (const effectRef of this.consumerEffects) {
+      effectRef.deref()?.notifyDestroy(this);
     }
   }
 
@@ -179,9 +171,10 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
    */
   protected producerAccessed(): void {
     if (RUNTIME.tracked) {
-      const effect = RUNTIME.currentEffect;
-      if (effect && !effect.isDestroyed) {
-        effect.notifyAccess(this);
+      if (RUNTIME.atomSources) {
+        RUNTIME.atomSources.push(this);
+      } else {
+        RUNTIME.atomSources = [this];
       }
     }
   }
@@ -189,12 +182,15 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
   subscribe(effect: AtomEffectNode): boolean {
     if (!effect.isDestroyed) {
       const prevSize = this.consumerEffects.size;
-      this.consumerEffects.set(effect.ref, effect.clock);
+      const newSize = this.consumerEffects.add(effect.ref).size;
 
-      const isAdded = this.consumerEffects.size > prevSize;
-      return isAdded;
+      return prevSize !== newSize;
     }
     return false;
+  }
+
+  unsubscribe(effect: AtomEffectNode): boolean {
+    return this.consumerEffects.delete(effect.ref);
   }
 }
 

@@ -1,7 +1,9 @@
 import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
+import { getAtomNode } from '../atoms/atom';
 import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
+import { WritableAtomNode } from '../common/reactiveNodes';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
@@ -60,7 +62,6 @@ describe('AtomEffect', () => {
 
       effect.notify();
       expect(effect.dirty).toBe(true);
-      expect(effect.clock).toBe(1);
 
       expect(scheduler.isEmpty()).toBe(false);
       scheduler.execute();
@@ -75,7 +76,6 @@ describe('AtomEffect', () => {
 
       effect.notify();
       expect(effect.dirty).toBe(false);
-      expect(effect.clock).toBe(0);
       expect(scheduler.isEmpty()).toBe(true);
     });
   });
@@ -83,6 +83,7 @@ describe('AtomEffect', () => {
   describe('notifyDestroy()', () => {
     it('should notify the effect that it must be destroyed', () => {
       const source = atom(1);
+      const node = getAtomNode(source) as WritableAtomNode<unknown>;
 
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
@@ -90,26 +91,29 @@ describe('AtomEffect', () => {
         () => {},
       );
 
-      effect.notifyDestroy();
+      effect.notifyDestroy(node);
 
       expect(effect.isDestroyed).toBe(true);
     });
 
     it('should not notify the effect if it is destroyed', () => {
+      const source = atom(1);
+      const node = getAtomNode(source) as WritableAtomNode<unknown>;
+
       const effect = new AtomEffect(
         createSyncTaskScheduler(),
-        atom(1),
+        source,
         () => {},
       );
 
       const mockDestroy = jest.fn(effect.destroy.bind(effect));
       effect.destroy = mockDestroy;
 
-      effect.notifyDestroy();
+      effect.notifyDestroy(node);
       expect(mockDestroy).toHaveBeenCalledTimes(1);
 
       mockDestroy.mockClear();
-      effect.notifyDestroy();
+      effect.notifyDestroy(node);
       expect(mockDestroy).toHaveBeenCalledTimes(0);
     });
   });

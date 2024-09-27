@@ -64,10 +64,10 @@ export type WritableAtomNode<T> = ReactiveNode &
      */
     subscribe: (effect: AtomEffectNode) => boolean;
 
-    // /**
-    //  * Unsubscribe from the atom
-    //  */
-    // unsubscribe: (effect: AtomEffectNode) => void;
+    /**
+     * Unsubscribe from the atom
+     */
+    unsubscribe: (effect: AtomEffectNode) => boolean;
   }>;
 
 /**
@@ -106,17 +106,6 @@ export type AtomEffectNode = ReactiveNode &
     onDestroy: Signal<void>;
 
     /**
-     * Monotonically increasing counter representing a version of this `Consumer`'s
-     * dependencies.
-     */
-    clock: number;
-
-    /**
-     * Notify the effect that an atom has been accessed
-     */
-    notifyAccess: (atom: WritableAtomNode<unknown>) => void;
-
-    /**
      * Schedule the effect to be re-run
      */
     notify: () => void;
@@ -124,7 +113,7 @@ export type AtomEffectNode = ReactiveNode &
     /**
      * Notify the effect that it may be destroyed
      */
-    notifyDestroy: () => void;
+    notifyDestroy: (atom: WritableAtomNode<unknown>) => void;
   }>;
 
 /**

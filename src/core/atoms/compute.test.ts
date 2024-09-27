@@ -217,15 +217,29 @@ describe('compute()', () => {
 
     expect(b()).toEqual(2);
 
-    const changes = await collectChanges(b, async () => {
-      entry.set(1);
-      expect(b()).toEqual(3);
+    // const changes = await collectChanges(b, async () => {
+    //   entry.set(1);
+    //   expect(b()).toEqual(3);
+    //
+    //   await flushMicrotasks();
+    //
+    //   entry.set(2);
+    //   expect(b()).toEqual(4);
+    // });
 
-      await flushMicrotasks();
+    const changes: number[] = [];
+    effect(b, (value) => changes.push(value));
+    await flushMicrotasks();
 
-      entry.set(2);
-      expect(b()).toEqual(4);
-    });
+    entry.set(1);
+    expect(b()).toEqual(3);
+
+    await flushMicrotasks();
+
+    entry.set(2);
+    expect(b()).toEqual(4);
+
+    await flushMicrotasks();
 
     expect(changes).toEqual([2, 3, 4]);
   });
@@ -468,8 +482,7 @@ describe('compute()', () => {
     await flushMicrotasks();
 
     // Expect that the runtime in empty
-    expect(RUNTIME.currentEffect).toBe(undefined);
-    // expect(ENERGY_RUNTIME.getVisitedComputedNodes().length).toBe(0);
+    expect(RUNTIME.atomSources).toBe(undefined);
     expect(RUNTIME.asyncScheduler.isEmpty()).toBe(true);
     expect(RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
