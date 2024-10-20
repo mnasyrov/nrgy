@@ -13,7 +13,7 @@ export class Runtime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
-  atomSources: WritableAtomNode<unknown>[] | undefined;
+  atomSources: Set<WritableAtomNode<unknown>> | undefined;
 
   /** @readonly */
   batchLock: number = 0;
@@ -36,6 +36,17 @@ export class Runtime {
     this.clock = nextSafeInteger(this.clock);
   }
 
+  trackAtom(source: WritableAtomNode<unknown>): void {
+    if (this.tracked) {
+      if (this.atomSources) {
+        this.atomSources.add(source);
+      } else {
+        this.atomSources = new Set();
+        this.atomSources.add(source);
+      }
+    }
+  }
+
   /**
    * Run a function in a tracked context
    */
@@ -45,7 +56,7 @@ export class Runtime {
     }
 
     this.tracked = true;
-    this.atomSources = [];
+    this.atomSources = undefined;
 
     try {
       return fn();

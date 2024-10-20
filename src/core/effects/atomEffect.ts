@@ -53,7 +53,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
-  private deps: WritableAtomNode<unknown>[] | undefined;
+  private deps: Set<WritableAtomNode<unknown>> | undefined;
 
   constructor(
     scheduler: TaskScheduler,
@@ -115,10 +115,10 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     }
 
     if (this.deps) {
-      this.deps = this.deps.filter((item) => item !== atom);
+      this.deps.delete(atom);
     }
 
-    if (!this.deps || this.deps.length === 0) {
+    if (!this.deps || this.deps.size === 0) {
       this.destroy();
     }
   }
@@ -143,13 +143,14 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     let result;
 
     try {
-      this.deps?.forEach((dependency) => dependency.unsubscribe(this));
+      const prevDeps = this.deps;
 
       const value = RUNTIME.runAsTracked(this.source);
 
       this.deps = RUNTIME.atomSources;
       RUNTIME.atomSources = undefined;
 
+      prevDeps?.forEach((dependency) => dependency.unsubscribe(this));
       this.deps?.forEach((item) => item.subscribe(this));
 
       const node = getAtomNode(this.source);

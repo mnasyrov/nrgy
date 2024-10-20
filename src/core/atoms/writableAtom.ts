@@ -145,7 +145,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     RUNTIME.updateAtomClock();
     this.version = nextSafeInteger(this.version);
 
-    for (const effectRef of this.consumerEffects) {
+    for (const effectRef of [...this.consumerEffects]) {
       const effect = effectRef.deref();
 
       if (!effect || effect.isDestroyed) {
@@ -161,7 +161,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
    * Notify all consumers of this producer that it is destroyed
    */
   protected producerDestroyed(): void {
-    for (const effectRef of this.consumerEffects) {
+    for (const effectRef of [...this.consumerEffects]) {
       effectRef.deref()?.notifyDestroy(this);
     }
   }
@@ -170,23 +170,18 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
    * Mark that this producer node has been accessed in the current reactive context.
    */
   protected producerAccessed(): void {
-    if (RUNTIME.tracked) {
-      if (RUNTIME.atomSources) {
-        RUNTIME.atomSources.push(this);
-      } else {
-        RUNTIME.atomSources = [this];
-      }
-    }
+    RUNTIME.trackAtom(this);
   }
 
   subscribe(effect: AtomEffectNode): boolean {
-    if (!effect.isDestroyed) {
-      const prevSize = this.consumerEffects.size;
-      const newSize = this.consumerEffects.add(effect.ref).size;
-
-      return prevSize !== newSize;
+    if (effect.isDestroyed) {
+      return false;
     }
-    return false;
+
+    const prevSize = this.consumerEffects.size;
+    const newSize = this.consumerEffects.add(effect.ref).size;
+
+    return prevSize !== newSize;
   }
 
   unsubscribe(effect: AtomEffectNode): boolean {

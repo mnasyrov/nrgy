@@ -86,7 +86,7 @@ class SignalImpl<T> implements SignalNode<T> {
 
     let hasDeletion = false;
 
-    for (const effectRef of this.consumerEffects) {
+    for (const effectRef of [...this.consumerEffects]) {
       const effect = effectRef.deref();
 
       if (!effect || effect.isDestroyed) {
@@ -107,7 +107,7 @@ class SignalImpl<T> implements SignalNode<T> {
    * Notify all consumers of this producer that it is destroyed
    */
   protected producerDestroyed(): void {
-    for (const effectRef of this.consumerEffects) {
+    for (const effectRef of [...this.consumerEffects]) {
       const effect = effectRef.deref();
 
       if (effect && !effect.isDestroyed) {
