@@ -1,15 +1,14 @@
 import { expectEffectContext } from '../../test/matchers';
 import {
   collectChanges,
-  collectHistory,
   flushMicrotasks,
   promiseTimeout,
 } from '../../test/testUtils';
 import { Atom } from '../common/types';
 import { effect, syncEffect } from '../effects/effect';
 import { RUNTIME } from '../internals/runtime';
+import { createScope } from '../scope/createScope';
 import { signal } from '../signals/signal';
-import { createAtomSubject } from '../utils/atomSubject';
 import { signalChanges } from '../utils/signalChanges';
 
 import { AtomUpdateError, getAtomName } from './atom';
@@ -319,38 +318,59 @@ describe('compute()', () => {
 
     expect(() => result()).toThrow(new Error('Detected cycle in computations'));
 
-    const history = await collectHistory(result, () => {});
-    expect(history).toEqual([
-      {
-        type: 'error',
-        error: new Error('Detected cycle in computations'),
-      },
-    ]);
+    const onErrorCallback = jest.fn();
+    const fx = effect(result, () => {});
+    effect(fx.onError, onErrorCallback);
+
+    await flushMicrotasks();
+    expect(onErrorCallback).toHaveBeenNthCalledWith(
+      1,
+      new Error('Detected cycle in computations'),
+      expectEffectContext(),
+    );
   });
 
   it('should propagate "error" event from a source to observers', async () => {
-    const source = createAtomSubject<number>(1);
+    let errorId = 0;
+    const source = atom(1);
 
-    const query1 = compute(() => source() + 1);
+    const query1 = compute(() => {
+      const result = source() + 1;
+      if (errorId > 0) throw `Test error ${errorId}`;
+      return result;
+    });
     const query2 = compute(() => query1() * 2);
 
-    const history1 = await collectHistory(query2, async () => {
-      await flushMicrotasks();
+    const fxScope = createScope();
 
-      source.error('Test error 1');
-    });
-    expect(history1).toEqual([
-      { type: 'value', value: 4 },
-      { type: 'error', error: 'Test error 1' },
-    ]);
+    const history1: any[] = [];
+    const fx1 = fxScope.effect(query2, (value) => history1.push({ value }));
+    fxScope.effect(fx1.onError, (error: any) => history1.push({ error }));
 
-    const history2 = await collectHistory(query2, () => {
-      source.error('Test error 2');
-    });
+    await flushMicrotasks();
+
+    errorId++;
+    source.set(2);
+    await flushMicrotasks();
+
+    expect(history1).toEqual([{ value: 4 }, { error: 'Test error 1' }]);
+    fxScope.destroy();
+
+    const history2: any[] = [];
+    const fx2 = fxScope.effect(query2, (value) => history2.push({ value }));
+    fxScope.effect(fx2.onError, (error: any) => history2.push({ error }));
+
+    await flushMicrotasks();
+
+    errorId++;
+    source.set(3);
+    await flushMicrotasks();
+
     expect(history2).toEqual([
-      { type: 'error', error: 'Test error 1' },
-      { type: 'error', error: 'Test error 2' },
+      { error: 'Test error 1' },
+      { error: 'Test error 2' },
     ]);
+    fxScope.destroy();
   });
 
   it('should throw an error on subscription to an incorrect dependency', async () => {
@@ -358,13 +378,17 @@ describe('compute()', () => {
       throw new Error('Some error');
     });
 
-    const history = await collectHistory(query1, () => {});
-    expect(history).toEqual([
-      {
-        type: 'error',
-        error: expect.any(Error),
-      },
-    ]);
+    const onErrorCallback = jest.fn();
+    const fx = effect(query1, () => {});
+    effect(fx.onError, onErrorCallback);
+
+    await flushMicrotasks();
+
+    expect(onErrorCallback).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Error),
+      expectEffectContext(),
+    );
   });
 
   it('should notify an observer only once on subscribe', async () => {

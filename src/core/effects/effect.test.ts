@@ -387,13 +387,13 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     const a = atom(1, { name: 'a' });
     const b = atom(0, { name: 'b' });
 
-    const fx = effect(
-      compute(() => {
-        const value = a();
-        b.set(value);
-      }),
-      () => {},
-    );
+    const c = compute(() => {
+      const value = a();
+      b.set(value);
+      return value;
+    });
+
+    const fx = effect(c, () => {});
 
     const errorCallback = jest.fn();
     effect(fx.onError, errorCallback);
@@ -405,9 +405,14 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     await flushMicrotasks();
     expect(b()).toBe(0);
 
-    expect(errorCallback).toHaveBeenCalledTimes(1);
+    expect(errorCallback).toHaveBeenCalledTimes(2);
     expect(errorCallback).toHaveBeenNthCalledWith(
       1,
+      new AtomUpdateError('b'),
+      expectEffectContext(),
+    );
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      2,
       new AtomUpdateError('b'),
       expectEffectContext(),
     );

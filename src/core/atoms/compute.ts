@@ -1,5 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { ComputedNode } from '../common/reactiveNodes';
+import { ComputedNode, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
@@ -85,6 +85,8 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
+  atomSources: Set<WritableAtomNode<unknown>> | undefined;
+
   constructor(
     private computation: Computation<T>,
     options?: ComputeOptions<T>,
@@ -95,6 +97,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   destroy(): void {
     this.value = UNSET;
+    this.atomSources = undefined;
   }
 
   get(): T {
@@ -113,9 +116,15 @@ export class ComputedImpl<T> implements ComputedNode<T> {
       throw new Error('Detected cycle in computations');
     }
 
+    // const isStale = this.clock !== RUNTIME.clock || this.value === UNSET;
+
     const isStale = this.clock !== RUNTIME.clock || this.value === UNSET;
 
-    if (isStale) {
+    const mustRenewSource =
+      RUNTIME.tracked &&
+      (!RUNTIME.atomSources || RUNTIME.atomSources.size === 0);
+
+    if (isStale || mustRenewSource) {
       this.recomputeValue();
     }
 
@@ -123,18 +132,37 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     //   this.recomputeValue();
     // }
 
-    if (
-      !isStale &&
-      RUNTIME.tracked &&
-      !RUNTIME.atomSources &&
-      this.value !== ERRORED
-    ) {
-      try {
-        this.computation();
-      } catch (_error) {
-        // Do nothing
-      }
-    }
+    // if (
+    //   !isStale &&
+    //   RUNTIME.tracked &&
+    //   (!RUNTIME.atomSources || RUNTIME.atomSources.size === 0)
+    // ) {
+    //   try {
+    //     this.computation();
+    //   } catch (_error) {
+    //     // Do nothing
+    //   }
+    // }
+
+    // if (RUNTIME.tracked && RUNTIME.computeLevel === 0) {
+    //   if (RUNTIME.atomSources) {
+    //     this.atomSources = RUNTIME.atomSources;
+    //   } else {
+    //     if (!this.atomSources && this.value !== ERRORED) {
+    //       RUNTIME.computeLevel++;
+    //       try {
+    //         this.computation();
+    //       } catch (_error) {
+    //         // Do nothing
+    //       }
+    //       RUNTIME.computeLevel--;
+    //     }
+    //
+    //     if (this.atomSources) {
+    //       RUNTIME.atomSources = this.atomSources;
+    //     }
+    //   }
+    // }
   }
 
   private recomputeValue(): void {

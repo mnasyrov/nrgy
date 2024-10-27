@@ -140,13 +140,21 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       return;
     }
 
-    let result;
+    let sourceValue: any;
+    let resultValue;
+    let resultError;
+    let isResultError;
+
+    const prevDeps = this.deps;
 
     try {
-      const prevDeps = this.deps;
+      sourceValue = RUNTIME.runAsTracked(this.source);
+    } catch (error) {
+      isResultError = true;
+      resultError = error;
+    }
 
-      const value = RUNTIME.runAsTracked(this.source);
-
+    try {
       this.deps = RUNTIME.atomSources;
       RUNTIME.atomSources = undefined;
 
@@ -162,17 +170,25 @@ export class AtomEffect<T, R> implements AtomEffectNode {
 
       this.actionScope?.destroy();
 
-      result = this.action(value, this.getContext());
+      if (!isResultError) {
+        resultValue = this.action(sourceValue, this.getContext());
+      }
     } catch (error) {
-      this.onError(error);
+      isResultError = true;
+      resultError = error;
     }
 
-    if (isPromise(result)) {
-      result
+    if (isResultError) {
+      this.onError(resultError);
+      return;
+    }
+
+    if (isPromise(resultValue)) {
+      resultValue
         .then((value) => this.onResult(value))
         .catch((error) => this.onError(error));
     } else {
-      this.onResult(result as any);
+      this.onResult(resultValue as any);
     }
   }
 
