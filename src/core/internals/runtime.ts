@@ -36,14 +36,15 @@ export class Runtime {
     this.clock = nextSafeInteger(this.clock);
   }
 
+  /**
+   * Mark that this producer node has been accessed in the current reactive context.
+   */
   trackAtom(source: WritableAtomNode<unknown>): void {
     if (this.tracked) {
-      if (this.atomSources) {
-        this.atomSources.add(source);
-      } else {
+      if (!this.atomSources) {
         this.atomSources = new Set();
-        this.atomSources.add(source);
       }
+      this.atomSources.add(source);
     }
   }
 

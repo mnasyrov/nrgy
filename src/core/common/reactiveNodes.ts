@@ -60,6 +60,11 @@ export type WritableAtomNode<T> = ReactiveNode &
   AtomNode<T> &
   Readonly<{
     /**
+     * Indicates that the node has been destroyed
+     */
+    isDestroyed: boolean;
+
+    /**
      * Subscribe to the atom
      */
     subscribe: (effect: AtomEffectNode) => boolean;

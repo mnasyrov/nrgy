@@ -159,6 +159,16 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       RUNTIME.atomSources = undefined;
 
       prevDeps?.forEach((dependency) => dependency.unsubscribe(this));
+
+      this.deps?.forEach((atom) => {
+        if (atom.isDestroyed) {
+          this.notifyDestroy(atom);
+        }
+      });
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.deps?.forEach((item) => item.subscribe(this));
 
       const node = getAtomNode(this.source);

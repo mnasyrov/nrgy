@@ -29,9 +29,9 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
 
   private readonlyAtom: Atom<T> | undefined;
   private readonly equal: ValueEqualityFn<T>;
-  private readonly consumerEffects = new Set<WeakRef<AtomEffectNode>>();
+  private consumerEffects = new Set<WeakRef<AtomEffectNode>>();
 
-  private isDestroyed = false;
+  isDestroyed = false;
 
   constructor(
     private value: T,
@@ -46,9 +46,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
   }
 
   get(): T {
-    if (!this.isDestroyed) {
-      this.producerAccessed();
-    }
+    RUNTIME.trackAtom(this);
 
     return this.value;
   }
@@ -145,15 +143,23 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     RUNTIME.updateAtomClock();
     this.version = nextSafeInteger(this.version);
 
-    for (const effectRef of [...this.consumerEffects]) {
-      const effect = effectRef.deref();
+    if (this.consumerEffects.size > 0) {
+      const prevEffects = this.consumerEffects;
+      this.consumerEffects = new Set<WeakRef<AtomEffectNode>>();
 
-      if (!effect || effect.isDestroyed) {
-        this.consumerEffects.delete(effectRef);
-        continue;
+      // const prevEffects = [...this.consumerEffects];
+      // this.consumerEffects.clear();
+
+      for (const effectRef of prevEffects) {
+        const effect = effectRef.deref();
+
+        if (!effect || effect.isDestroyed) {
+          this.consumerEffects.delete(effectRef);
+          continue;
+        }
+
+        effect.notify();
       }
-
-      effect.notify();
     }
   }
 
@@ -164,13 +170,6 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     for (const effectRef of [...this.consumerEffects]) {
       effectRef.deref()?.notifyDestroy(this);
     }
-  }
-
-  /**
-   * Mark that this producer node has been accessed in the current reactive context.
-   */
-  protected producerAccessed(): void {
-    RUNTIME.trackAtom(this);
   }
 
   subscribe(effect: AtomEffectNode): boolean {
