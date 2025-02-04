@@ -589,31 +589,38 @@ describe('compute()', () => {
   });
 
   it('should recalculate once', async () => {
-    const counter = atom(1);
-    let i = 1;
-    let j = 1;
+    const source = atom(1);
+    let compute1CallCounts = 1;
+    let compute2CallCounts = 1;
 
     // Create derived computation
-    const doubled = compute(() => {
-      console.log('doubled', i++);
-      return counter() * 2;
+    const compute1 = compute(() => {
+      compute1CallCounts++;
+      return source() * 2;
     });
-    const formula = compute(() => {
-      console.log('formula', j++);
-      return counter() + doubled();
+    const compute2 = compute(() => {
+      compute2CallCounts++;
+      return source() + compute1();
     });
 
-    // !!! TODO: Remove console.log
-    effect(formula, (value) => console.log('f1', value));
-    effect(formula, (value) => console.log('f2', value));
+    // Fake subscriptions
+    const callback = jest.fn();
+    effect(compute2, (value) => callback('fx1', value));
+    effect(compute2, (value) => callback('fx2', value));
 
     // Update
-    setTimeout(() => counter.set(2), 100);
+    setTimeout(() => source.set(2), 100);
 
     await promiseTimeout(200);
 
-    expect(i).toBe(3);
-    expect(j).toBe(3);
+    expect(callback).toHaveBeenNthCalledWith(1, 'fx1', 3);
+    expect(callback).toHaveBeenNthCalledWith(2, 'fx2', 3);
+    expect(callback).toHaveBeenNthCalledWith(3, 'fx1', 6);
+    expect(callback).toHaveBeenNthCalledWith(4, 'fx2', 6);
+    expect(callback).toHaveBeenCalledTimes(4);
+
+    expect(compute1CallCounts).toBe(3);
+    expect(compute2CallCounts).toBe(3);
   });
 });
 

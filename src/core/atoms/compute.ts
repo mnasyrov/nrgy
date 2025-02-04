@@ -85,7 +85,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
    */
   private error: unknown = undefined;
 
-  atomSources: Set<WritableAtomNode<unknown>> | undefined;
+  cachedAtomSources: Set<WritableAtomNode<unknown>> | undefined;
 
   constructor(
     private computation: Computation<T>,
@@ -97,7 +97,7 @@ export class ComputedImpl<T> implements ComputedNode<T> {
 
   destroy(): void {
     this.value = UNSET;
-    this.atomSources = undefined;
+    this.cachedAtomSources = undefined;
   }
 
   get(): T {
@@ -127,6 +127,8 @@ export class ComputedImpl<T> implements ComputedNode<T> {
     if (isStale || mustRenewSource) {
       this.recomputeValue();
     }
+
+    // this.cachedAtomSources = RUNTIME.atomSources;
 
     // if (isStale || (RUNTIME.tracked && !RUNTIME.atomSources)) {
     //   this.recomputeValue();
