@@ -13,6 +13,9 @@ const entries = [
   { entry: 'rx-effects', source: 'src/rx-effects' },
   { entry: 'rxjs', source: 'src/rxjs' },
   { entry: 'rxjs-react', source: 'src/rxjs-react' },
+
+  // Deprectated
+  { entry: 'store', source: 'src/store' },
 ];
 
 main();
