@@ -1,7 +1,6 @@
 import { expectEffectContext } from '../../test/matchers';
 import { collectChanges, flushMicrotasks } from '../../test/testUtils';
 import { effect, syncEffect } from '../effects/effect';
-import { getSignalNode } from '../signals/common';
 
 import { isAtom, WritableAtom } from './atom';
 import { atom } from './writableAtom';
@@ -60,8 +59,6 @@ describe('WritableAtom', () => {
       onChange.mockClear();
       fx.destroy();
       store.set(3);
-      const node = getSignalNode(fx.onDestroy);
-      expect(node.isDestroyed).toBe(true);
       expect(onChange).toHaveBeenCalledTimes(0);
     });
 
@@ -165,10 +162,12 @@ describe('WritableAtom', () => {
     test('Read-only atom should transmit "destroy" notification', () => {
       const source = atom(1);
       const readonly = source.asReadonly();
-      const fx = syncEffect(readonly, () => {});
+
+      const destroyCallback = jest.fn();
+      syncEffect(readonly, () => {}, { onDestroy: destroyCallback });
 
       source.destroy();
-      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+      expect(destroyCallback).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -215,26 +214,20 @@ describe('WritableAtom', () => {
     });
 
     it('should not notify destroyed effects', () => {
-      const onDestroy = jest.fn();
-
       const store = atom<number>(1);
-      const fx = syncEffect(store, () => {});
-      syncEffect(fx.onDestroy, onDestroy);
+
+      const onDestroy = jest.fn();
+      const fx = syncEffect(store, () => {}, { onDestroy });
 
       store.set(2);
       fx.destroy();
 
-      const node = getSignalNode(fx.onDestroy);
-
-      expect(node.isDestroyed).toBe(true);
       expect(onDestroy).toHaveBeenCalledTimes(1);
 
       store.destroy();
-      expect(node.isDestroyed).toBe(true);
       expect(onDestroy).toHaveBeenCalledTimes(1);
 
       store.destroy();
-      expect(node.isDestroyed).toBe(true);
       expect(onDestroy).toHaveBeenCalledTimes(1);
     });
   });

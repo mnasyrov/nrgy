@@ -4,9 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom, compute, effect, isAtom, signal, syncEffect } from '../core';
-import { getSignalNode } from '../core/signals/common';
-import { expectEffectContext } from '../test/matchers';
+import { atom, compute, effect, isAtom, syncEffect } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { fromQuery, Query, toQuery } from './query';
@@ -61,8 +59,7 @@ describe('toQuery()', () => {
     const x = atom(1);
     const query = toQuery(x);
 
-    const setter = signal<number>();
-    effect(setter, (value) => x.set(value));
+    const setter = (value: number) => x.set(value);
 
     const { result, unmount } = renderHook(() => useQuery(query));
 
@@ -140,19 +137,14 @@ describe('fromQuery()', () => {
     const result = fromQuery(query);
 
     const getterSpy = jest.fn();
-    const fx = syncEffect(result, getterSpy);
-
     const errorSpy = jest.fn();
-    syncEffect(fx.onError, errorSpy);
+    syncEffect(result, getterSpy, { onError: errorSpy });
 
     source.error(new Error('test error'));
     expect(() => result()).toThrow(new Error('test error'));
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith(
-      new Error('test error'),
-      expectEffectContext(),
-    );
+    expect(errorSpy).toHaveBeenCalledWith(new Error('test error'));
   });
 
   it('should transmit "destroy" notification from the source atom', () => {
@@ -160,10 +152,11 @@ describe('fromQuery()', () => {
     const atomQuery = toQuery(source);
 
     const result = fromQuery(atomQuery);
-    const fx = syncEffect(result, () => {});
+    const destroySpy = jest.fn();
+    syncEffect(result, () => {}, { onDestroy: destroySpy });
 
     source.destroy();
-    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+    expect(destroySpy).toHaveBeenCalledTimes(1);
   });
 
   it('should transmit "destroy" notification from the source atom and the computed atom', () => {
@@ -172,10 +165,11 @@ describe('fromQuery()', () => {
     const query = toQuery(computed);
 
     const result = fromQuery(query);
-    const fx = syncEffect(result, () => {});
+    const destroySpy = jest.fn();
+    syncEffect(result, () => {}, { onDestroy: destroySpy });
 
     source.destroy();
-    expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+    expect(destroySpy).toHaveBeenCalledTimes(1);
   });
 
   describe('asReadonly()', () => {
@@ -212,10 +206,11 @@ describe('fromQuery()', () => {
 
       const result = fromQuery(atomQuery);
       const readonly = result.asReadonly();
-      const fx = syncEffect(readonly, () => {});
+      const destroySpy = jest.fn();
+      syncEffect(readonly, () => {}, { onDestroy: destroySpy });
 
       source.destroy();
-      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+      expect(destroySpy).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,4 +1,3 @@
-import { Signal } from './types';
 import { DataRef } from './utilityTypes';
 
 /**
@@ -98,108 +97,7 @@ export type AtomEffectNode = ReactiveNode &
     dirty: boolean;
 
     /**
-     * Signals a result of the `AtomEffect`
-     */
-    onResult: Signal<any>;
-
-    /**
-     * Signals an error of the `AtomEffect`
-     */
-    onError: Signal<unknown>;
-
-    /**
-     * Signals that the `AtomEffect` has been destroyed
-     */
-    onDestroy: Signal<void>;
-
-    /**
      * Schedule the effect to be re-run
      */
     notify: () => void;
-  }>;
-
-/**
- * @internal
- */
-export type SignalNode<T> = ReactiveNode &
-  Readonly<{
-    ref: DataRef<SignalNode<T>>;
-
-    /**
-     * The name of the signal
-     */
-    name?: string;
-
-    /**
-     * If true, the SyncScheduler will be forced to use to notify consumers.
-     */
-    sync?: boolean;
-
-    /**
-     * Indicates that the `Signal` is subscribed
-     */
-    isSubscribed(): boolean;
-
-    /**
-     * Indicates that the `Signal` has been destroyed
-     */
-    isDestroyed: boolean;
-
-    /**
-     * Emit a value to all consumers
-     */
-    emit: (value: T) => void;
-
-    /**
-     * Subscribe to this signal
-     */
-    subscribe: (effect: SignalEffectNode<T>) => void;
-
-    /**
-     * Unsubscribe from this signal
-     */
-    unsubscribe: (effect: SignalEffectNode<T>) => void;
-  }>;
-
-/**
- * @internal
- *
- * A signal effect node
- */
-export type SignalEffectNode<T> = ReactiveNode &
-  Readonly<{
-    /**
-     * The reference to this effect node
-     */
-    ref: DataRef<SignalEffectNode<T>>;
-
-    /**
-     * Indicates that the `SignalEffect` has been destroyed
-     */
-    isDestroyed: boolean;
-
-    /**
-     * Signals a result of the action function
-     */
-    onResult: Signal<any>;
-
-    /**
-     * Signals an error of the action function
-     */
-    onError: Signal<unknown>;
-
-    /**
-     * Signals that the `SignalEffect` has been destroyed
-     */
-    onDestroy: Signal<void>;
-
-    /**
-     * Schedule the effect to be re-run
-     */
-    notify: (value: T) => void;
-
-    /**
-     * Notify the effect that it must be destroyed
-     */
-    notifyDestroy: () => void;
   }>;

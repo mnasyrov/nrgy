@@ -1,6 +1,6 @@
+import { expectEffectContext } from '../../test/matchers';
 import { atom } from '../atoms/writableAtom';
-import { syncEffect } from '../effects/effect';
-import { getSignalNode } from '../signals/common';
+import { runEffects } from '../utils/runEffects';
 
 import { createScope } from './createScope';
 
@@ -97,17 +97,6 @@ describe('createScope()', () => {
     });
   });
 
-  describe('signal()', () => {
-    it('should create and register a signal', () => {
-      const scope = createScope();
-
-      const signal = scope.signal();
-      scope.destroy();
-
-      expect(getSignalNode(signal).isDestroyed).toBe(true);
-    });
-  });
-
   describe('atom()', () => {
     it('should create and register an atom', () => {
       const scope = createScope();
@@ -123,19 +112,25 @@ describe('createScope()', () => {
   describe('effect()', () => {
     it('should create and register an effect', () => {
       const scope = createScope();
+      const callback = jest.fn();
 
-      const fx = scope.effect(atom(1), () => {});
-      scope.destroy();
+      scope.effect(atom(1), callback);
+      runEffects();
 
-      expect(getSignalNode(fx.onDestroy).isDestroyed).toBe(true);
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
     });
   });
 
   describe('syncEffect()', () => {
-    it('should create and register a sync effect', async () => {
-      expect(() => syncEffect((() => {}) as unknown as any, {} as any)).toThrow(
-        new Error('Unexpected the first argument'),
-      );
+    it('should create and register a sync effect', () => {
+      const scope = createScope();
+      const callback = jest.fn();
+
+      scope.syncEffect(atom(1), callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
     });
   });
 });

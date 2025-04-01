@@ -2,12 +2,9 @@ import { defaultEquals } from '../common/defaultEquals';
 import { AtomConsumer, WritableAtomNode } from '../common/reactiveNodes';
 import { Atom, ValueEqualityFn } from '../common/types';
 import { DataRef } from '../common/utilityTypes';
-import { syncEffect } from '../effects/effect';
 import { LinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from '../internals/runtime';
-import { destroySignal } from '../signals/common';
-import { signal } from '../signals/signal';
 
 import {
   AtomOptions,
@@ -33,13 +30,9 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
 
   version = 0;
 
-  /**
-   * Signals that the effect has been destroyed
-   */
-  readonly onDestroyed = signal<void>({ sync: true });
-
   private readonlyAtom: Atom<T> | undefined;
   private readonly equal: ValueEqualityFn<T>;
+  private onDestroy?: () => void;
 
   private consumers = new LinkedList<DataRef<AtomConsumer>>();
 
@@ -51,10 +44,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
   ) {
     this.name = options?.name;
     this.equal = options?.equal ?? defaultEquals;
-
-    if (options?.onDestroy) {
-      syncEffect(this.onDestroyed, options.onDestroy);
-    }
+    this.onDestroy = options?.onDestroy;
   }
 
   get(): T {
@@ -139,8 +129,7 @@ class WritableAtomImpl<T> implements WritableAtomNode<T> {
     this.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
     this.consumers.clear();
 
-    this.onDestroyed();
-    destroySignal(this.onDestroyed);
+    this.onDestroy?.();
 
     this.state = ATOM_STATE_DESTROYED;
   }
@@ -185,8 +174,6 @@ export const atom: AtomFn = <T>(
     node,
     node.get.bind(node),
     {
-      onDestroyed: node.onDestroyed,
-
       set: node.set.bind(node),
       update: node.update.bind(node),
       mutate: node.mutate.bind(node),

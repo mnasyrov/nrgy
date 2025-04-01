@@ -1,11 +1,6 @@
 import { AtomNode, ReactiveNode } from '../common/reactiveNodes';
 import { ATOM_SYMBOL } from '../common/symbols';
-import {
-  Atom,
-  DestroyableAtom,
-  Signal,
-  ValueEqualityFn,
-} from '../common/types';
+import { Atom, DestroyableAtom, ValueEqualityFn } from '../common/types';
 import { AnyObject } from '../common/utilityTypes';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
@@ -94,11 +89,6 @@ export function createAtomFromFunction<
  */
 export interface WritableAtom<T> extends DestroyableAtom<T> {
   /**
-   * Signals that the `AtomEffect` has been destroyed
-   */
-  readonly onDestroyed: Signal<void>;
-
-  /**
    * Directly set the atom to a new value, and notify any dependents.
    */
   set(value: T): boolean;
@@ -142,7 +132,7 @@ export type AtomOptions<T> = {
   equal?: ValueEqualityFn<T>;
 
   /**
-   * Callback is called when the store is destroyed.
+   * Callback is called when the atom is destroyed.
    */
   onDestroy?: () => void;
 };

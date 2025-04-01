@@ -1,13 +1,6 @@
 import { Observable, skip } from 'rxjs';
 
-import {
-  Atom,
-  compute,
-  createScope,
-  DestroyableAtom,
-  destroySignal,
-  signal,
-} from '../core';
+import { Atom, compute, createScope, DestroyableAtom } from '../core';
 import { createAtomFromFunction, getAtomNode } from '../core/atoms/atom';
 import { RUNTIME } from '../core/internals/runtime';
 import { observe } from '../rxjs';
@@ -48,13 +41,7 @@ type State =
  * Creates an Atom from a Query
  */
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
-  const onDestroyed = signal<void>({ sync: true });
-
   const scope = createScope();
-  scope.onDestroy(() => {
-    onDestroyed();
-    destroySignal(onDestroyed);
-  });
 
   const state = scope.atom<State>({ type: StateType.value });
 
@@ -84,7 +71,6 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
   const node = getAtomNode(result);
 
   return createAtomFromFunction(node, () => result(), {
-    onDestroyed,
     destroy: () => scope.destroy(),
     asReadonly: () => result,
   });

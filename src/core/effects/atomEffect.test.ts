@@ -1,4 +1,3 @@
-import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
 import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
@@ -6,7 +5,6 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from '../internals/schedulers';
-import { getSignalNode } from '../signals/common';
 
 import { AtomEffect } from './atomEffect';
 import { effect, syncEffect } from './effect';
@@ -30,25 +28,11 @@ describe('AtomEffect', () => {
         createSyncTaskScheduler(),
         atom(1),
         () => {},
+        { onDestroy: onDestroyCallback },
       );
-      syncEffect(effect.onDestroy, onDestroyCallback);
 
       effect.destroy();
       expect(onDestroyCallback).toHaveBeenCalledTimes(1);
-    });
-
-    it('should destroy onDestroy, onError, onResult signals', () => {
-      const effect = new AtomEffect(
-        createSyncTaskScheduler(),
-        atom(1),
-        () => {},
-      );
-
-      effect.destroy();
-
-      expect(getSignalNode(effect.onResult).isDestroyed).toBe(true);
-      expect(getSignalNode(effect.onError).isDestroyed).toBe(true);
-      expect(getSignalNode(effect.onDestroy).isDestroyed).toBe(true);
     });
   });
 
@@ -79,40 +63,26 @@ describe('AtomEffect', () => {
   });
 
   describe('run()', () => {
-    it('should signals onResult with result of action', () => {
-      const resultCallback = jest.fn();
-      const scheduler = createSyncTaskScheduler();
-
-      const effect = new AtomEffect(scheduler, atom(1), () => 'result');
-      syncEffect(effect.onResult, resultCallback);
-
-      effect.dirty = true;
-      effect.run();
-
-      expect(resultCallback).toHaveBeenCalledTimes(1);
-      expect(resultCallback).toHaveBeenCalledWith(
-        'result',
-        expectEffectContext(),
-      );
-    });
-
     it('should signals onError with error of action', () => {
       const errorCallback = jest.fn();
       const scheduler = createSyncTaskScheduler();
 
-      const effect = new AtomEffect(scheduler, atom(1), () => {
-        throw new Error('error');
-      });
-      syncEffect(effect.onError, errorCallback);
+      const effect = new AtomEffect(
+        scheduler,
+        atom(1),
+        () => {
+          throw new Error('error');
+        },
+        {
+          onError: errorCallback,
+        },
+      );
 
       effect.dirty = true;
       effect.run();
 
       expect(errorCallback).toHaveBeenCalledTimes(1);
-      expect(errorCallback).toHaveBeenCalledWith(
-        new Error('error'),
-        expectEffectContext(),
-      );
+      expect(errorCallback).toHaveBeenCalledWith(new Error('error'));
     });
 
     it('should run the effect if it is dirty', () => {

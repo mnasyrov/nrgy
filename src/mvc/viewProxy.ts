@@ -1,4 +1,5 @@
-import { Atom, atom, createScope, signal, WritableAtom } from '../core';
+import { Atom, atom, createScope, WritableAtom } from '../core';
+import { Emitter } from '../core/internals/emitter';
 
 import {
   ViewBinding,
@@ -69,22 +70,22 @@ export function createViewProxy<TProps extends ViewProps>(
     });
   }
 
-  const onMount = signal<void>({ sync: true });
-  const onUpdate = signal<Partial<TProps>>({ sync: true });
-  const onUnmount = signal<void>({ sync: true });
+  const mountEmitter = new Emitter<void>();
+  const updateEmitter = new Emitter<Partial<TProps>>();
+  const unmountEmitter = new Emitter<void>();
 
   return {
     status: status.asReadonly(),
     props: readonlyProps as ViewPropAtoms<TProps>,
 
-    onMount,
-    onUpdate,
-    onUnmount,
+    onMount: (listener) => mountEmitter.subscribe(listener),
+    onUpdate: (listener) => updateEmitter.subscribe(listener),
+    onUnmount: (listener) => unmountEmitter.subscribe(listener),
 
     mount(): void {
       if (status() === ViewStatuses.unmounted) {
         status.set(ViewStatuses.mounted);
-        onMount();
+        mountEmitter.emit();
       }
     },
 
@@ -99,19 +100,19 @@ export function createViewProxy<TProps extends ViewProps>(
         });
       }
 
-      onUpdate(nextProps ?? {});
+      updateEmitter.emit(nextProps ?? {});
     },
 
     unmount(): void {
       if (status() === ViewStatuses.mounted) {
         status.set(ViewStatuses.unmounted);
-        onUnmount();
+        unmountEmitter.emit();
       }
     },
 
     destroy(): void {
       if (status() !== ViewStatuses.destroyed) {
-        onUnmount();
+        unmountEmitter.emit();
         status.set(ViewStatuses.destroyed);
         scope.destroy();
       }

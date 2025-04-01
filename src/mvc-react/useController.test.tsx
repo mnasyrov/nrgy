@@ -10,7 +10,6 @@ import {
   ExtensionParamsProvider,
   withView,
 } from '../mvc';
-import { expectEffectContext } from '../test/matchers';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { NrgyControllerExtension } from './NrgyControllerExtension';
@@ -98,12 +97,12 @@ describe('useController() and withView() extension', () => {
 
     const ViewController = declareController()
       .extend(withView<{ value: number }>())
-      .apply(({ scope, view: { onMount, onUnmount, onUpdate, props } }) => {
-        effect(props.value, () => {});
+      .apply(({ view }) => {
+        effect(view.props.value, () => {});
 
-        scope.syncEffect(onMount, mountCallback);
-        scope.syncEffect(onUpdate, updateCallback);
-        scope.syncEffect(onUnmount, unmountCallback);
+        view.onMount(mountCallback);
+        view.onUpdate(updateCallback);
+        view.onUnmount(unmountCallback);
       });
 
     const { rerender, unmount } = renderHook(
@@ -118,28 +117,19 @@ describe('useController() and withView() extension', () => {
     rerender({ value: 2 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(1);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 2 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 2 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(2);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 2 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 3 });
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(3);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 3 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 3 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     unmount();
@@ -155,12 +145,12 @@ describe('useController() and withView() extension', () => {
 
     const ViewController = declareController()
       .extend(withView<{ value: number }>())
-      .apply(({ scope, view: { onMount, onUnmount, onUpdate, props } }) => {
-        effect(props.value, () => {});
+      .apply(({ view }) => {
+        effect(view.props.value, () => {});
 
-        scope.effect(onMount, mountCallback);
-        scope.effect(onUpdate, updateCallback);
-        scope.effect(onUnmount, unmountCallback);
+        view.onMount(mountCallback);
+        view.onUpdate(updateCallback);
+        view.onUnmount(unmountCallback);
       });
 
     const { rerender, unmount } = renderHook(
@@ -177,30 +167,21 @@ describe('useController() and withView() extension', () => {
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(1);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 2 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 2 });
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(2);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 2 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 2 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     rerender({ value: 3 });
     await flushMicrotasks();
     expect(mountCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(3);
-    expect(updateCallback).toHaveBeenCalledWith(
-      { value: 3 },
-      expectEffectContext(),
-    );
+    expect(updateCallback).toHaveBeenCalledWith({ value: 3 });
     expect(unmountCallback).toHaveBeenCalledTimes(0);
 
     unmount();

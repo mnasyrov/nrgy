@@ -156,15 +156,11 @@ describe('AtomSubject', () => {
       const spy = jest.fn();
       const spyError = jest.fn();
 
-      const fx = syncEffect(subject, spy);
-      syncEffect(fx.onError, spyError);
+      syncEffect(subject, spy, { onError: spyError });
       expect(spy).toHaveBeenLastCalledWith(1, expectEffectContext());
 
       subject.error(new Error('test'));
-      expect(spyError).toHaveBeenLastCalledWith(
-        new Error('test'),
-        expectEffectContext(),
-      );
+      expect(spyError).toHaveBeenLastCalledWith(new Error('test'));
     });
 
     it('should not notify if the subject is destroyed', () => {
@@ -172,8 +168,7 @@ describe('AtomSubject', () => {
       const spy = jest.fn();
       const spyError = jest.fn();
 
-      const fx = syncEffect(subject, spy);
-      syncEffect(fx.onError, spyError);
+      syncEffect(subject, spy, { onError: spyError });
 
       subject.destroy();
 
@@ -189,8 +184,7 @@ describe('AtomSubject', () => {
       const spy = jest.fn();
       const spyError = jest.fn();
 
-      const fx = syncEffect(subject, spy);
-      syncEffect(fx.onError, spyError);
+      const fx = syncEffect(subject, spy, { onError: spyError });
       fx.destroy();
 
       spy.mockClear();

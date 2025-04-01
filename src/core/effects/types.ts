@@ -1,27 +1,12 @@
 import { AtomList } from '../atoms/atomTypes';
-import { Atom, Signal } from '../common/types';
+import { Atom } from '../common/types';
 
 /**
  * A reactive effect, which can be manually destroyed.
  */
-export type EffectSubscription<R> = Readonly<{
+export type EffectSubscription = Readonly<{
   /**
-   * Signal that emits the result of the effect.
-   */
-  onResult: Signal<R>;
-
-  /**
-   * Signal that emits the error of the effect.
-   */
-  onError: Signal<unknown>;
-
-  /**
-   * Signal that emits when the effect is destroyed.
-   */
-  onDestroy: Signal<void>;
-
-  /**
-   * Shut down the effect, removing it from any upcoming scheduled executions.
+   * Unsubscribes and destroys the effect
    */
   destroy(): void;
 }>;
@@ -30,16 +15,25 @@ export type EffectContext = {
   cleanup(callback: () => void): void;
 };
 
-export type EffectAction<T, R> = (
-  value: T,
-  context: EffectContext,
-) => R | Promise<R>;
+export type EffectAction<T> = (value: T, context: EffectContext) => unknown;
 
 /**
  * Options for an effect
  */
 export type EffectOptions = {
   sync?: boolean;
+
+  /**
+   * Callback is called when the action trows an error
+   */
+  onError?: (error: unknown) => void;
+
+  /**
+   * Callback is called when the effect has been destroyed
+   */
+  onDestroy?: () => void;
+
+  waitChanges?: boolean;
 };
 
 /**
@@ -47,26 +41,18 @@ export type EffectOptions = {
  */
 export interface EffectFn {
   /**
-   * Creates a new effect for a signal
-   */ <T, R>(
-    source: Signal<T>,
-    action: EffectAction<T, R>,
-    options?: EffectOptions,
-  ): EffectSubscription<R>;
-
-  /**
    * Creates a new effect for an atom
-   */ <T, R>(
+   */ <T>(
     source: Atom<T>,
-    action: EffectAction<T, R>,
+    action: EffectAction<T>,
     options?: EffectOptions,
-  ): EffectSubscription<R>;
+  ): EffectSubscription;
 
   /**
    * Creates a new effect for a list of atoms
-   */ <TValues extends unknown[], R>(
+   */ <TValues extends unknown[]>(
     sources: AtomList<TValues>,
-    action: EffectAction<TValues, R>,
+    action: EffectAction<TValues>,
     options?: EffectOptions,
-  ): EffectSubscription<R>;
+  ): EffectSubscription;
 }

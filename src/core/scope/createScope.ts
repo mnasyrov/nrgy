@@ -1,8 +1,6 @@
 import { atom } from '../atoms/writableAtom';
 import { AnyFunction } from '../common/utilityTypes';
 import { effect, syncEffect } from '../effects/effect';
-import { destroySignal } from '../signals/common';
-import { signal } from '../signals/signal';
 
 import { BaseScope } from './baseScope';
 import { Scope } from './types';
@@ -20,12 +18,6 @@ export function createScope(): Scope {
 
     createScope: () => {
       return scope.add(createScope());
-    },
-
-    signal: (...args: any[]) => {
-      const emitter = (signal as AnyFunction)(...args);
-      scope.onDestroy(() => destroySignal(emitter));
-      return emitter;
     },
 
     atom: (...args: any[]) => {

@@ -4,7 +4,6 @@ import { compute } from '../atoms/compute';
 import { atom } from '../atoms/writableAtom';
 import { effect, syncEffect } from '../effects/effect';
 import { RUNTIME } from '../internals/runtime';
-import { signal } from '../signals/signal';
 
 import { batch } from './batch';
 
@@ -102,62 +101,5 @@ describe('batch()', () => {
       'Hello world!',
       expectEffectContext(),
     );
-  });
-
-  it('should defer all sync notifications of signals until the action is finished', () => {
-    const signal1 = signal<number>();
-    const callback = jest.fn();
-
-    syncEffect(signal1, callback);
-
-    batch(() => {
-      signal1(1);
-      expect(callback).toHaveBeenCalledTimes(0);
-
-      signal1(2);
-      expect(callback).toHaveBeenCalledTimes(0);
-
-      signal1(3);
-      expect(callback).toHaveBeenCalledTimes(0);
-    });
-
-    expect(callback).toHaveBeenCalledTimes(3);
-    expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
-    expect(callback).toHaveBeenCalledWith(2, expectEffectContext());
-    expect(callback).toHaveBeenCalledWith(3, expectEffectContext());
-  });
-
-  it('should defer all async notifications of signals until the action is finished', async () => {
-    const signal1 = signal<number>();
-    const callback = jest.fn();
-
-    effect(signal1, callback);
-
-    batch(() => {
-      signal1(1);
-      signal1(2);
-      signal1(3);
-    });
-
-    await flushMicrotasks();
-
-    expect(callback).toHaveBeenCalledTimes(3);
-    expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
-    expect(callback).toHaveBeenCalledWith(2, expectEffectContext());
-    expect(callback).toHaveBeenCalledWith(3, expectEffectContext());
-  });
-
-  it('should allow to create syncEffect and subscribe on its onResult signal', () => {
-    const history: number[] = [];
-    const source = atom(1);
-
-    batch(() => {
-      const fx = syncEffect(source, (v) => v + 10);
-      syncEffect(fx.onResult, (r) => history.push(r));
-    });
-
-    source.set(2);
-
-    expect(history).toEqual([11, 12]);
   });
 });

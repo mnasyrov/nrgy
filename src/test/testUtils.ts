@@ -25,11 +25,10 @@ export function collectHistory<T>(
   const history: HistoryEvent<T>[] = [];
   const scope = createScope();
 
-  const fx = scope.effect(source, (value) =>
-    history.push({ type: 'value', value }),
-  );
-  scope.effect(fx.onError, (error) => history.push({ type: 'error', error }));
-  scope.effect(fx.onDestroy, () => scope.destroy());
+  scope.effect(source, (value) => history.push({ type: 'value', value }), {
+    onError: (error) => history.push({ type: 'error', error }),
+    onDestroy: () => scope.destroy(),
+  });
 
   const timeoutId = setTimeout(() => {
     reject(new Error('Timeout is occurred'));

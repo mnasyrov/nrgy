@@ -2,15 +2,12 @@ import { getAtomNode } from '../atoms/atom';
 import { AtomEffectNode } from '../common/reactiveNodes';
 import { Atom } from '../common/types';
 import { DataRef } from '../common/utilityTypes';
-import { isPromise } from '../internals/isPromise';
 import { RUNTIME } from '../internals/runtime';
 import { TaskScheduler } from '../internals/schedulers';
 import { BaseScope } from '../scope/baseScope';
-import { destroySignal } from '../signals/common';
-import { signal } from '../signals/signal';
 
 import { generateEffectId } from './effectId';
-import { EffectAction, EffectContext } from './types';
+import { EffectAction, EffectContext, EffectOptions } from './types';
 
 /**
  * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
@@ -19,7 +16,7 @@ import { EffectAction, EffectContext } from './types';
  * `AtomEffect` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `AtomEffect.run()`.
  */
-export class AtomEffect<T, R> implements AtomEffectNode {
+export class AtomEffect<T> implements AtomEffectNode {
   readonly id = generateEffectId();
 
   private _ref: DataRef<AtomEffectNode> | undefined;
@@ -38,36 +35,28 @@ export class AtomEffect<T, R> implements AtomEffectNode {
   /** Whether the effect has been destroyed */
   isDestroyed = false;
 
-  /**
-   * Signals a result of the action function
-   */
-  readonly onResult = signal<R>();
-
-  /**
-   * Signals an error which occurred in the execution of the action function
-   */
-  readonly onError = signal<unknown>({ sync: true });
-
-  /**
-   * Signals that the effect has been destroyed
-   */
-  readonly onDestroy = signal<void>({ sync: true });
-
   private scheduler?: TaskScheduler;
   private source?: Atom<T>;
-  private action?: EffectAction<T, R>;
+  private action?: EffectAction<T>;
 
   private actionScope?: BaseScope;
   private actionContext?: EffectContext;
 
+  private onError?: (error: unknown) => void;
+  private onDestroy?: () => void;
+
   constructor(
     scheduler: TaskScheduler,
     source: Atom<T>,
-    action: EffectAction<T, R>,
+    action: EffectAction<T>,
+    options?: EffectOptions,
   ) {
     this.scheduler = scheduler;
     this.action = action;
     this.source = source;
+
+    this.onError = options?.onError;
+    this.onDestroy = options?.onDestroy;
   }
 
   /**
@@ -93,11 +82,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     this.actionScope = undefined;
     this.actionContext = undefined;
 
-    this.onDestroy();
-
-    destroySignal(this.onResult);
-    destroySignal(this.onError);
-    destroySignal(this.onDestroy);
+    this.onDestroy?.();
   }
 
   /**
@@ -140,7 +125,6 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     }
 
     let sourceValue: any;
-    let resultValue;
     let resultError;
     let isResultError;
 
@@ -166,7 +150,7 @@ export class AtomEffect<T, R> implements AtomEffectNode {
       this.actionScope?.destroy();
 
       if (!isResultError) {
-        resultValue = this.action(sourceValue, this.getContext());
+        this.action(sourceValue, this.getContext());
       }
     } catch (error) {
       isResultError = true;
@@ -174,16 +158,8 @@ export class AtomEffect<T, R> implements AtomEffectNode {
     }
 
     if (isResultError) {
-      this.onError(resultError);
+      this.onError?.(resultError);
       return;
-    }
-
-    if (isPromise(resultValue)) {
-      resultValue
-        .then((value) => this.onResult(value))
-        .catch((error) => this.onError(error));
-    } else {
-      this.onResult(resultValue as any);
     }
   }
 

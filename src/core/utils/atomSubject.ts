@@ -73,7 +73,6 @@ export function createAtomSubject<T>(
     },
   );
 
-  const onDestroyed = state.onDestroyed;
   const destroy = () => state.destroy();
 
   const node = getAtomNode(result);
@@ -90,14 +89,12 @@ export function createAtomSubject<T>(
     next: (value: T) => state.set({ type: StateType.value, value }),
     error: (error: unknown) => state.set({ type: StateType.error, error }),
 
-    onDestroyed,
     destroy,
 
     asDestroyable: () => {
       if (!observableAtom) {
         const node = getAtomNode(result);
         observableAtom = createAtomFromFunction(node, () => result(), {
-          onDestroyed,
           destroy,
           asReadonly,
         });

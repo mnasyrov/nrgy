@@ -1,9 +1,14 @@
-import { Atom, Signal } from '../core';
+import { Atom } from '../core';
+import { EmitterSubscription, Listener } from '../core/internals/emitter';
 
 /**
  * ViewProps are the properties that are provided to the view
  */
 export type ViewProps = Record<string, unknown>;
+
+export type ViewListener<T> = Listener<T>;
+
+export type ViewSubscription = EmitterSubscription;
 
 /**
  * ViewPropAtoms are the atoms wit View's props that are provided
@@ -38,17 +43,19 @@ export type ViewBinding<TProps extends ViewProps> = {
   /**
    * Signals that the view has been mounted
    */
-  readonly onMount: Signal<void>;
+  readonly onMount: (listener: ViewListener<void>) => ViewSubscription;
 
   /**
    * Signals that the view has been updated.
    *
    * Partial<TProps> is the properties that were updated.
    */
-  readonly onUpdate: Signal<Partial<TProps>>;
+  readonly onUpdate: (
+    listener: ViewListener<Partial<TProps>>,
+  ) => ViewSubscription;
 
   /**
    * Signals that the view has been unmounted.
    */
-  readonly onUnmount: Signal<void>;
+  readonly onUnmount: (listener: ViewListener<void>) => ViewSubscription;
 };

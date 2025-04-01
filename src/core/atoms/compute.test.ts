@@ -8,8 +8,6 @@ import { Atom } from '../common/types';
 import { effect, syncEffect } from '../effects/effect';
 import { RUNTIME } from '../internals/runtime';
 import { createScope } from '../scope/createScope';
-import { signal } from '../signals/signal';
-import { signalChanges } from '../utils/signalChanges';
 
 import { AtomUpdateError, getAtomName } from './atom';
 import { compute, ComputedImpl } from './compute';
@@ -313,14 +311,12 @@ describe('compute()', () => {
     expect(() => result()).toThrow(new Error('Detected cycle in computations'));
 
     const onErrorCallback = jest.fn();
-    const fx = effect(result, () => {});
-    effect(fx.onError, onErrorCallback);
+    effect(result, () => {}, { onError: onErrorCallback });
 
     await flushMicrotasks();
     expect(onErrorCallback).toHaveBeenNthCalledWith(
       1,
       new Error('Detected cycle in computations'),
-      expectEffectContext(),
     );
   });
 
@@ -338,8 +334,9 @@ describe('compute()', () => {
     const fxScope = createScope();
 
     const history1: any[] = [];
-    const fx1 = fxScope.effect(query2, (value) => history1.push({ value }));
-    fxScope.effect(fx1.onError, (error: any) => history1.push({ error }));
+    fxScope.effect(query2, (value) => history1.push({ value }), {
+      onError: (error: any) => history1.push({ error }),
+    });
 
     await flushMicrotasks();
 
@@ -351,8 +348,9 @@ describe('compute()', () => {
     fxScope.destroy();
 
     const history2: any[] = [];
-    const fx2 = fxScope.effect(query2, (value) => history2.push({ value }));
-    fxScope.effect(fx2.onError, (error: any) => history2.push({ error }));
+    fxScope.effect(query2, (value) => history2.push({ value }), {
+      onError: (error: any) => history2.push({ error }),
+    });
 
     await flushMicrotasks();
 
@@ -373,16 +371,11 @@ describe('compute()', () => {
     });
 
     const onErrorCallback = jest.fn();
-    const fx = effect(query1, () => {});
-    effect(fx.onError, onErrorCallback);
+    effect(query1, () => {}, { onError: onErrorCallback });
 
     await flushMicrotasks();
 
-    expect(onErrorCallback).toHaveBeenNthCalledWith(
-      1,
-      expect.any(Error),
-      expectEffectContext(),
-    );
+    expect(onErrorCallback).toHaveBeenNthCalledWith(1, expect.any(Error));
   });
 
   it('should notify an observer only once on subscribe', async () => {
@@ -428,9 +421,13 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = effect(signalChanges(nextResult), (result) => {
-      store.update((state) => ({ ...state, result }));
-    });
+    const subscription = effect(
+      nextResult,
+      (result) => {
+        store.update((state) => ({ ...state, result }));
+      },
+      { waitChanges: true },
+    );
 
     const changes = await collectChanges(store, async () => {
       expect(nextResult()).toEqual({ value: 0 });
@@ -446,7 +443,6 @@ describe('compute()', () => {
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
-      { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
     ]);
   });
@@ -459,9 +455,13 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = effect(signalChanges(nextResult), (result) => {
-      store.update((state) => ({ ...state, result }));
-    });
+    const subscription = effect(
+      nextResult,
+      (result) => {
+        store.update((state) => ({ ...state, result }));
+      },
+      { waitChanges: true },
+    );
 
     const changes = await collectChanges(store, async () => {
       await flushMicrotasks();
@@ -475,7 +475,6 @@ describe('compute()', () => {
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
-      { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
     ]);
   });
@@ -511,9 +510,13 @@ describe('compute()', () => {
       equal: (a, b) => a.value === b.value,
     });
 
-    const subscription = effect(signalChanges(nextResult), (result) => {
-      store.update((state) => ({ ...state, result }));
-    });
+    const subscription = effect(
+      nextResult,
+      (result) => {
+        store.update((state) => ({ ...state, result }));
+      },
+      { waitChanges: true },
+    );
 
     const changes = await collectChanges(store, async () => {
       await flushMicrotasks();
@@ -524,7 +527,6 @@ describe('compute()', () => {
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
-      { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
     ]);
   });
@@ -696,10 +698,8 @@ describe('Tracked context in the computed expression with implicit dependencies'
     // It is not possible to detect explicit invocation of ComputedNode.get();
     expect(() => c()).not.toThrow(new AtomUpdateError('b'));
 
-    const fx = effect(c, () => {});
-
     const errorCallback = jest.fn();
-    effect(fx.onError, errorCallback);
+    effect(c, () => {}, { onError: errorCallback });
 
     await flushMicrotasks();
     expect(b()).toBe(1);
@@ -709,47 +709,8 @@ describe('Tracked context in the computed expression with implicit dependencies'
     expect(b()).toBe(1);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
-    expect(errorCallback).toHaveBeenNthCalledWith(
-      1,
-      new AtomUpdateError('b'),
-      expectEffectContext(),
-    );
-    expect(errorCallback).toHaveBeenNthCalledWith(
-      2,
-      new AtomUpdateError('b'),
-      expectEffectContext(),
-    );
-  });
-
-  it('should be possible to notify signals, but the expression is not pure', async () => {
-    const a = atom(1, { name: 'a' });
-    const s = signal<number>();
-
-    const signalCallback = jest.fn();
-    effect(s, signalCallback);
-
-    const c = compute(() => {
-      const value = a();
-      s(value);
-      return value;
-    });
-
-    const fx = effect(c, () => {});
-
-    const errorCallback = jest.fn();
-    effect(fx.onError, errorCallback);
-
-    await flushMicrotasks();
-    expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(1, expectEffectContext());
-
-    signalCallback.mockClear();
-    a.set(2);
-    await flushMicrotasks();
-    expect(signalCallback).toHaveBeenCalledTimes(1);
-    expect(signalCallback).toHaveBeenCalledWith(2, expectEffectContext());
-
-    expect(errorCallback).toHaveBeenCalledTimes(0);
+    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
   });
 });
 

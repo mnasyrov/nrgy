@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { atom, compute, effect, signal } from '../core';
+import { atom, compute, effect } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { observe } from './observe';
@@ -182,23 +182,6 @@ describe('observe()', () => {
     expect(spy).toHaveBeenLastCalledWith(1);
 
     source.set(2);
-    expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenLastCalledWith(2);
-  });
-
-  it('should use a sync scheduler for signals if "sync" option is set', () => {
-    const source = signal<number>();
-    const observable = observe(source, { sync: true });
-
-    const spy = jest.fn();
-    observable.subscribe(spy);
-    expect(spy).toHaveBeenCalledTimes(0);
-
-    source(1);
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenLastCalledWith(1);
-
-    source(2);
     expect(spy).toHaveBeenCalledTimes(2);
     expect(spy).toHaveBeenLastCalledWith(2);
   });

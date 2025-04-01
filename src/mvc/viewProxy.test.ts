@@ -1,6 +1,3 @@
-import { syncEffect } from '../core';
-import { expectEffectContext } from '../test/matchers';
-
 import { createViewProxy } from './viewProxy';
 
 describe('ViewProxy', () => {
@@ -35,7 +32,7 @@ describe('ViewProxy', () => {
       const view = createViewProxy();
 
       const spy = jest.fn();
-      syncEffect(view.onMount, spy);
+      view.onMount(spy);
       view.mount();
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -47,7 +44,7 @@ describe('ViewProxy', () => {
       const view = createViewProxy({ value: 1 });
 
       const spy = jest.fn();
-      syncEffect(view.onUpdate, spy);
+      view.onUpdate(spy);
 
       view.update({ value: 2 });
       expect(spy).toHaveBeenCalledTimes(0);
@@ -57,7 +54,7 @@ describe('ViewProxy', () => {
       view.mount();
       view.update({ value: 3 });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({ value: 3 }, expectEffectContext());
+      expect(spy).toHaveBeenLastCalledWith({ value: 3 });
       expect(view.props.value()).toBe(3);
     });
 
@@ -65,19 +62,19 @@ describe('ViewProxy', () => {
       const view = createViewProxy({ value: 1 });
 
       const spy = jest.fn();
-      syncEffect(view.onUpdate, spy);
+      view.onUpdate(spy);
 
       view.mount();
 
       view.update({ value: 2 });
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({ value: 2 }, expectEffectContext());
+      expect(spy).toHaveBeenLastCalledWith({ value: 2 });
       expect(view.props.value()).toBe(2);
 
       spy.mockClear();
       view.update();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith({}, expectEffectContext());
+      expect(spy).toHaveBeenLastCalledWith({});
       expect(view.props.value()).toBe(2);
     });
 
@@ -85,15 +82,12 @@ describe('ViewProxy', () => {
       const view = createViewProxy({ value: 1 });
 
       const spy = jest.fn();
-      syncEffect(view.onUpdate, spy);
+      view.onUpdate(spy);
 
       view.mount();
       view.update({ value: 2, unknown: 3 } as any);
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenLastCalledWith(
-        { value: 2, unknown: 3 },
-        expectEffectContext(),
-      );
+      expect(spy).toHaveBeenLastCalledWith({ value: 2, unknown: 3 });
 
       expect(view.props.value()).toBe(2);
       expect((view.props as any)['unknown']).toEqual(undefined);
@@ -106,7 +100,7 @@ describe('ViewProxy', () => {
       view.mount();
 
       const spy = jest.fn();
-      syncEffect(view.onUnmount, spy);
+      view.onUnmount(spy);
       view.unmount();
 
       expect(spy).toHaveBeenCalledTimes(1);

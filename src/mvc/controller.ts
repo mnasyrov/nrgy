@@ -1,4 +1,5 @@
-import { createScope, Scope, signal } from '../core';
+import { createScope, Scope } from '../core';
+import { RUNTIME } from '../core/internals/runtime';
 
 /**
  * Base service type which is implemented by controllers
@@ -151,9 +152,6 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
   protected readonly scope: Scope;
   protected readonly params: TContext['params'];
 
-  protected readonly onCreateSignal = signal({ sync: false });
-  protected readonly onDestroySignal = signal({ sync: true });
-
   protected constructor(
     paramsOrProviders?:
       | TContext['params']
@@ -165,10 +163,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     this.scope = this.context.scope;
     this.params = this.context.params;
 
-    this.scope.effect(this.onCreateSignal, () => this.onCreated());
-    this.scope.effect(this.onDestroySignal, () => this.onDestroy());
-
-    this.onCreateSignal();
+    RUNTIME.asyncScheduler.schedule(() => this.onCreated());
   }
 
   /**
@@ -191,7 +186,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
    * Destroys the controller
    */
   destroy(): void {
-    this.onDestroySignal();
+    this.onDestroy();
     this.scope.destroy();
   }
 }

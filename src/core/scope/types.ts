@@ -1,6 +1,5 @@
 import { AtomFn } from '../atoms/types';
 import { EffectFn } from '../effects/types';
-import { SignalFn } from '../signals/types';
 
 /**
  * An object which can be unsubscribed from
@@ -52,11 +51,6 @@ export interface Scope extends Destroyable {
    * Creates a new atom and registers it for later disposal
    */
   atom: AtomFn;
-
-  /**
-   * Creates a new signal and registers it for later disposal
-   */
-  signal: SignalFn;
 
   /**
    * Creates a new effect and registers it for later disposal

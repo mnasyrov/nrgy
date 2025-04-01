@@ -2,27 +2,8 @@
 // Common
 //
 
-export type {
-  Atom,
-  DestroyableAtom,
-  Signal,
-  ValueEqualityFn,
-} from './common/types';
+export type { Atom, DestroyableAtom, ValueEqualityFn } from './common/types';
 export { defaultEquals } from './common/defaultEquals';
-
-//
-// Signals
-//
-
-export type { SignalOptions, SignalFn } from './signals/types';
-export {
-  isSignalSubscribed,
-  isSignalDestroyed,
-  destroySignal,
-  getSignalName,
-  isSignal,
-} from './signals/common';
-export { signal } from './signals/signal';
 
 //
 // Atoms
@@ -94,10 +75,7 @@ export { createAtomSubject } from './utils/atomSubject';
 
 export { batch } from './utils/batch';
 export { combineAtoms } from './utils/combineAtoms';
-export { keepLastValue } from './utils/keepLastValue';
 export { mapAtom } from './utils/mapAtom';
 export { mergeAtoms } from './utils/mergeAtoms';
-export { mixSignals } from './utils/mixSignals';
 export { objectEquals } from './utils/objectEquals';
 export { runEffects } from './utils/runEffects';
-export { signalChanges } from './utils/signalChanges';
