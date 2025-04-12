@@ -4,7 +4,7 @@ import {
   BaseControllerContext,
   ControllerConstructorError,
   ExtensionFn,
-} from '../mvc';
+} from '../core/mvc';
 
 import { DITOX_EXTENSION_CONTAINER_KEY } from './withContainer';
 

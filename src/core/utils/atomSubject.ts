@@ -1,11 +1,6 @@
-import {
-  AtomOptions,
-  createAtomFromFunction,
-  getAtomNode,
-} from '../atoms/atom';
-import { compute } from '../atoms/compute';
-import { atom } from '../atoms/writableAtom';
-import { Atom, DestroyableAtom } from '../common/types';
+import { atom } from '../reactivity/atom';
+import { compute } from '../reactivity/compute';
+import { AtomOptions, DestroyableAtom } from '../reactivity/types';
 
 const enum StateType {
   value,
@@ -26,9 +21,6 @@ export type AtomSubject<T> = DestroyableAtom<T> &
 
     /** Emits an error */
     error: (error: unknown) => void;
-
-    /** Returns an atom that can be used to destroy the subject */
-    asDestroyable(): DestroyableAtom<T>;
   }>;
 
 /**
@@ -41,8 +33,6 @@ export function createAtomSubject<T>(
   initialValue: T,
   options?: AtomOptions<T>,
 ): AtomSubject<T> {
-  let readonlyAtom: Atom<T> | undefined = undefined;
-
   const state = atom<State<T>>(
     {
       type: StateType.value,
@@ -73,37 +63,14 @@ export function createAtomSubject<T>(
     },
   );
 
-  const destroy = () => state.destroy();
-
-  const node = getAtomNode(result);
-  let observableAtom: DestroyableAtom<T> | undefined;
-
-  const asReadonly = (): Atom<T> => {
-    if (readonlyAtom === undefined) {
-      readonlyAtom = createAtomFromFunction(node, () => result());
-    }
-    return readonlyAtom;
+  const getter = result as any;
+  getter.destroy = () => state.destroy();
+  getter.next = (value: T) => {
+    state.set({ type: StateType.value, value });
+  };
+  getter.error = (error: unknown) => {
+    state.set({ type: StateType.error, error });
   };
 
-  const resultAtom = createAtomFromFunction(node, () => result(), {
-    next: (value: T) => state.set({ type: StateType.value, value }),
-    error: (error: unknown) => state.set({ type: StateType.error, error }),
-
-    destroy,
-
-    asDestroyable: () => {
-      if (!observableAtom) {
-        const node = getAtomNode(result);
-        observableAtom = createAtomFromFunction(node, () => result(), {
-          destroy,
-          asReadonly,
-        });
-      }
-      return observableAtom;
-    },
-
-    asReadonly,
-  });
-
-  return resultAtom;
+  return getter;
 }

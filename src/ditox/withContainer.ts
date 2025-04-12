@@ -6,7 +6,7 @@ import {
   ExtensionFn,
   ExtensionParams,
   ExtensionParamsProvider,
-} from '../mvc';
+} from '../core/mvc';
 
 /**
  * @internal

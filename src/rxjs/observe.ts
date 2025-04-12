@@ -1,7 +1,7 @@
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
 import { Atom, createScope } from '../core';
-import { RUNTIME } from '../core/internals/runtime';
+import { RUNTIME } from '../core/reactivity/runtime';
 
 /**
  * Options for `observe`

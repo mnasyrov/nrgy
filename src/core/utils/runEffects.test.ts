@@ -1,4 +1,4 @@
-import { RUNTIME } from '../internals/runtime';
+import { RUNTIME } from '../reactivity/runtime';
 
 import { runEffects } from './runEffects';
 

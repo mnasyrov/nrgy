@@ -1,5 +1,5 @@
-import { AtomOptions, WritableAtom } from '../atoms/atom';
-import { atom } from '../atoms/writableAtom';
+import { atom } from '../reactivity/atom';
+import { AtomOptions, WritableAtom } from '../reactivity/types';
 
 /**
  * A function to update a state.

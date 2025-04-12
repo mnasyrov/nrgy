@@ -1,4 +1,4 @@
-import { RUNTIME } from '../internals/runtime';
+import { RUNTIME } from '../reactivity/runtime';
 
 /**
  * Run a function in a batch update context.

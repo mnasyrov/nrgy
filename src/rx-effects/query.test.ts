@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom, compute, effect, isAtom, syncEffect } from '../core';
+import { atom, compute, effect, syncEffect } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { fromQuery, Query, toQuery } from './query';
@@ -170,48 +170,6 @@ describe('fromQuery()', () => {
 
     source.destroy();
     expect(destroySpy).toHaveBeenCalledTimes(1);
-  });
-
-  describe('asReadonly()', () => {
-    it('should return a read-only representation of the writable Atom', () => {
-      const source = atom(1);
-      const atomQuery = toQuery(source);
-
-      const result = fromQuery(atomQuery);
-      const readonly = result.asReadonly();
-
-      expect(readonly).toBeInstanceOf(Function);
-      expect(isAtom(readonly)).toBe(true);
-      expect(readonly()).toBe(1);
-
-      expect(readonly).not.toEqual(
-        expect.objectContaining({
-          set: expect.any(Function),
-          update: expect.any(Function),
-          mutate: expect.any(Function),
-          asReadonly: expect.any(Function),
-          destroy: expect.any(Function),
-        }),
-      );
-
-      expect(readonly()).toEqual(1);
-
-      source.set(2);
-      expect(readonly()).toEqual(2);
-    });
-
-    test('Read-only atom should transmit "destroy" notification', () => {
-      const source = atom(1);
-      const atomQuery = toQuery(source);
-
-      const result = fromQuery(atomQuery);
-      const readonly = result.asReadonly();
-      const destroySpy = jest.fn();
-      syncEffect(readonly, () => {}, { onDestroy: destroySpy });
-
-      source.destroy();
-      expect(destroySpy).toHaveBeenCalledTimes(1);
-    });
   });
 });
 

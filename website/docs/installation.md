@@ -18,8 +18,6 @@ Install additional dependencies according to the following table:
 | Import             | Dependencies       | Command                        |
 | ------------------ | ------------------ | ------------------------------ |
 | `nrgy`             | No dependencies    | `npm install nrgy`             |
-| `nrgy/mvc`         | No dependencies    | `npm install nrgy`             |
-| `nrgy/mvc-react`   | React.js           | `npm install nrgy react`       |
 | `nrgy/react`       | React.js           | `npm install nrgy react`       |
 | `nrgy/ditox`       | Ditox.js           | `npm install nrgy ditox`       |
 | `nrgy/ditox-react` | Ditox.js, React.js | `npm install nrgy ditox react` |

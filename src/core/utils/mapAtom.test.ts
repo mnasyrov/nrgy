@@ -1,7 +1,7 @@
-import { atom } from '../atoms/writableAtom';
+import { objectEquals } from '../common/objectEquals';
+import { atom } from '../reactivity/atom';
 
 import { mapAtom } from './mapAtom';
-import { objectEquals } from './objectEquals';
 
 describe('mapAtom()', () => {
   it('should follow to map() notation', () => {

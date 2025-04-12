@@ -1,5 +1,5 @@
 import { expectEffectContext } from '../../test/matchers';
-import { atom } from '../atoms/writableAtom';
+import { atom } from '../reactivity/atom';
 import { runEffects } from '../utils/runEffects';
 
 import { createScope } from './createScope';

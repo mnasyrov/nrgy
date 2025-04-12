@@ -1,8 +1,8 @@
-import { Observable, skip } from 'rxjs';
+import { Observable, skip, Unsubscribable } from 'rxjs';
 
-import { Atom, compute, createScope, DestroyableAtom } from '../core';
-import { createAtomFromFunction, getAtomNode } from '../core/atoms/atom';
-import { RUNTIME } from '../core/internals/runtime';
+import { atom, Atom, compute } from '../core';
+import { RUNTIME } from '../core/reactivity/runtime';
+import { DestroyableAtom } from '../core/reactivity/types';
 import { observe } from '../rxjs';
 
 // NOTE: Query is copy-pasted from 'rx-effects' to not use it as dependency.
@@ -41,18 +41,18 @@ type State =
  * Creates an Atom from a Query
  */
 export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
-  const scope = createScope();
+  let subscription: Unsubscribable | undefined = undefined;
 
-  const state = scope.atom<State>({ type: StateType.value });
-
-  const changes$ = query.value$.pipe(skip(1));
-  scope.add(
-    changes$.subscribe({
-      next: () => state.set({ type: StateType.value }),
-      error: (error: unknown) => state.set({ type: StateType.error, error }),
-      complete: () => scope.destroy(),
-    }),
+  const state = atom<State>(
+    { type: StateType.value },
+    { onDestroy: () => subscription?.unsubscribe() },
   );
+
+  subscription = query.value$.pipe(skip(1)).subscribe({
+    next: () => state.set({ type: StateType.value }),
+    error: (error: unknown) => state.set({ type: StateType.error, error }),
+    complete: () => state.destroy(),
+  });
 
   // The actual returned atom is a `computed` of the `State` atom, which maps the various states
   // to either values or errors.
@@ -68,10 +68,7 @@ export function fromQuery<T>(query: Query<T>): DestroyableAtom<T> {
     }
   });
 
-  const node = getAtomNode(result);
+  (result as any).destroy = () => state.destroy();
 
-  return createAtomFromFunction(node, () => result(), {
-    destroy: () => scope.destroy(),
-    asReadonly: () => result,
-  });
+  return result as DestroyableAtom<T>;
 }

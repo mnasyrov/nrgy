@@ -1,6 +1,6 @@
 import { bindModule, createContainer, declareModule, token } from 'ditox';
 
-import { declareController } from '../mvc';
+import { declareController } from '../core/mvc';
 
 import { applyInjections } from './applyInjections';
 import { withInjections } from './withInjections';

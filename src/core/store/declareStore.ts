@@ -1,4 +1,4 @@
-import { AtomOptions } from '../atoms/atom';
+import { AtomOptions } from '../reactivity/types';
 
 import { createStore, StateMutation, StateUpdates, Store } from './store';
 
@@ -139,7 +139,8 @@ export function declareStore<
     return store;
   }
 
-  Object.assign(factory, { initialState, updates });
+  factory.initialState = initialState;
+  factory.updates = updates;
 
   return factory as StoreFactory<State, Updates>;
 }

@@ -1,6 +1,6 @@
 import { Container } from 'ditox';
 
-import { BaseService, ControllerDeclaration } from '../mvc';
+import { BaseService, ControllerDeclaration } from '../core/mvc';
 
 import { provideDependencyContainer } from './withContainer';
 import { DependencyContext } from './withInjections';

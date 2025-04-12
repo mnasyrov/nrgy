@@ -1,9 +1,9 @@
 import { expectEffectContext } from '../../test/matchers';
 import { flushMicrotasks } from '../../test/testUtils';
-import { compute } from '../atoms/compute';
-import { atom } from '../atoms/writableAtom';
-import { effect, syncEffect } from '../effects/effect';
-import { RUNTIME } from '../internals/runtime';
+import { atom } from '../reactivity/atom';
+import { compute } from '../reactivity/compute';
+import { effect, syncEffect } from '../reactivity/effect';
+import { RUNTIME } from '../reactivity/runtime';
 
 import { batch } from './batch';
 

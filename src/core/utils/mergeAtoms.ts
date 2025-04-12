@@ -1,5 +1,5 @@
-import { compute, ComputeOptions } from '../atoms/compute';
-import { Atom } from '../common/types';
+import { compute } from '../reactivity/compute';
+import { Atom, ComputeOptions } from '../reactivity/types';
 
 /**
  * Creates a new Atom which takes the latest values from source queries

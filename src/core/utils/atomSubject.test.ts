@@ -1,6 +1,5 @@
 import { expectEffectContext } from '../../test/matchers';
-import { isAtom } from '../atoms/atom';
-import { syncEffect } from '../effects/effect';
+import { syncEffect } from '../reactivity/effect';
 
 import { createAtomSubject } from './atomSubject';
 
@@ -16,58 +15,6 @@ describe('AtomSubject', () => {
           next: expect.any(Function),
           error: expect.any(Function),
           destroy: expect.any(Function),
-          asDestroyable: expect.any(Function),
-          asReadonly: expect.any(Function),
-        }),
-      );
-    });
-  });
-
-  describe('asReadonly()', () => {
-    it('should return a read-only representation of the subject', () => {
-      const subject = createAtomSubject(1);
-      const readonly = subject.asReadonly();
-
-      expect(readonly).toBeInstanceOf(Function);
-      expect(isAtom(readonly)).toBe(true);
-      expect(readonly()).toBe(1);
-
-      const keys = Object.keys(readonly);
-      expect(keys).toEqual([]);
-
-      expect(readonly).not.toEqual(
-        expect.objectContaining({
-          next: expect.any(Function),
-          error: expect.any(Function),
-          destroy: expect.any(Function),
-          asDestroyable: expect.any(Function),
-          asReadonly: expect.any(Function),
-        }),
-      );
-    });
-  });
-
-  describe('asDestroyable()', () => {
-    it('should return a destroyable representation of the subject', () => {
-      const subject = createAtomSubject(1);
-      const destroyable = subject.asDestroyable();
-
-      expect(destroyable).toBeInstanceOf(Function);
-      expect(isAtom(destroyable)).toBe(true);
-      expect(destroyable()).toBe(1);
-
-      expect(destroyable).toEqual(
-        expect.objectContaining({
-          destroy: expect.any(Function),
-          asReadonly: expect.any(Function),
-        }),
-      );
-
-      expect(destroyable).not.toEqual(
-        expect.objectContaining({
-          next: expect.any(Function),
-          error: expect.any(Function),
-          asDestroyable: expect.any(Function),
         }),
       );
     });

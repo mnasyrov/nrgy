@@ -1,7 +1,7 @@
-import { atom } from '../atoms/writableAtom';
+import { objectEquals } from '../common/objectEquals';
+import { atom } from '../reactivity/atom';
 
 import { mergeAtoms } from './mergeAtoms';
-import { objectEquals } from './objectEquals';
 
 describe('mergeAtoms()', () => {
   it('should return a calculated value from source queries', () => {

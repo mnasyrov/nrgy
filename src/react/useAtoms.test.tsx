@@ -1,5 +1,4 @@
 import React, { FC, PropsWithChildren } from 'react';
-import '@testing-library/jest-dom';
 
 import {
   act,
@@ -8,13 +7,13 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
-import { Atom, atom } from '../core';
-import { declareViewModel, ViewModel } from '../mvc';
-import { withViewModel } from '../mvc-react';
+import { Atom, atom, declareViewModel, ViewModel } from '../core';
 import { flushMicrotasks } from '../test/testUtils';
 
 import { useAtoms } from './useAtoms';
+import { withViewModel } from './withViewModel';
 
 describe('useAtoms()', () => {
   it('should render with a current value and watch for value changes', async () => {

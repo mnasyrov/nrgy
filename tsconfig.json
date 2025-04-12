@@ -1,5 +1,4 @@
 {
-  "exclude": ["examples", "experiments"],
   "compilerOptions": {
     "noEmit": true,
     "target": "ES2019",

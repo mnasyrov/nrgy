@@ -1,8 +1,8 @@
 import { collectChanges, flushMicrotasks } from '../../test/testUtils';
-import { compute } from '../atoms/compute';
-import { atom } from '../atoms/writableAtom';
-import { effect } from '../effects/effect';
-import { objectEquals } from '../utils/objectEquals';
+import { objectEquals } from '../common/objectEquals';
+import { atom } from '../reactivity/atom';
+import { compute } from '../reactivity/compute';
+import { effect } from '../reactivity/effect';
 
 import {
   createStore,

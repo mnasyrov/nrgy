@@ -1,6 +1,6 @@
-import { atom } from '../atoms/writableAtom';
 import { AnyFunction } from '../common/utilityTypes';
-import { effect, syncEffect } from '../effects/effect';
+import { atom } from '../reactivity/atom';
+import { effect, syncEffect } from '../reactivity/effect';
 
 import { BaseScope } from './baseScope';
 import { Scope } from './types';

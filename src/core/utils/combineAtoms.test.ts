@@ -1,4 +1,4 @@
-import { atom } from '../atoms/writableAtom';
+import { atom } from '../reactivity/atom';
 
 import { combineAtoms } from './combineAtoms';
 

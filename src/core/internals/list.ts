@@ -6,8 +6,8 @@ export type ListEntry<T> = { value: T; next?: ListEntry<T> };
 
 /** @internal */
 export class LinkedList<T> {
-  private head: ListEntry<T> | undefined;
-  private tail: ListEntry<T> | undefined;
+  head: ListEntry<T> | undefined;
+  tail: ListEntry<T> | undefined;
 
   clonePointers(): LinkedList<T> {
     const result = new LinkedList<T>();

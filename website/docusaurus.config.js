@@ -10,10 +10,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 const packageNames = [
   // Core libs
   'core',
-  'mvc',
-  'mvc-react',
   'react',
-  'store',
 
   // Extensions
   'ditox',

@@ -1,6 +1,6 @@
-import { Observable, Subscribable } from 'rxjs';
+import { Observable, Subscribable, Unsubscribable } from 'rxjs';
 
-import { createAtomSubject, createScope, DestroyableAtom } from '../core';
+import { Atom, createAtomSubject } from '../core';
 
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.
@@ -12,7 +12,7 @@ import { createAtomSubject, createScope, DestroyableAtom } from '../core';
  */
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
-): DestroyableAtom<T | undefined>;
+): Atom<T | undefined>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.
@@ -25,25 +25,26 @@ export function fromObservable<T>(
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   initialValue: T,
-): DestroyableAtom<T>;
+): Atom<T>;
 
 export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   initialValue?: T | U,
-): DestroyableAtom<T | U> {
-  const scope = createScope();
+): Atom<T | U> {
+  let subscription: Unsubscribable | undefined = undefined;
 
   // Note: T is the Observable value type, and U is the initial value type. They don't have to be
   // the same - the returned atom gives values of type `T`.
   //
   // If an initial value was passed, use it. Otherwise, use `undefined` as the initial value.
   const atomSubject = createAtomSubject<T | U>(initialValue as U, {
-    onDestroy: scope.destroy,
+    onDestroy: () => subscription?.unsubscribe(),
   });
 
-  scope.add(
-    source.subscribe({ next: atomSubject.next, error: atomSubject.error }),
-  );
+  subscription = source.subscribe({
+    next: atomSubject.next,
+    error: atomSubject.error,
+  });
 
-  return atomSubject.asDestroyable();
+  return atomSubject;
 }

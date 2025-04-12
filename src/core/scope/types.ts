@@ -1,5 +1,4 @@
-import { AtomFn } from '../atoms/types';
-import { EffectFn } from '../effects/types';
+import { AtomFn, EffectFn } from '../reactivity/types';
 
 /**
  * An object which can be unsubscribed from
