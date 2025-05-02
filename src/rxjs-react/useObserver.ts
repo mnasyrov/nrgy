@@ -23,7 +23,7 @@ export function useObserver<T>(
   source$: Observable<T>,
   observerOrNext: Partial<Observer<T>> | ((value: T) => void),
 ): void {
-  const argsRef = useRef<Partial<Observer<T>>>();
+  const argsRef = useRef<Partial<Observer<T>>>(undefined);
 
   // Update the latest observable and callbacks
   // synchronously after render being committed

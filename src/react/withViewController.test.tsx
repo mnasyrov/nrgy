@@ -2,7 +2,6 @@ import React, { FC } from 'react';
 
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-// eslint-disable-next-line import/no-named-as-default
 import userEvent from '@testing-library/user-event';
 
 import { Atom, declareController, readonlyAtom, withView } from '../core';

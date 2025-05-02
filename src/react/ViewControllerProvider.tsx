@@ -71,7 +71,7 @@ export function useOptionalViewController<
 >(
   declaration: ControllerDeclaration<TContext, TService>,
   defaultValue?: TDefault,
-): TService | TDefault {
+): TService | TDefault | undefined {
   const reactContext = REACT_CONTEXTS.get(declaration) ?? EMPTY_CONTEXT;
 
   const value = useContext(reactContext);

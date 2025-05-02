@@ -1,0 +1,5 @@
+{
+  "errorLevel": 2,
+  "format": ["group", "repo", "time", "installedVersion"],
+  "reject": ["ditox", "ditox-react", "react", "rx-effects", "rxjs"]
+}

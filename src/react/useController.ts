@@ -55,7 +55,7 @@ export function useController<
 
   const reactExtensionProviders = useNrgyControllerExtensionContext();
 
-  const hookContextRef = useRef<HookContext>();
+  const hookContextRef = useRef<HookContext>(undefined);
 
   if (hookContextRef.current?.declaration !== declaration) {
     const view = createViewProxy<TProps>((props ?? {}) as TProps);
