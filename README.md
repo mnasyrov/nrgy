@@ -2,7 +2,7 @@
 
 <img alt="energy" src="energy.svg" width="120" />
 
-The energy for reactive programming with MVC/MVVM patterns
+Javascript library for reactive programming with MVVM/MVC patterns.
 
 [![npm](https://img.shields.io/npm/v/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 [![licence](https://img.shields.io/github/license/mnasyrov/nrgy.svg)](https://github.com/mnasyrov/nrgy/blob/master/LICENSE)
