@@ -47,10 +47,6 @@
     "./rxjs": {
       "require": "./rxjs.cjs",
       "default": "./rxjs.js"
-    },
-    "./rxjs-react": {
-      "require": "./rxjs-react.cjs",
-      "default": "./rxjs-react.js"
     }
   },
   "scripts": {

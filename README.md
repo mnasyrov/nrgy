@@ -73,7 +73,6 @@ Install additional dependencies according to the following table:
 | `nrgy/ditox-react` | Ditox.js, React.js | `npm i ditox react` |
 | `nrgy/rx-effects`  | RxJS, RxEffects    | `npm i rx-effects`  |
 | `nrgy/rxjs`        | RxJS               | `npm i rxjs`        |
-| `nrgy/rxjs-react`  | RxJS, React.js     | `npm i rxjs react`  |
 
 ## Documentation
 

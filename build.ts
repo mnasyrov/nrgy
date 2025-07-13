@@ -10,7 +10,6 @@ const entries = [
   { entry: 'ditox-react', source: 'src/ditox-react' },
   { entry: 'rx-effects', source: 'src/rx-effects' },
   { entry: 'rxjs', source: 'src/rxjs' },
-  { entry: 'rxjs-react', source: 'src/rxjs-react' },
 ];
 
 main();
