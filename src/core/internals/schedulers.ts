@@ -38,12 +38,14 @@ export function createMicrotaskScheduler(
   const onError = options?.onError ?? nrgyReportError;
 
   const queue = createQueue<() => void>();
+  let isPlanned = false;
   let isActive = false;
   let isPaused = false;
 
   const execute = () => {
     if (isActive) return;
 
+    isPlanned = false;
     isActive = true;
 
     let action;
@@ -64,7 +66,8 @@ export function createMicrotaskScheduler(
       const prevEmpty = queue.isEmpty();
       queue.add(entry);
 
-      if (prevEmpty && !isActive) {
+      if (prevEmpty && !isActive && !isPlanned) {
+        isPlanned = true;
         queueMicrotask(execute);
       }
     },
@@ -77,7 +80,8 @@ export function createMicrotaskScheduler(
     resume: () => {
       isPaused = false;
 
-      if (!queue.isEmpty()) {
+      if (!isPlanned && !queue.isEmpty()) {
+        isPaused = true;
         queueMicrotask(execute);
       }
     },
