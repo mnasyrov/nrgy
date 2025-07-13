@@ -1,11 +1,11 @@
-import { expectEffectContext } from '../../test/matchers';
-import { flushMicrotasks } from '../../test/testUtils';
+import { expectEffectContext } from '../../test/expectEffectContext';
 import { atom } from '../reactivity/atom';
 import { compute } from '../reactivity/compute';
 import { effect, syncEffect } from '../reactivity/effect';
 import { RUNTIME } from '../reactivity/runtime';
 
 import { batch } from './batch';
+import { runEffects } from './runEffects';
 
 describe('batch()', () => {
   it('should call the specified action', () => {
@@ -86,7 +86,8 @@ describe('batch()', () => {
 
     const callback = jest.fn();
     effect(result, callback);
-    await flushMicrotasks();
+    runEffects();
+
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
 
@@ -95,7 +96,8 @@ describe('batch()', () => {
       s1.set('Hello');
       s2.set('world!');
     });
-    await flushMicrotasks();
+    runEffects();
+
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(
       'Hello world!',

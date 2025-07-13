@@ -1,10 +1,7 @@
-import { expectEffectContext } from '../../test/matchers';
-import {
-  collectChanges,
-  flushMicrotasks,
-  promiseTimeout,
-} from '../../test/testUtils';
+import { collectAtomChanges } from '../../test/collectAtomChanges';
+import { expectEffectContext } from '../../test/expectEffectContext';
 import { createScope } from '../scope/createScope';
+import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { AtomUpdateError } from './atomUpdateError';
@@ -30,13 +27,13 @@ describe('compute()', () => {
     const results: number[] = [];
 
     effect(h, (value) => results.push(value));
-    await flushMicrotasks();
+    runEffects();
 
     entry.set(1);
-    await flushMicrotasks();
+    runEffects();
 
     entry.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     expect(results).toEqual([10, 18, 26]);
   });
@@ -74,32 +71,32 @@ describe('compute()', () => {
     const results: any[] = [];
     effect(output, (value) => results.push(value));
 
-    await flushMicrotasks();
+    runEffects();
 
     i = 1;
     b.set('b1a');
-    await flushMicrotasks();
+    runEffects();
 
     i = 2;
     a.set('a2');
     b.set('b2');
-    await flushMicrotasks();
+    runEffects();
 
     i = 3;
     isA.set(false);
-    await flushMicrotasks();
+    runEffects();
 
     i = 4;
     b.set('b3');
-    await flushMicrotasks();
+    runEffects();
 
     i = 5;
     a.set('a4');
-    await flushMicrotasks();
+    runEffects();
 
     i = 6;
     a.set('a5');
-    await flushMicrotasks();
+    runEffects();
 
     expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4', 'b3, i5']);
   });
@@ -115,18 +112,18 @@ describe('compute()', () => {
     const results: any[] = [];
     const { destroy } = effect(subscribed, (value) => results.push(value));
 
-    await flushMicrotasks();
+    runEffects();
 
     value = 2;
-    await flushMicrotasks();
+    runEffects();
 
     value = 3;
-    await flushMicrotasks();
+    runEffects();
 
     value = 4;
-    await flushMicrotasks();
+    runEffects();
     expect(subscribed()).toBe(1);
-    await flushMicrotasks();
+    runEffects();
 
     destroy();
 
@@ -182,13 +179,13 @@ describe('compute()', () => {
     const results: number[] = [];
 
     const fx = effect(b, (value) => results.push(value));
-    await flushMicrotasks();
+    runEffects();
 
     source.set(1);
-    await flushMicrotasks();
+    runEffects();
 
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     fx.destroy();
 
@@ -200,10 +197,10 @@ describe('compute()', () => {
 
     const a = compute(() => source() * 10);
 
-    const changes = await collectChanges(a, async () => {
+    const changes = await collectAtomChanges(a, async () => {
       source.set(2);
 
-      await flushMicrotasks();
+      runEffects();
 
       source.set(3);
     });
@@ -221,17 +218,17 @@ describe('compute()', () => {
 
     const changes: number[] = [];
     effect(b, (value) => changes.push(value));
-    await flushMicrotasks();
+    runEffects();
 
     entry.set(1);
     expect(b()).toEqual(3);
 
-    await flushMicrotasks();
+    runEffects();
 
     entry.set(2);
     expect(b()).toEqual(4);
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(changes).toEqual([2, 3, 4]);
   });
@@ -247,7 +244,7 @@ describe('compute()', () => {
 
     expect(b()).toEqual({ a: 1, b: 0 });
 
-    const changes = await collectChanges(b, () => {
+    const changes = await collectAtomChanges(b, () => {
       s1.set(1);
       // expect(b()).toEqual({ a: 2, b: 0 });
       expect(b()).toEqual({ a: 1, b: 0 });
@@ -280,11 +277,11 @@ describe('compute()', () => {
 
     expect(d()).toEqual(5);
 
-    const changes = await collectChanges(d, async () => {
+    const changes = await collectAtomChanges(d, async () => {
       entry.set(1);
       expect(d()).toEqual(7);
 
-      await flushMicrotasks();
+      runEffects();
 
       entry.set(2);
       expect(d()).toEqual(9);
@@ -314,7 +311,8 @@ describe('compute()', () => {
     const onErrorCallback = jest.fn();
     effect(result, () => {}, { onError: onErrorCallback });
 
-    await flushMicrotasks();
+    runEffects();
+
     expect(onErrorCallback).toHaveBeenNthCalledWith(
       1,
       new Error('Detected cycle in computations'),
@@ -339,11 +337,11 @@ describe('compute()', () => {
       onError: (error: any) => history1.push({ error }),
     });
 
-    await flushMicrotasks();
+    runEffects();
 
     errorId++;
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     expect(history1).toEqual([{ value: 4 }, { error: 'Test error 1' }]);
     fxScope.destroy();
@@ -353,11 +351,11 @@ describe('compute()', () => {
       onError: (error: any) => history2.push({ error }),
     });
 
-    await flushMicrotasks();
+    runEffects();
 
     errorId++;
     source.set(3);
-    await flushMicrotasks();
+    runEffects();
 
     expect(history2).toEqual([
       { error: 'Test error 1' },
@@ -374,7 +372,7 @@ describe('compute()', () => {
     const onErrorCallback = jest.fn();
     effect(query1, () => {}, { onError: onErrorCallback });
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(onErrorCallback).toHaveBeenNthCalledWith(1, expect.any(Error));
   });
@@ -397,14 +395,14 @@ describe('compute()', () => {
     const onSumChanged = jest.fn();
     effect(sum, onSumChanged);
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(onSumChanged).toHaveBeenCalledWith('ab', expectEffectContext());
     expect(onSumChanged).toHaveBeenCalledTimes(1);
 
     onSumChanged.mockClear();
 
-    const storeChanges = await collectChanges(store, () => {
+    const storeChanges = await collectAtomChanges(store, () => {
       effect(sum, (sum) => store.update((state) => ({ ...state, sum })));
     });
 
@@ -430,14 +428,14 @@ describe('compute()', () => {
       { waitChanges: true },
     );
 
-    const changes = await collectChanges(store, async () => {
+    const changes = await collectAtomChanges(store, async () => {
       expect(nextResult()).toEqual({ value: 0 });
 
       store.update((state) => ({ ...state, a: 1 }));
 
       expect(nextResult()).toEqual({ value: 1 });
 
-      await flushMicrotasks();
+      runEffects();
     });
 
     subscription?.destroy();
@@ -464,12 +462,12 @@ describe('compute()', () => {
       { waitChanges: true },
     );
 
-    const changes = await collectChanges(store, async () => {
-      await flushMicrotasks();
+    const changes = await collectAtomChanges(store, async () => {
+      runEffects();
 
       store.update((state) => ({ ...state, a: 1 }));
 
-      await flushMicrotasks();
+      runEffects();
     });
 
     subscription?.destroy();
@@ -491,13 +489,13 @@ describe('compute()', () => {
       store1.update((state) => ({ ...state, result }));
     });
 
-    await collectChanges(store1, async () => {
+    await collectAtomChanges(store1, async () => {
       store1.update((state) => ({ ...state, a: 1 }));
     });
 
     subscription1?.destroy();
 
-    await flushMicrotasks();
+    runEffects();
 
     // Expect that the runtime in empty
     expect(RUNTIME.activeEffect).toBe(undefined);
@@ -519,8 +517,8 @@ describe('compute()', () => {
       { waitChanges: true },
     );
 
-    const changes = await collectChanges(store, async () => {
-      await flushMicrotasks();
+    const changes = await collectAtomChanges(store, async () => {
+      runEffects();
       store.update((state) => ({ ...state, a: 1 }));
     });
 
@@ -539,7 +537,7 @@ describe('compute()', () => {
       equal: (a, b) => a.key === b.key,
     });
 
-    const changes = await collectChanges(query, () => {
+    const changes = await collectAtomChanges(query, () => {
       source.set({ key: 1, val: 'a' });
       source.set({ key: 1, val: 'b' });
       source.set({ key: 2, val: 'c' });
@@ -604,11 +602,11 @@ describe('compute()', () => {
     const callback = jest.fn();
     effect(compute2, (value) => callback('fx1', value));
     effect(compute2, (value) => callback('fx2', value));
+    runEffects();
 
     // Update
-    setTimeout(() => source.set(2), 100);
-
-    await promiseTimeout(200);
+    source.set(2);
+    runEffects();
 
     expect(callback).toHaveBeenNthCalledWith(1, 'fx1', 3);
     expect(callback).toHaveBeenNthCalledWith(2, 'fx2', 3);
@@ -704,11 +702,11 @@ describe('Tracked context in the computed expression with implicit dependencies'
     const errorCallback = jest.fn();
     effect(c, () => {}, { onError: errorCallback });
 
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(1);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(1);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
@@ -748,13 +746,13 @@ describe('One source and two computed atoms', () => {
     effect(result, (value) => history1.push(value));
     effect(result, (value) => history2.push(value));
 
-    await flushMicrotasks();
+    runEffects();
 
     a1.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     a1.set(3);
-    await flushMicrotasks();
+    runEffects();
 
     expect(history1).toEqual([11, 22, 33]);
     expect(history2).toEqual([11, 22, 33]);

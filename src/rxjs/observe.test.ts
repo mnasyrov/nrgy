@@ -1,8 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { atom, compute, effect } from '../core';
-import { flushMicrotasks } from '../test/testUtils';
+import { atom, compute, effect, runEffects } from '../core';
 
 import { observe } from './observe';
 
@@ -14,16 +13,16 @@ describe('observe()', () => {
     );
 
     // Initial effect execution, emits 0.
-    await flushMicrotasks();
+    runEffects();
 
     counter.set(1);
     // Emits 1.
-    await flushMicrotasks();
+    runEffects();
 
     counter.set(2);
     counter.set(3);
     // Emits 3 (ignores 2 as it was batched by the effect).
-    await flushMicrotasks();
+    runEffects();
 
     expect(await counterValues).toEqual([0, 1, 3]);
   });
@@ -49,11 +48,11 @@ describe('observe()', () => {
       error: (err) => (currentError = err),
     });
 
-    await flushMicrotasks();
+    runEffects();
     expect(currentValue).toBe(1);
 
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(currentError).toBe('fail');
 
     sub.unsubscribe();
@@ -71,7 +70,7 @@ describe('observe()', () => {
     // Simply creating the Observable shouldn't trigger an atom read.
     expect(counterRead).toBe(false);
 
-    await flushMicrotasks();
+    runEffects();
     expect(counterRead).toBe(false);
   });
 
@@ -89,7 +88,7 @@ describe('observe()', () => {
     const sub = counter$.subscribe();
 
     counter.set(1);
-    await flushMicrotasks();
+    runEffects();
     const prevReadCount = readCount;
 
     // Tear down the only subscription.
@@ -97,7 +96,7 @@ describe('observe()', () => {
 
     // Now, setting the atom still triggers additional reads
     counter.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(readCount).toBe(prevReadCount);
   });
 
@@ -116,13 +115,13 @@ describe('observe()', () => {
 
     expect(readCount).toBe(0);
 
-    await flushMicrotasks();
+    runEffects();
     expect(readCount).toBe(0);
 
     // Now, setting the atom shouldn't trigger any additional reads, as the Injector was destroyed
     // childInjector.destroy();
     counter.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(readCount).toBe(0);
   });
 
@@ -143,10 +142,10 @@ describe('observe()', () => {
       emits.update((v) => v + 1);
     });
 
-    await flushMicrotasks();
+    runEffects();
     expect(emits()).toBe(1);
 
-    await flushMicrotasks();
+    runEffects();
     expect(emits()).toBe(1);
 
     expect(hits).toBe(1);
@@ -197,13 +196,13 @@ describe('observe()', () => {
     observable.subscribe((value) => history1.push(value));
     effect(computed, (v) => history2.push(v));
 
-    await flushMicrotasks();
+    runEffects();
 
     store.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     store.set(3);
-    await flushMicrotasks();
+    runEffects();
 
     expect(history1).toEqual([1, 2, 3]);
     expect(history2).toEqual([1, 2, 3]);

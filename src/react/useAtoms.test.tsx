@@ -10,7 +10,7 @@ import {
 import '@testing-library/jest-dom';
 
 import { Atom, atom, declareViewModel, ViewModel } from '../core';
-import { flushMicrotasks } from '../test/testUtils';
+import { flushMicrotasks } from '../test/flushMicrotasks';
 
 import { useAtoms } from './useAtoms';
 import { withViewModel } from './withViewModel';

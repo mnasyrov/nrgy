@@ -1,4 +1,4 @@
-import { expectEffectContext } from '../../test/matchers';
+import { expectEffectContext } from '../../test/expectEffectContext';
 import { atom } from '../reactivity/atom';
 import { runEffects } from '../utils/runEffects';
 

@@ -1,8 +1,9 @@
-import { collectChanges, flushMicrotasks } from '../../test/testUtils';
+import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { objectEquals } from '../common/objectEquals';
 import { atom } from '../reactivity/atom';
 import { compute } from '../reactivity/compute';
 import { effect } from '../reactivity/effect';
+import { runEffects } from '../utils/runEffects';
 
 import {
   createStore,
@@ -40,7 +41,7 @@ describe('Concurrent Store updates', () => {
       store.update((state) => ({ ...state, uppercase }));
     });
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(store().merged).toEqual('ab');
     expect(store().uppercase).toEqual('AB');
@@ -51,12 +52,12 @@ describe('Concurrent Store updates', () => {
     expect(store().merged).toEqual('ab');
     expect(store().uppercase).toEqual('AB');
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(store().merged).toEqual('cd');
     expect(store().uppercase).toEqual('CD');
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(history).toEqual([
       { v1: 'a', v2: 'b' },
@@ -72,7 +73,7 @@ describe('Concurrent Store updates', () => {
       foo: number;
     }>({ bar: 0, foo: 0 }, { equal: objectEquals });
 
-    const history = await collectChanges(store, () => {
+    const history = await collectAtomChanges(store, () => {
       store.update((state) => ({ ...state, foo: 1 }));
       store.update((state) => ({ ...state, foo: 2 }));
       store.update((state) => ({ ...state, bar: 42 }));
@@ -96,7 +97,7 @@ describe('Concurrent Store updates', () => {
     effect(store, ({ x }) => store.update((state) => ({ ...state, y: x })));
     effect(store, ({ y }) => store.update((state) => ({ ...state, z: y })));
 
-    const history = await collectChanges(store, () => {
+    const history = await collectAtomChanges(store, () => {
       store.update((state) => ({ ...state, x: 1 }));
       store.update((state) => ({ ...state, x: 2 }));
       store.update((state) => ({ ...state, x: 3 }));
@@ -117,13 +118,13 @@ describe('Concurrent Store updates', () => {
       }
     });
 
-    const changes = await collectChanges(store, () => {
+    const changes = await collectAtomChanges(store, () => {
       store.set(1);
       store.set(2);
       store.set(3);
     });
 
-    await flushMicrotasks();
+    runEffects();
 
     expect(changes).toEqual([0, 30, 300]);
   });

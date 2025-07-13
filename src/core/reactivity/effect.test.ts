@@ -1,5 +1,5 @@
-import { expectEffectContext } from '../../test/matchers';
-import { flushMicrotasks } from '../../test/testUtils';
+import { expectEffectContext } from '../../test/expectEffectContext';
+import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { AtomUpdateError } from './atomUpdateError';
@@ -13,16 +13,16 @@ describe('effect()', () => {
 
     let result = 0;
     const fx = effect(a, (value) => (result = value));
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(1);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(2);
 
     fx.destroy();
     a.set(3);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(2);
   });
 
@@ -36,16 +36,16 @@ describe('effect()', () => {
       (value) => (result = value),
     );
 
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(3);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(4);
 
     fx.destroy();
     a.set(3);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(4);
   });
 
@@ -56,16 +56,16 @@ describe('effect()', () => {
     let result = 0;
     const fx = effect([a, b], ([a, b]) => (result = a + b));
 
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(3);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(4);
 
     fx.destroy();
     a.set(3);
-    await flushMicrotasks();
+    runEffects();
     expect(result).toBe(4);
   });
 
@@ -74,18 +74,18 @@ describe('effect()', () => {
 
     const results: number[] = [];
     effect(a, (value) => results.push(value));
-    await flushMicrotasks();
+    runEffects();
 
     a.set(1);
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(results).toEqual([0, 2]);
 
     a.set(3);
     a.set(4);
     expect(a()).toEqual(4);
 
-    await flushMicrotasks();
+    runEffects();
     expect(results).toEqual([0, 2, 4]);
   });
 
@@ -95,7 +95,7 @@ describe('effect()', () => {
 
     effect(source, (value) => value * value, { onDestroy: destroyCallback });
 
-    await flushMicrotasks();
+    runEffects();
     expect(destroyCallback).toHaveBeenCalledTimes(0);
 
     source.destroy();
@@ -187,14 +187,14 @@ describe('Effect with a primitive value', () => {
 
     effect(source, callback);
 
-    await flushMicrotasks();
+    runEffects();
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(false, expectEffectContext());
 
     callback.mockClear();
     source.set(true);
 
-    await flushMicrotasks();
+    runEffects();
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith(true, expectEffectContext());
   });
@@ -208,11 +208,11 @@ describe('Untracked context in the atom effect with the explicit dependency', ()
     const errorCallback = jest.fn();
     effect(a, (value) => b.set(value), { onError: errorCallback });
 
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(1);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(2);
 
     expect(errorCallback).toHaveBeenCalledTimes(0);
@@ -233,11 +233,11 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     const errorCallback = jest.fn();
     effect(c, () => {}, { onError: errorCallback });
 
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(0);
 
     a.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(b()).toBe(0);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
@@ -270,19 +270,19 @@ describe('@regression Cycled effect on reading and updating the same atom', () =
       store.set(nextState);
     });
 
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({});
 
     inputs.set(['a']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ a: 1 });
 
     inputs.set(['a', 'b']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ a: 2, b: 1 });
 
     inputs.set(['b', 'c']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ b: 2, c: 1 });
   });
 
@@ -315,19 +315,19 @@ describe('@regression Cycled effect on reading and updating the same atom', () =
       updateStore(nextState);
     });
 
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({});
 
     inputs.set(['a']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ a: 1 });
 
     inputs.set(['a', 'b']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ a: 2, b: 1 });
 
     inputs.set(['b', 'c']);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toEqual({ b: 2, c: 1 });
   });
 });
@@ -342,15 +342,15 @@ describe('Explicit dependencies in the effect', () => {
       store.update((prev) => prev + a + b);
     });
 
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toBe(1);
 
     atomA.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toBe(3);
 
     atomB.set(3);
-    await flushMicrotasks();
+    runEffects();
     expect(store()).toBe(8);
   });
 });
@@ -380,21 +380,21 @@ describe('Effect: waitChanges option', () => {
 
     const spy = jest.fn();
     effect(source, spy, { waitChanges: true });
-    await flushMicrotasks();
+    runEffects();
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockClear();
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(3);
-    await flushMicrotasks();
+    runEffects();
     expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
   });
 

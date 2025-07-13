@@ -10,7 +10,7 @@ import {
   ExtensionParamsProvider,
   withView,
 } from '../core/mvc';
-import { flushMicrotasks } from '../test/testUtils';
+import { flushMicrotasks } from '../test/flushMicrotasks';
 
 import { NrgyControllerExtension } from './NrgyControllerExtension';
 import { useController } from './useController';

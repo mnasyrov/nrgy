@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { Subject } from 'rxjs';
 
-import { monitorSubscriptionCount } from '../test/testUtils';
+import { monitorSubscriptionCount } from '../test/monitorSubscriptionCount';
 
 import { useObservable } from './useObservable';
 

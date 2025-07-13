@@ -1,5 +1,6 @@
-import { expectEffectContext } from '../../test/matchers';
-import { collectChanges, flushMicrotasks } from '../../test/testUtils';
+import { collectAtomChanges } from '../../test/collectAtomChanges';
+import { expectEffectContext } from '../../test/expectEffectContext';
+import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { effect, syncEffect } from './effect';
@@ -50,7 +51,7 @@ describe('WritableAtom', () => {
         { equal: (s1, s2) => s1.value === s2.value },
       );
 
-      const changes = await collectChanges(store, () => {
+      const changes = await collectAtomChanges(store, () => {
         store.set({ value: 1, data: 'b' });
         expect(store()).toEqual({ value: 1, data: 'a' });
 
@@ -92,7 +93,7 @@ describe('WritableAtom', () => {
     it('should not apply a mutation if the new state is the same', async () => {
       const store = atom({ value: 1 });
 
-      const statePromise = collectChanges(store, () => {
+      const statePromise = collectAtomChanges(store, () => {
         store.update((state) => state);
       });
 
@@ -127,15 +128,15 @@ describe('WritableAtom', () => {
       const store = atom<number>(1);
 
       effect(store, (value) => changes.push(value));
-      await flushMicrotasks();
+      runEffects();
 
       store.set(2);
-      await flushMicrotasks();
+      runEffects();
 
       store.set(3);
       store.destroy();
       store.set(4);
-      await flushMicrotasks();
+      runEffects();
 
       expect(changes).toEqual([1, 2, 3]);
     });

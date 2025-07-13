@@ -1,9 +1,9 @@
 import { createContainer, token } from 'ditox';
 
 import { provideDependencyContainer, withInjections } from '../../ditox';
-import { flushMicrotasks } from '../../test/testUtils';
 import { compute } from '../reactivity/compute';
 import { readonlyAtom } from '../utils/readonlyAtom';
+import { runEffects } from '../utils/runEffects';
 
 import {
   BaseController,
@@ -203,7 +203,7 @@ describe('declareController() with classes', () => {
     expect(controller).toBeInstanceOf(BaseTestController);
     expect(controller).toBeInstanceOf(BaseController);
 
-    await flushMicrotasks();
+    runEffects();
     expect(onCreatedCallback).toHaveBeenCalled();
 
     expect(controller.counter()).toBe(10);

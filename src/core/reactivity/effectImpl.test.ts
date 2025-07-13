@@ -1,8 +1,8 @@
-import { flushMicrotasks } from '../../test/testUtils';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from '../internals/schedulers';
+import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { compute } from './compute';
@@ -185,13 +185,13 @@ describe('Change detector bugs', () => {
     syncEffect(computed, (v) => history2.push(v));
     effect(computed, (v) => history3.push(v));
 
-    await flushMicrotasks();
+    runEffects();
 
     store.set(2);
-    await flushMicrotasks();
+    runEffects();
 
     store.set(3);
-    await flushMicrotasks();
+    runEffects();
 
     expect(history1).toEqual([1, 2, 3]);
     expect(history2).toEqual([1, 2, 3]);

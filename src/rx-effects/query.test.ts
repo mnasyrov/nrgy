@@ -4,8 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 
-import { atom, compute, effect, syncEffect } from '../core';
-import { flushMicrotasks } from '../test/testUtils';
+import { atom, compute, effect, runEffects, syncEffect } from '../core';
 
 import { fromQuery, Query, toQuery } from './query';
 
@@ -17,15 +16,15 @@ describe('toQuery()', () => {
     expect(query.get()).toBe(1);
 
     const historyPromise = firstValueFrom(query.value$.pipe(toArray()));
-    await flushMicrotasks();
+    runEffects();
 
     source.set(2);
     expect(query.get()).toBe(2);
-    await flushMicrotasks();
+    runEffects();
 
     source.set(3);
     expect(query.get()).toBe(3);
-    await flushMicrotasks();
+    runEffects();
 
     source.destroy();
     source.set(4);
@@ -196,11 +195,11 @@ describe('Equivalence of toQuery/fromQuery transformation', () => {
     const values: number[] = [];
 
     effect(clone, (value) => values.push(value));
-    await flushMicrotasks();
+    runEffects();
     expect(values).toEqual([1]);
 
     source.set(2);
-    await flushMicrotasks();
+    runEffects();
     expect(values).toEqual([1, 2]);
   });
 });
