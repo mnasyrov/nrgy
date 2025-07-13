@@ -5,6 +5,6 @@ import { RUNTIME } from '../reactivity/runtime';
  *
  * It will defer all effect notifications until the function is finished.
  */
-export function batch(action: () => any): void {
-  RUNTIME.batch(action);
+export function batch<T>(action: () => T): T {
+  return RUNTIME.batch(action);
 }
