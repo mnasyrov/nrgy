@@ -88,6 +88,10 @@ export class Runtime {
       }
     }
   }
+
+  runEffects() {
+    this.asyncScheduler.execute();
+  }
 }
 
 /**
