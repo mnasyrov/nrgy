@@ -8,7 +8,6 @@ import {
 } from '../core/mvc';
 
 import { useController } from './useController';
-import { ViewControllerProvider } from './ViewControllerProvider';
 
 /**
  * Creates a higher-order React component that provides a controller for a given view component.
@@ -30,14 +29,7 @@ export function withViewController<
     return function (props: TProps) {
       const controller = useController(controllerDeclaration, props);
 
-      return (
-        <ViewControllerProvider
-          declaration={controllerDeclaration}
-          controller={controller}
-        >
-          <ViewComponent {...props} controller={controller} />
-        </ViewControllerProvider>
-      );
+      return <ViewComponent {...props} controller={controller} />;
     };
   };
 }

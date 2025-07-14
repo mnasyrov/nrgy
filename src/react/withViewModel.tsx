@@ -7,7 +7,6 @@ import {
 } from '../core/mvc/viewModel';
 
 import { useController } from './useController';
-import { ViewControllerProvider } from './ViewControllerProvider';
 
 type InferHocComponent<
   TViewModel extends BaseViewModel,
@@ -68,16 +67,11 @@ export function withViewModelImpl<
     );
 
     return (
-      <ViewControllerProvider
-        declaration={viewModelDeclaration}
-        controller={viewModel}
-      >
-        <ViewComponent
-          {...(restProps as any as TComponentProps)}
-          viewModel={viewModel}
-          children={children}
-        />
-      </ViewControllerProvider>
+      <ViewComponent
+        {...(restProps as any as TComponentProps)}
+        viewModel={viewModel}
+        children={children}
+      />
     );
   };
 
