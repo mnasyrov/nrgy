@@ -11,7 +11,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf build coverage dist",
-    "start": "npm run -w nrgy build -- --silent && tsx ./index.ts"
+    "start": "npm run -w nrgy build -- --silent && node index.mjs"
   },
   "devDependencies": {
     "nrgy-reference": "npm:nrgy@0.0.45",

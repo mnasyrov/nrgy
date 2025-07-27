@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+
 import fs from 'node:fs';
 import tsup from 'tsup';
 
-import pkg from './package.json';
+import pkg from './package.json' with { type: 'json' };
 
 const entries = [
   { entry: 'index', source: 'src/core' },
@@ -34,8 +36,8 @@ async function main() {
   // Write public package.json
   pkg.private = false;
   pkg.files = [...new Set([...pkg.files, ...compiledFiles])];
-  pkg.scripts = undefined as any;
-  pkg.devDependencies = undefined as any;
+  pkg.scripts = undefined;
+  pkg.devDependencies = undefined;
 
   fs.writeFileSync(`dist/package.json`, JSON.stringify(pkg, undefined, 2));
 }

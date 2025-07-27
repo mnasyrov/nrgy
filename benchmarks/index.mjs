@@ -1,7 +1,7 @@
 import * as REF_CORE from 'nrgy-reference';
 import { Bench } from 'tinybench';
 
-import * as DEV_CORE from '../dist';
+import * as DEV_CORE from '../dist/index.js';
 
 const ITERATION_COUNT = 200;
 
@@ -31,10 +31,7 @@ async function main() {
   console.table(bench.table());
 }
 
-function createDevComputeTest(
-  core: typeof DEV_CORE,
-  params: { sync: boolean },
-) {
+function createDevComputeTest(core, params) {
   const { sync } = params;
   const atom = core.atom;
 
@@ -70,10 +67,7 @@ function createDevComputeTest(
   return latch.promise.then(() => fx.destroy());
 }
 
-function createReferenceComputeTest(
-  core: typeof REF_CORE,
-  params: { sync: boolean },
-) {
+function createReferenceComputeTest(core, params) {
   const { sync } = params;
   const atom = core.atom;
 
@@ -109,14 +103,10 @@ function createReferenceComputeTest(
   return latch.promise.then(() => fx.destroy());
 }
 
-function createLatch<T = void>(): {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason?: unknown) => void;
-} {
-  const result = {} as any;
+function createLatch() {
+  const result = {};
 
-  result.promise = new Promise<T>((resolve, reject) => {
+  result.promise = new Promise((resolve, reject) => {
     result.resolve = resolve;
     result.reject = reject;
   });

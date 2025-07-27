@@ -57,7 +57,7 @@
     "eslint-fix": "npm run eslint -- --fix",
     "tsc": "tsc --noEmit --jsx react-jsx",
     "test": "jest",
-    "build": "tsx build.ts",
+    "build": "node build.mjs",
     "pack": "npm run build && cd dist && npm pack",
     "preversion": "npm run build && npm run lint && npm run test && git add --all",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
@@ -104,7 +104,6 @@
     "rxjs": "7.8.2",
     "ts-jest": "29.3.2",
     "tsup": "8.4.0",
-    "tsx": "4.19.4",
     "typescript": "5.8.3"
   },
   "attributions": [
