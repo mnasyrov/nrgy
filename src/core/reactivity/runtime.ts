@@ -1,9 +1,9 @@
 import { nextSafeInteger } from '../internals/nextSafeInteger';
+
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
-} from '../internals/schedulers';
-
+} from './schedulers';
 import { ConsumerNode } from './types';
 
 /**

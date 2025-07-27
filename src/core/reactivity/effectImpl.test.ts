@@ -1,13 +1,13 @@
-import {
-  createMicrotaskScheduler,
-  createSyncTaskScheduler,
-} from '../internals/schedulers';
 import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { EffectImpl } from './effectImpl';
+import {
+  createMicrotaskScheduler,
+  createSyncTaskScheduler,
+} from './schedulers';
 
 describe('AtomEffect', () => {
   describe('destroy()', () => {

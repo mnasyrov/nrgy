@@ -1,8 +1,8 @@
 import { DataRef } from '../common/utilityTypes';
-import { TaskScheduler } from '../internals/schedulers';
 
 import { getAtomNode } from './atomUtils';
 import { RUNTIME } from './runtime';
+import { TaskScheduler } from './schedulers';
 import { Atom, ConsumerNode, EffectCallback, EffectOptions } from './types';
 
 /**

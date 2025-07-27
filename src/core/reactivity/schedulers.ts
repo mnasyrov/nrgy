@@ -1,5 +1,5 @@
-import { createQueue } from './queue';
-import { nrgyReportError } from './reportError';
+import { createQueue } from '../internals/queue';
+import { nrgyReportError } from '../internals/reportError';
 
 /**
  * Task scheduler interface
