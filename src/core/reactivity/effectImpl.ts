@@ -1,16 +1,9 @@
 import { DataRef } from '../common/utilityTypes';
 import { TaskScheduler } from '../internals/schedulers';
-import { BaseScope } from '../scope/baseScope';
 
 import { getAtomNode } from './atomUtils';
 import { RUNTIME } from './runtime';
-import {
-  Atom,
-  ConsumerNode,
-  EffectCallback,
-  EffectContext,
-  EffectOptions,
-} from './types';
+import { Atom, ConsumerNode, EffectCallback, EffectOptions } from './types';
 
 /**
  * @internal
@@ -41,9 +34,6 @@ export class EffectImpl<T> implements ConsumerNode {
   private scheduler?: TaskScheduler;
   private source?: Atom<T>;
   private action?: EffectCallback<T>;
-
-  private actionScope?: BaseScope;
-  private actionContext?: EffectContext;
 
   private onError?: (error: unknown) => void;
   private onDestroy?: () => void;
@@ -80,10 +70,6 @@ export class EffectImpl<T> implements ConsumerNode {
       this._ref.value = undefined;
       this._ref = undefined;
     }
-
-    this.actionScope?.destroy();
-    this.actionScope = undefined;
-    this.actionContext = undefined;
 
     this.onDestroy?.();
   }
@@ -150,10 +136,8 @@ export class EffectImpl<T> implements ConsumerNode {
       }
       this.lastValueVersion = sourceVersion;
 
-      this.actionScope?.destroy();
-
       if (!isResultError) {
-        this.action(sourceValue, this.getContext());
+        this.action(sourceValue);
       }
     } catch (error) {
       isResultError = true;
@@ -164,20 +148,5 @@ export class EffectImpl<T> implements ConsumerNode {
       this.onError?.(resultError);
       return;
     }
-  }
-
-  private getContext(): EffectContext {
-    if (!this.actionContext) {
-      this.actionContext = {
-        cleanup: (callback: () => void) => {
-          if (!this.actionScope) {
-            this.actionScope = new BaseScope();
-          }
-          this.actionScope.onDestroy(callback);
-        },
-      };
-    }
-
-    return this.actionContext;
   }
 }

@@ -1,4 +1,3 @@
-import { expectEffectContext } from '../../test/expectEffectContext';
 import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
@@ -173,12 +172,12 @@ describe('Effect with a primitive value', () => {
 
     syncEffect(source, callback);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(false, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(false);
 
     callback.mockClear();
     source.set(true);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(true, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(true);
   });
 
   it('should trigger the effect', async () => {
@@ -189,14 +188,14 @@ describe('Effect with a primitive value', () => {
 
     runEffects();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(false, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(false);
 
     callback.mockClear();
     source.set(true);
 
     runEffects();
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(true, expectEffectContext());
+    expect(callback).toHaveBeenCalledWith(true);
   });
 });
 
@@ -364,7 +363,7 @@ describe('Effect: waitChanges option', () => {
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(2);
-    expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
+    expect(spy).toHaveBeenLastCalledWith(2);
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockClear();
@@ -372,7 +371,7 @@ describe('Effect: waitChanges option', () => {
     expect(spy).toHaveBeenCalledTimes(0);
 
     source.set(3);
-    expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
+    expect(spy).toHaveBeenLastCalledWith(3);
   });
 
   it('should asynchronously emits the changes of the source atom', async () => {
@@ -385,7 +384,7 @@ describe('Effect: waitChanges option', () => {
 
     source.set(2);
     runEffects();
-    expect(spy).toHaveBeenLastCalledWith(2, expectEffectContext());
+    expect(spy).toHaveBeenLastCalledWith(2);
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockClear();
@@ -395,7 +394,7 @@ describe('Effect: waitChanges option', () => {
 
     source.set(3);
     runEffects();
-    expect(spy).toHaveBeenLastCalledWith(3, expectEffectContext());
+    expect(spy).toHaveBeenLastCalledWith(3);
   });
 
   it('should not emit the changes if the source atom is destroyed', () => {

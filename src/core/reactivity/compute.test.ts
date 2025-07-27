@@ -1,5 +1,4 @@
 import { collectAtomChanges } from '../../test/collectAtomChanges';
-import { expectEffectContext } from '../../test/expectEffectContext';
 import { createScope } from '../scope/createScope';
 import { runEffects } from '../utils/runEffects';
 
@@ -397,7 +396,7 @@ describe('compute()', () => {
 
     runEffects();
 
-    expect(onSumChanged).toHaveBeenCalledWith('ab', expectEffectContext());
+    expect(onSumChanged).toHaveBeenCalledWith('ab');
     expect(onSumChanged).toHaveBeenCalledTimes(1);
 
     onSumChanged.mockClear();

@@ -94,7 +94,7 @@ class WritableAtomImpl<T> implements AtomNode {
       return;
     }
 
-    if (RUNTIME.tracked) {
+    if (RUNTIME.isTracked()) {
       throw new AtomUpdateError(this.name);
     }
 

@@ -43,11 +43,11 @@ export const effect: EffectFn = function <T>(
   if (options?.waitChanges) {
     let skipFirst = true;
 
-    fxCallback = (value, context) => {
+    fxCallback = (value) => {
       if (skipFirst) {
         skipFirst = false;
       } else {
-        callback(value, context);
+        callback(value);
       }
     };
   }

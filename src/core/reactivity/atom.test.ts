@@ -1,5 +1,4 @@
 import { collectAtomChanges } from '../../test/collectAtomChanges';
-import { expectEffectContext } from '../../test/expectEffectContext';
 import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
@@ -74,7 +73,7 @@ describe('WritableAtom', () => {
       onChange.mockClear();
       store.set(2);
       expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith(2, expectEffectContext());
+      expect(onChange).toHaveBeenCalledWith(2);
 
       onChange.mockClear();
       fx.destroy();

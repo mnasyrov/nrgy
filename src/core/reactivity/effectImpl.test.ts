@@ -121,55 +121,6 @@ describe('AtomEffect', () => {
       expect(action).toHaveBeenCalledTimes(0);
     });
   });
-
-  describe('Context of the action', () => {
-    describe('cleanup()', () => {
-      it('should be called before calling the next action', () => {
-        const cleanupCallback = jest.fn();
-
-        const scheduler = createSyncTaskScheduler();
-        const source = atom(10);
-
-        const effect = new EffectImpl(scheduler, source, (value, context) => {
-          context.cleanup(() => cleanupCallback(value));
-        });
-
-        cleanupCallback.mockClear();
-        effect.notify();
-        expect(cleanupCallback).toHaveBeenCalledTimes(0);
-
-        cleanupCallback.mockClear();
-        source.set(11);
-        effect.dirty = true;
-        effect.notify();
-        expect(cleanupCallback).toHaveBeenCalledTimes(1);
-        expect(cleanupCallback).toHaveBeenCalledWith(10);
-      });
-
-      it('should be called when the effect is destroyed', () => {
-        const cleanupCallback = jest.fn();
-
-        const scheduler = createSyncTaskScheduler();
-        const source = atom(10);
-
-        const effect = new EffectImpl(scheduler, source, (_value, context) => {
-          context.cleanup(cleanupCallback);
-        });
-
-        cleanupCallback.mockClear();
-        effect.notify();
-        expect(cleanupCallback).toHaveBeenCalledTimes(0);
-
-        cleanupCallback.mockClear();
-        effect.destroy();
-        expect(cleanupCallback).toHaveBeenCalledTimes(1);
-
-        cleanupCallback.mockClear();
-        effect.destroy();
-        expect(cleanupCallback).toHaveBeenCalledTimes(0);
-      });
-    });
-  });
 });
 
 describe('Change detector bugs', () => {

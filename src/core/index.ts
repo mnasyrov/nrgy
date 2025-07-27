@@ -16,7 +16,6 @@ export type {
   Computation,
   ComputeOptions,
   EffectCallback,
-  EffectContext,
   EffectFn,
   EffectOptions,
   EffectSubscription,

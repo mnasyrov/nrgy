@@ -131,10 +131,7 @@ export type EffectSubscription = Readonly<{
   destroy(): void;
 }>;
 
-export type EffectContext = {
-  cleanup(callback: () => void): void;
-};
-export type EffectCallback<T> = (value: T, context: EffectContext) => unknown;
+export type EffectCallback<T> = (value: T) => unknown;
 
 /**
  * Options for an effect

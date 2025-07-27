@@ -24,7 +24,7 @@ export class Runtime {
   /**
    * Marks the current computation context as tracked
    */
-  get tracked(): boolean {
+  isTracked(): boolean {
     return !!this.activeEffect;
   }
 

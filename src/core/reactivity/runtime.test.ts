@@ -33,11 +33,11 @@ describe('EnergyRuntime', () => {
 
       const spy = jest.fn();
       const result = runtime.runAsUntracked(() => {
-        spy(runtime.tracked);
+        spy(runtime.isTracked());
         return 'bar';
       });
 
-      expect(runtime.tracked).toBe(true);
+      expect(runtime.isTracked()).toBe(true);
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(false);

@@ -1,4 +1,3 @@
-import { expectEffectContext } from '../../test/expectEffectContext';
 import { atom } from '../reactivity/atom';
 import { runEffects } from '../utils/runEffects';
 
@@ -118,7 +117,7 @@ describe('createScope()', () => {
       runEffects();
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
+      expect(callback).toHaveBeenCalledWith(1);
     });
   });
 
@@ -130,7 +129,7 @@ describe('createScope()', () => {
       scope.syncEffect(atom(1), callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback).toHaveBeenCalledWith(1, expectEffectContext());
+      expect(callback).toHaveBeenCalledWith(1);
     });
   });
 });

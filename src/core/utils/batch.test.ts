@@ -1,4 +1,3 @@
-import { expectEffectContext } from '../../test/expectEffectContext';
 import { atom } from '../reactivity/atom';
 import { compute } from '../reactivity/compute';
 import { effect, syncEffect } from '../reactivity/effect';
@@ -65,7 +64,7 @@ describe('batch()', () => {
     const callback = jest.fn();
     syncEffect(result, callback);
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
+    expect(callback).toHaveBeenCalledWith('foo bar');
 
     callback.mockClear();
     batch(() => {
@@ -73,10 +72,7 @@ describe('batch()', () => {
       s2.set('world!');
     });
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(
-      'Hello world!',
-      expectEffectContext(),
-    );
+    expect(callback).toHaveBeenCalledWith('Hello world!');
   });
 
   it('should defer all async notifications of atoms until the action is finished', async () => {
@@ -89,7 +85,7 @@ describe('batch()', () => {
     runEffects();
 
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith('foo bar', expectEffectContext());
+    expect(callback).toHaveBeenCalledWith('foo bar');
 
     callback.mockClear();
     batch(() => {
@@ -99,9 +95,6 @@ describe('batch()', () => {
     runEffects();
 
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(
-      'Hello world!',
-      expectEffectContext(),
-    );
+    expect(callback).toHaveBeenCalledWith('Hello world!');
   });
 });
