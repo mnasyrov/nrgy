@@ -23,7 +23,6 @@ export class EffectImpl<T> implements ConsumerNode {
   }
 
   private lastValueVersion: number | undefined;
-  private notifiedAt: number | undefined;
 
   /** Whether the effect needs to be re-run */
   dirty = false;
@@ -64,7 +63,6 @@ export class EffectImpl<T> implements ConsumerNode {
     this.scheduler = undefined;
     this.source = undefined;
     this.action = undefined;
-    this.notifiedAt = undefined;
 
     if (this._ref) {
       this._ref.value = undefined;
@@ -78,11 +76,6 @@ export class EffectImpl<T> implements ConsumerNode {
    * Schedule the effect to be re-run
    */
   notify(): void {
-    if (this.notifiedAt === RUNTIME.clock) {
-      return;
-    }
-    this.notifiedAt = RUNTIME.clock;
-
     if (this.isDestroyed) {
       return;
     }
@@ -107,7 +100,6 @@ export class EffectImpl<T> implements ConsumerNode {
     }
 
     this.dirty = false;
-    this.notifiedAt = undefined;
 
     if (this.isDestroyed || !this.action || !this.source) {
       return;
