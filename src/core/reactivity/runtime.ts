@@ -90,6 +90,7 @@ export class Runtime {
   }
 
   runEffects() {
+    this.syncScheduler.execute();
     this.asyncScheduler.execute();
   }
 }
