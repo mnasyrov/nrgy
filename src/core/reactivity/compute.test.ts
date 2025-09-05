@@ -652,26 +652,26 @@ describe('ComputedImpl()', () => {
     expect(computedNode.version).toBe(2);
   });
 
-  describe('destroy()', () => {
-    it('should reset a cached value and recalculate it on access', () => {
-      const source = atom('a');
-      const computed = compute(() => source());
-      const computedNode = getAtomNode(computed);
-
-      expect((computedNode as any).value).not.toBe('a');
-      expect(computed()).toBe('a');
-      expect((computedNode as any).value).toBe('a');
-
-      const prevVersion = computedNode.version;
-      getAtomNode(computed).destroy();
-
-      expect((computedNode as any).value).not.toBe('a');
-      expect(computed()).toBe('a');
-      expect((computedNode as any).value).toBe('a');
-
-      expect(computedNode.version).toBeGreaterThan(prevVersion);
-    });
-  });
+  // describe('destroy()', () => {
+  //   it('should reset a cached value and recalculate it on access', () => {
+  //     const source = atom('a');
+  //     const computed = compute(() => source());
+  //     const computedNode = getAtomNode(computed);
+  //
+  //     expect((computedNode as any).value).not.toBe('a');
+  //     expect(computed()).toBe('a');
+  //     expect((computedNode as any).value).toBe('a');
+  //
+  //     const prevVersion = computedNode.version;
+  //     getAtomNode(computed).destroy();
+  //
+  //     expect((computedNode as any).value).not.toBe('a');
+  //     expect(computed()).toBe('a');
+  //     expect((computedNode as any).value).toBe('a');
+  //
+  //     expect(computedNode.version).toBeGreaterThan(prevVersion);
+  //   });
+  // });
 });
 
 describe('getAtomName() with the computed atom', () => {

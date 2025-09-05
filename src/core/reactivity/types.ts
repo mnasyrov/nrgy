@@ -182,9 +182,6 @@ export type AtomNode = {
 
   /** The version of the cached value*/
   version: number;
-
-  /** Destroys the node */
-  destroy: () => void;
 };
 
 /**

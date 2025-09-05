@@ -15,25 +15,6 @@ import {
   WritableAtom,
 } from './types';
 
-/**
- * Factory to create a writable `Atom` that can be set or updated directly.
- */
-export const atom: AtomFn = function <T>(
-  initialValue: T,
-  options?: AtomOptions<T>,
-): WritableAtom<T> {
-  const node = new WritableAtomImpl<T>(initialValue, options);
-
-  const getter = node.get.bind(node) as any;
-  getter[ATOM_SYMBOL] = node;
-  getter.destroy = node.destroy.bind(node);
-  getter.set = node.set.bind(node);
-  getter.update = (updateWritableAtom<T>).bind(node);
-  getter.mutate = (mutate<T>).bind(node);
-
-  return getter;
-};
-
 const ATOM_STATE_ALIVE = 0;
 const ATOM_STATE_PREDESTROY = 1;
 const ATOM_STATE_DESTROYED = 2;
@@ -43,130 +24,109 @@ type AtomState =
   | typeof ATOM_STATE_PREDESTROY
   | typeof ATOM_STATE_DESTROYED;
 
-class WritableAtomImpl<T> implements AtomNode {
-  readonly name?: string;
+type Node<T> = AtomNode & {
+  name?: string;
+  version: number;
+  equal: ValueEqualityFn<T>;
+  onDestroy?: () => void;
+  consumers: LinkedList<DataRef<ConsumerNode>>;
+  value: T;
+  state: AtomState;
+};
 
-  version = 0;
+/**
+ * Factory to create a writable `Atom` that can be set or updated directly.
+ */
+export const atom: AtomFn = function <T>(
+  initialValue: T,
+  options?: AtomOptions<T>,
+): WritableAtom<T> {
+  const node: Node<T> = {
+    name: options?.name,
+    version: 0,
+    equal: options?.equal ?? defaultEquals,
+    onDestroy: options?.onDestroy,
+    consumers: new LinkedList<DataRef<ConsumerNode>>(),
+    value: initialValue,
+    state: ATOM_STATE_ALIVE,
+  };
 
-  protected value: T;
-  private readonly equal: ValueEqualityFn<T>;
-  private onDestroy?: () => void;
+  const getter = () => get(node);
+  getter[ATOM_SYMBOL] = node;
+  getter.destroy = () => destroy(node);
+  getter.set = (value: T) => set(node, value);
+  getter.update = (updater: (value: T) => T) => set(node, updater(node.value));
+  getter.mutate = (mutator: (value: T) => void) =>
+    set(node, undefined, mutator);
 
-  private consumers = new LinkedList<DataRef<ConsumerNode>>();
+  return getter;
+};
 
-  private state: AtomState = ATOM_STATE_ALIVE;
-
-  constructor(value: T, options?: AtomOptions<T>) {
-    this.value = value;
-    this.name = options?.name;
-    this.equal = options?.equal ?? defaultEquals;
-    this.onDestroy = options?.onDestroy;
+function get<T>(node: Node<T>): T {
+  // Mark that this producer node has been accessed in the current reactive context.
+  // RUNTIME.trackAtom(this);
+  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeEffect) {
+    node.consumers.add(RUNTIME.activeEffect.getRef());
   }
 
-  get(): T {
-    // Mark that this producer node has been accessed in the current reactive context.
-    // RUNTIME.trackAtom(this);
-    if (this.state === ATOM_STATE_ALIVE && RUNTIME.activeEffect) {
-      this.consumers.add(RUNTIME.activeEffect.getRef());
-    }
+  return node.value;
+}
 
-    return this.value;
+function set<T>(
+  node: Node<T>,
+  newValue: T | undefined,
+  mutator?: (value: T) => void,
+): void {
+  if (node.state === ATOM_STATE_DESTROYED) {
+    return;
   }
 
-  /**
-   * Directly update the value of the atom to a new value, which may or may not be
-   * equal to the previous.
-   *
-   * In the event that `newValue` is semantically equal to the current value, `set` is
-   * a no-op.
-   *
-   * Returns `true` if the value was changed.
-   */
-  set(newValue: T, mutator?: undefined): void;
+  if (RUNTIME.isTracked()) {
+    throw new AtomUpdateError(node.name);
+  }
 
-  /**
-   * Calls `mutator` on the current value and assumes that it has been mutated.
-   */
-  set(newValue: undefined, mutator: (value: T) => void): void;
-
-  set(newValue: T | undefined, mutator?: (value: T) => void): void {
-    if (this.state === ATOM_STATE_DESTROYED) {
-      return;
-    }
-
-    if (RUNTIME.isTracked()) {
-      throw new AtomUpdateError(this.name);
-    }
-
-    let isChanged;
-    if (mutator) {
-      // Mutation bypasses equality checks
-      mutator(this.value);
-      isChanged = true;
-    } else {
-      isChanged = !this.equal(this.value, newValue!);
-      if (isChanged) {
-        this.value = newValue!;
-      }
-    }
-
+  let isChanged;
+  if (mutator) {
+    // Mutation bypasses equality checks
+    mutator(node.value);
+    isChanged = true;
+  } else {
+    isChanged = !node.equal(node.value, newValue!);
     if (isChanged) {
-      // Notify all consumers of this producer that its value is changed
+      node.value = newValue!;
+    }
+  }
 
-      RUNTIME.updateAtomClock();
-      this.version = nextSafeInteger(this.version);
+  if (isChanged) {
+    // Notify all consumers of this producer that its value is changed
 
-      if (this.state === ATOM_STATE_ALIVE && !this.consumers.isEmpty()) {
-        const consumerRefs = this.consumers.head;
-        this.consumers.clear();
+    RUNTIME.updateAtomClock();
+    node.version = nextSafeInteger(node.version);
 
-        let item = consumerRefs;
-        while (item) {
-          item.value.value?.notify();
-          item = item.next;
-        }
+    if (node.state === ATOM_STATE_ALIVE && !node.consumers.isEmpty()) {
+      const consumerRefs = node.consumers.head;
+      node.consumers.clear();
+
+      let item = consumerRefs;
+      while (item) {
+        item.value.value?.notify();
+        item = item.next;
       }
     }
   }
+}
 
-  destroy() {
-    if (this.state !== ATOM_STATE_ALIVE) {
-      return;
-    }
-
-    this.state = ATOM_STATE_PREDESTROY;
-
-    this.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
-    this.consumers.clear();
-
-    this.onDestroy?.();
-
-    this.state = ATOM_STATE_DESTROYED;
+function destroy<T>(node: Node<T>): void {
+  if (node.state !== ATOM_STATE_ALIVE) {
+    return;
   }
-}
 
-/**
- * Derive a new value for the atom from its current value using the `updater` function.
- *
- * This is equivalent to calling `set` on the result of running `updater` on the current
- * value.
- *
- * Returns `true` if the value was changed.
- */
-function updateWritableAtom<T>(
-  this: WritableAtomImpl<T>,
-  updater: (value: T) => T,
-): void {
-  const nextValue = updater(this.value);
-  this.set(nextValue);
-}
+  node.state = ATOM_STATE_PREDESTROY;
 
-/**
- * Calls `mutator` on the current value and assumes that it has been mutated.
- */
-function mutate<T>(
-  this: WritableAtomImpl<T>,
-  mutator: (value: T) => void,
-): void {
-  this.set(undefined, mutator);
+  node.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
+  node.consumers.clear();
+
+  node.onDestroy?.();
+
+  node.state = ATOM_STATE_DESTROYED;
 }
