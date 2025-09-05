@@ -92,46 +92,45 @@ export const compute: ComputeFn = function <T>(
   };
 
   const node = data as ComputedNodeImpl<T>;
-  node.destroy = (destroy<T>).bind(node);
-  node.get = (get<T>).bind(node);
-  node.getRef = (getRef<T>).bind(node);
-  node.notify = (notify<T>).bind(node);
+  node.destroy = () => destroy(node);
+  node.get = () => get(node);
+  node.getRef = () => getRef(node);
+  node.notify = () => notify(node);
 
   const getter = node.get as any;
   getter[ATOM_SYMBOL] = node;
-  getter.destroy = node.destroy;
 
   return getter;
 };
 
-function destroy<T>(this: ComputedNodeImpl<T>): void {
-  this.value = UNSET;
-  this.notifiedAt = undefined;
+function destroy<T>(node: ComputedNodeImpl<T>): void {
+  node.value = UNSET;
+  node.notifiedAt = undefined;
 
-  this.consumers.forEach((ref) => ref.value?.destroy());
-  this.consumers.clear();
+  node.consumers.forEach((ref) => ref.value?.destroy());
+  node.consumers.clear();
 
-  if (this._ref) {
-    this._ref.value = undefined;
-    this._ref = undefined;
+  if (node._ref) {
+    node._ref.value = undefined;
+    node._ref = undefined;
   }
 }
 
-function getRef<T>(this: ComputedNodeImpl<T>): DataRef<ConsumerNode> {
-  if (!this._ref) {
-    this._ref = { value: this };
+function getRef<T>(node: ComputedNodeImpl<T>): DataRef<ConsumerNode> {
+  if (!node._ref) {
+    node._ref = { value: node };
   }
-  return this._ref;
+  return node._ref;
 }
 
-function notify<T>(this: ComputedNodeImpl<T>): void {
-  if (this.notifiedAt === RUNTIME.clock) {
+function notify<T>(node: ComputedNodeImpl<T>): void {
+  if (node.notifiedAt === RUNTIME.clock) {
     return;
   }
-  this.notifiedAt = RUNTIME.clock;
+  node.notifiedAt = RUNTIME.clock;
 
-  const consumerRefs = this.consumers.head;
-  this.consumers.clear();
+  const consumerRefs = node.consumers.head;
+  node.consumers.clear();
 
   let item = consumerRefs;
   while (item) {
@@ -140,64 +139,64 @@ function notify<T>(this: ComputedNodeImpl<T>): void {
   }
 }
 
-function get<T>(this: ComputedNodeImpl<T>): T {
+function get<T>(node: ComputedNodeImpl<T>): T {
   const trackingMode: boolean = !!RUNTIME.activeEffect;
 
-  if (this.value === COMPUTING) {
+  if (node.value === COMPUTING) {
     // Our computation somehow led to a cyclic read of itself.
     throw new Error('Detected cycle in computations');
   }
 
-  const isStale = this.clock !== RUNTIME.clock || this.value === UNSET;
-  const mustRenewSource = RUNTIME.activeEffect && this.consumers.isEmpty();
+  const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
+  const mustRenewSource = RUNTIME.activeEffect && node.consumers.isEmpty();
 
   if (RUNTIME.activeEffect) {
-    this.consumers.add(RUNTIME.activeEffect.getRef());
+    node.consumers.add(RUNTIME.activeEffect.getRef());
   }
 
   if (isStale || mustRenewSource) {
-    (recomputeValue<T>).call(this, trackingMode);
+    recomputeValue(node, trackingMode);
   }
 
-  if (this.value === ERRORED) {
-    throw this.error;
+  if (node.value === ERRORED) {
+    throw node.error;
   }
 
-  return this.value;
+  return node.value;
 }
 
 function recomputeValue<T>(
-  this: ComputedNodeImpl<T>,
+  node: ComputedNodeImpl<T>,
   trackingMode: boolean,
 ): void {
-  const oldValue = this.value;
-  this.value = COMPUTING;
+  const oldValue = node.value;
+  node.value = COMPUTING;
 
   let newValue: T;
 
   try {
     newValue = trackingMode
-      ? RUNTIME.runAsTracked(this, this.computation)
-      : this.computation();
+      ? RUNTIME.runAsTracked(node, node.computation)
+      : node.computation();
   } catch (err) {
     newValue = ERRORED;
-    this.error = err;
+    node.error = err;
   }
 
   // As we're re-running the computation, update our dependent tracking version number.
-  this.clock = RUNTIME.clock;
+  node.clock = RUNTIME.clock;
 
   if (
     oldValue === UNSET ||
     oldValue === ERRORED ||
     newValue === ERRORED ||
-    !this.equal(oldValue, newValue)
+    !node.equal(oldValue, newValue)
   ) {
-    this.value = newValue;
-    this.version = nextSafeInteger(this.version);
+    node.value = newValue;
+    node.version = nextSafeInteger(node.version);
   } else {
     // No change to `valueVersion` - old and new values are
     // semantically equivalent.
-    this.value = oldValue;
+    node.value = oldValue;
   }
 }
