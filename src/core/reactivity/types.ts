@@ -1,12 +1,10 @@
 // istanbul ignore next
-import { DataRef } from '../common/utilityTypes';
-
 import { ATOM_SYMBOL } from './symbols';
 
 /**
  * A reactive value which notifies consumers of any changes.
  *
- * Atoms are functions which returns their current value. To access the current value of an atom,
+ * Atoms are functions that return their current value. To access the current value of an atom,
  * call it.
  */
 export type Atom<T> = (() => T) & {
@@ -172,32 +170,3 @@ export interface EffectFn {
     options?: EffectOptions,
   ): EffectSubscription;
 }
-
-/**
- * @internal
- */
-export type AtomNode = {
-  /** The name of the atom */
-  name?: string;
-
-  /** The version of the cached value*/
-  version: number;
-};
-
-/**
- * @internal
- */
-export type ConsumerNode = {
-  /** Destroys the node */
-  destroy: () => void;
-
-  /**
-   * The reference to this effect node
-   */
-  getRef: () => DataRef<ConsumerNode>;
-
-  /**
-   * Schedule the effect to be re-run
-   */
-  notify: () => void;
-};

@@ -4,7 +4,7 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { ConsumerNode } from './types';
+import { ConsumerNode } from './types.internal';
 
 /**
  * @internal

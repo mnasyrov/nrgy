@@ -1,5 +1,6 @@
 import { ATOM_SYMBOL } from './symbols';
-import { Atom, AtomNode } from './types';
+import { Atom } from './types';
+import { AtomNode } from './types.internal';
 
 /**
  * Checks if the given `value` is a reactive `Atom`.
@@ -17,8 +18,8 @@ export function isAtom<T>(value: unknown): value is Atom<T> {
  *
  * Returns `AtomNode` from the given Atom.
  */
-export function getAtomNode<T>(value: Atom<T>): AtomNode {
-  return value[ATOM_SYMBOL] as AtomNode;
+export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
+  return value[ATOM_SYMBOL] as AtomNode<T>;
 }
 
 /**

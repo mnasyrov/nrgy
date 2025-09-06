@@ -6,33 +6,14 @@ import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { AtomUpdateError } from './atomUpdateError';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
+import { AtomFn, AtomOptions, WritableAtom } from './types';
 import {
-  AtomFn,
+  ATOM_STATE_ALIVE,
+  ATOM_STATE_DESTROYED,
+  ATOM_STATE_PREDESTROY,
   AtomNode,
-  AtomOptions,
   ConsumerNode,
-  ValueEqualityFn,
-  WritableAtom,
-} from './types';
-
-const ATOM_STATE_ALIVE = 0;
-const ATOM_STATE_PREDESTROY = 1;
-const ATOM_STATE_DESTROYED = 2;
-
-type AtomState =
-  | typeof ATOM_STATE_ALIVE
-  | typeof ATOM_STATE_PREDESTROY
-  | typeof ATOM_STATE_DESTROYED;
-
-type Node<T> = AtomNode & {
-  name?: string;
-  version: number;
-  equal: ValueEqualityFn<T>;
-  onDestroy?: () => void;
-  consumers: LinkedList<DataRef<ConsumerNode>>;
-  value: T;
-  state: AtomState;
-};
+} from './types.internal';
 
 /**
  * Factory to create a writable `Atom` that can be set or updated directly.
@@ -41,7 +22,7 @@ export const atom: AtomFn = function <T>(
   initialValue: T,
   options?: AtomOptions<T>,
 ): WritableAtom<T> {
-  const node: Node<T> = {
+  const node: AtomNode<T> = {
     name: options?.name,
     version: 0,
     equal: options?.equal ?? defaultEquals,
@@ -62,7 +43,7 @@ export const atom: AtomFn = function <T>(
   return getter;
 };
 
-function get<T>(node: Node<T>): T {
+function get<T>(node: AtomNode<T>): T {
   // Mark that this producer node has been accessed in the current reactive context.
   // RUNTIME.trackAtom(this);
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeEffect) {
@@ -73,7 +54,7 @@ function get<T>(node: Node<T>): T {
 }
 
 function set<T>(
-  node: Node<T>,
+  node: AtomNode<T>,
   newValue: T | undefined,
   mutator?: (value: T) => void,
 ): void {
@@ -116,7 +97,7 @@ function set<T>(
   }
 }
 
-function destroy<T>(node: Node<T>): void {
+function destroy<T>(node: AtomNode<T>): void {
   if (node.state !== ATOM_STATE_ALIVE) {
     return;
   }

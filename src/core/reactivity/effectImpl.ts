@@ -3,7 +3,8 @@ import { DataRef } from '../common/utilityTypes';
 import { getAtomNode } from './atomUtils';
 import { RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
-import { Atom, ConsumerNode, EffectCallback, EffectOptions } from './types';
+import { Atom, EffectCallback, EffectOptions } from './types';
+import { ConsumerNode } from './types.internal';
 
 /**
  * @internal

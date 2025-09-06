@@ -5,15 +5,8 @@ import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
-import {
-  Atom,
-  AtomNode,
-  Computation,
-  ComputeFn,
-  ComputeOptions,
-  ConsumerNode,
-  ValueEqualityFn,
-} from './types';
+import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
+import { ComputedNode, ConsumerNode } from './types.internal';
 
 /**
  * A dedicated symbol used before a computed value has been calculated for the first time.
@@ -35,42 +28,6 @@ const COMPUTING: any = Symbol('COMPUTING');
  */
 const ERRORED: any = Symbol('ERRORED');
 
-type ComputedData<T> = {
-  name?: string;
-  version: number;
-  computation: Computation<T>;
-  _ref?: DataRef<ConsumerNode>;
-  clock?: number;
-  equal: ValueEqualityFn<T>;
-
-  /**
-   * Current value of the computation.
-   *
-   * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
-   */
-  value: T;
-
-  /**
-   * If `value` is `ERRORED`, the error caught from the last computation attempt which will
-   * be re-thrown.
-   */
-  error?: unknown;
-
-  consumers: LinkedList<DataRef<ConsumerNode>>;
-  notifiedAt?: number;
-};
-
-/**
- * A computation, which derives a value from a declarative reactive expression.
- */
-type ComputedNodeImpl<T> = AtomNode &
-  ComputedData<T> & {
-    destroy: () => void;
-    getRef: () => DataRef<ConsumerNode>;
-    notify: () => void;
-    get: () => T;
-  };
-
 /**
  * Create a computed `Atom` which derives a reactive value from an expression.
  *
@@ -81,7 +38,7 @@ export const compute: ComputeFn = function <T>(
   computation: Computation<T>,
   options?: ComputeOptions<T>,
 ): Atom<T> {
-  const data: ComputedData<T> = {
+  const node: ComputedNode<T> = {
     computation: computation,
     name: options?.name,
     equal: options?.equal ?? defaultEquals,
@@ -89,13 +46,12 @@ export const compute: ComputeFn = function <T>(
     version: 0,
     value: UNSET,
     consumers: new LinkedList<DataRef<ConsumerNode>>(),
-  };
 
-  const node = data as ComputedNodeImpl<T>;
-  node.destroy = () => destroy(node);
-  node.get = () => get(node);
-  node.getRef = () => getRef(node);
-  node.notify = () => notify(node);
+    destroy: () => destroy(node),
+    get: () => get(node),
+    getRef: () => getRef(node),
+    notify: () => notify(node),
+  };
 
   const getter = node.get as any;
   getter[ATOM_SYMBOL] = node;
@@ -103,7 +59,7 @@ export const compute: ComputeFn = function <T>(
   return getter;
 };
 
-function destroy<T>(node: ComputedNodeImpl<T>): void {
+function destroy<T>(node: ComputedNode<T>): void {
   node.value = UNSET;
   node.notifiedAt = undefined;
 
@@ -116,14 +72,14 @@ function destroy<T>(node: ComputedNodeImpl<T>): void {
   }
 }
 
-function getRef<T>(node: ComputedNodeImpl<T>): DataRef<ConsumerNode> {
+function getRef<T>(node: ComputedNode<T>): DataRef<ConsumerNode> {
   if (!node._ref) {
     node._ref = { value: node };
   }
   return node._ref;
 }
 
-function notify<T>(node: ComputedNodeImpl<T>): void {
+function notify<T>(node: ComputedNode<T>): void {
   if (node.notifiedAt === RUNTIME.clock) {
     return;
   }
@@ -139,7 +95,7 @@ function notify<T>(node: ComputedNodeImpl<T>): void {
   }
 }
 
-function get<T>(node: ComputedNodeImpl<T>): T {
+function get<T>(node: ComputedNode<T>): T {
   const trackingMode: boolean = !!RUNTIME.activeEffect;
 
   if (node.value === COMPUTING) {
@@ -165,10 +121,7 @@ function get<T>(node: ComputedNodeImpl<T>): T {
   return node.value;
 }
 
-function recomputeValue<T>(
-  node: ComputedNodeImpl<T>,
-  trackingMode: boolean,
-): void {
+function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
   const oldValue = node.value;
   node.value = COMPUTING;
 
