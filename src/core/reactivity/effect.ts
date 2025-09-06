@@ -1,6 +1,6 @@
 import { combineAtoms } from '../utils/combineAtoms';
 
-import { EffectImpl } from './effectImpl';
+import { createEffectNode } from './effectImpl';
 import { RUNTIME } from './runtime';
 import {
   Atom,
@@ -52,7 +52,7 @@ export const effect: EffectFn = function <T>(
     };
   }
 
-  const fx = new EffectImpl<T>(scheduler, source, fxCallback, options);
+  const fx = createEffectNode<T>(scheduler, source, fxCallback, options);
 
   // Effect starts dirty.
   fx.notify();

@@ -1,7 +1,8 @@
 import { DataRef } from '../common/utilityTypes';
 import { LinkedList } from '../internals/list';
 
-import { Computation, ValueEqualityFn } from './types';
+import { TaskScheduler } from './schedulers';
+import { Atom, Computation, EffectCallback, ValueEqualityFn } from './types';
 
 /** @internal */
 export const ATOM_STATE_ALIVE = 0;
@@ -74,4 +75,19 @@ export type ComputedNode<T> = ConsumerNode & {
   notifiedAt?: number;
 
   get: () => T;
+};
+
+/** @internal */
+export type EffectNode<T> = ConsumerNode & {
+  ref?: DataRef<ConsumerNode>;
+  lastValueVersion?: number;
+  dirty: boolean;
+  isDestroyed: boolean;
+
+  scheduler?: TaskScheduler;
+  source?: Atom<T>;
+  action?: EffectCallback<T>;
+
+  onError?: (error: unknown) => void;
+  onDestroy?: () => void;
 };

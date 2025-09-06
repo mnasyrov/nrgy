@@ -4,7 +4,7 @@ import { getAtomNode } from './atomUtils';
 import { RUNTIME } from './runtime';
 import { TaskScheduler } from './schedulers';
 import { Atom, EffectCallback, EffectOptions } from './types';
-import { ConsumerNode } from './types.internal';
+import { ConsumerNode, EffectNode } from './types.internal';
 
 /**
  * @internal
@@ -15,131 +15,125 @@ import { ConsumerNode } from './types.internal';
  * `AtomEffect` doesn't run reactive expressions itself, but relies on a consumer-provided
  * scheduling operation to coordinate calling `AtomEffect.run()`.
  */
-export class EffectImpl<T> implements ConsumerNode {
-  private _ref: DataRef<ConsumerNode> | undefined;
+export function createEffectNode<T>(
+  scheduler: TaskScheduler,
+  source: Atom<T>,
+  action: EffectCallback<T>,
+  options?: EffectOptions,
+): EffectNode<T> {
+  const node: EffectNode<T> = {
+    dirty: false,
+    isDestroyed: false,
+    scheduler,
+    action,
+    source,
+    onError: options?.onError,
+    onDestroy: options?.onDestroy,
 
-  getRef(): DataRef<ConsumerNode> {
-    if (!this._ref) this._ref = { value: this };
-    return this._ref;
+    getRef: () => getRef(node),
+    destroy: () => destroy(node),
+    notify: () => notify(node),
+  };
+
+  return node;
+}
+
+function getRef<T>(node: EffectNode<T>): DataRef<ConsumerNode> {
+  if (!node.ref) {
+    node.ref = { value: node };
+  }
+  return node.ref;
+}
+
+/**
+ * Destroys the effect
+ */
+function destroy<T>(node: EffectNode<T>): void {
+  if (node.isDestroyed) {
+    return;
   }
 
-  private lastValueVersion: number | undefined;
+  node.isDestroyed = true;
+  node.scheduler = undefined;
+  node.source = undefined;
+  node.action = undefined;
 
-  /** Whether the effect needs to be re-run */
-  dirty = false;
-
-  /** Whether the effect has been destroyed */
-  isDestroyed = false;
-
-  private scheduler?: TaskScheduler;
-  private source?: Atom<T>;
-  private action?: EffectCallback<T>;
-
-  private onError?: (error: unknown) => void;
-  private onDestroy?: () => void;
-
-  constructor(
-    scheduler: TaskScheduler,
-    source: Atom<T>,
-    action: EffectCallback<T>,
-    options?: EffectOptions,
-  ) {
-    this.scheduler = scheduler;
-    this.action = action;
-    this.source = source;
-
-    this.onError = options?.onError;
-    this.onDestroy = options?.onDestroy;
+  if (node.ref) {
+    node.ref.value = undefined;
+    node.ref = undefined;
   }
 
-  /**
-   * Destroys the effect
-   */
-  destroy(): void {
-    if (this.isDestroyed) {
-      return;
-    }
+  node.onDestroy?.();
+}
 
-    this.isDestroyed = true;
-    this.scheduler = undefined;
-    this.source = undefined;
-    this.action = undefined;
-
-    if (this._ref) {
-      this._ref.value = undefined;
-      this._ref = undefined;
-    }
-
-    this.onDestroy?.();
+/**
+ * Schedule the effect to be re-run
+ */
+function notify<T>(node: EffectNode<T>): void {
+  if (node.isDestroyed) {
+    return;
   }
 
-  /**
-   * Schedule the effect to be re-run
-   */
-  notify(): void {
-    if (this.isDestroyed) {
-      return;
-    }
+  const needsSchedule = !node.dirty;
+  node.dirty = true;
 
-    const needsSchedule = !this.dirty;
-    this.dirty = true;
+  if (needsSchedule && node.scheduler) {
+    node.scheduler.schedule(() => runEffect(node));
+  }
+}
 
-    if (needsSchedule && this.scheduler) {
-      this.scheduler.schedule(this.run.bind(this));
-    }
+/**
+ * @internal
+ *
+ * Execute the reactive expression in the context of this `AtomEffect`.
+ *
+ * Should be called by the user scheduling algorithm when the provided
+ * `scheduler` TaskScheduler is called.
+ */
+export function runEffect<T>(node: EffectNode<T>): void {
+  if (!node.dirty) {
+    return;
   }
 
-  /**
-   * Execute the reactive expression in the context of this `AtomEffect`.
-   *
-   * Should be called by the user scheduling algorithm when the provided
-   * `scheduler` TaskScheduler is called.
-   */
-  run(): void {
-    if (!this.dirty) {
+  node.dirty = false;
+
+  if (node.isDestroyed || !node.action || !node.source) {
+    return;
+  }
+
+  let sourceValue: any;
+  let resultError;
+  let isResultError;
+
+  try {
+    sourceValue = RUNTIME.runAsTracked(node, node.source);
+  } catch (error) {
+    isResultError = true;
+    resultError = error;
+  }
+
+  try {
+    if (node.isDestroyed) {
       return;
     }
 
-    this.dirty = false;
-
-    if (this.isDestroyed || !this.action || !this.source) {
+    const sourceVersion = getAtomNode(node.source).version;
+    if (node.lastValueVersion === sourceVersion) {
+      // Value is not changed
       return;
     }
+    node.lastValueVersion = sourceVersion;
 
-    let sourceValue: any;
-    let resultError;
-    let isResultError;
-
-    try {
-      sourceValue = RUNTIME.runAsTracked(this, this.source);
-    } catch (error) {
-      isResultError = true;
-      resultError = error;
+    if (!isResultError) {
+      node.action(sourceValue);
     }
+  } catch (error) {
+    isResultError = true;
+    resultError = error;
+  }
 
-    try {
-      if (this.isDestroyed) {
-        return;
-      }
-
-      const sourceVersion = getAtomNode(this.source).version;
-      if (this.lastValueVersion === sourceVersion) {
-        // Value is not changed
-        return;
-      }
-      this.lastValueVersion = sourceVersion;
-
-      if (!isResultError) {
-        this.action(sourceValue);
-      }
-    } catch (error) {
-      isResultError = true;
-      resultError = error;
-    }
-
-    if (isResultError) {
-      this.onError?.(resultError);
-      return;
-    }
+  if (isResultError) {
+    node.onError?.(resultError);
+    return;
   }
 }

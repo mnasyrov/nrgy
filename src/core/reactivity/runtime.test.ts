@@ -1,5 +1,5 @@
 import { compute } from './compute';
-import { EffectImpl } from './effectImpl';
+import { createEffectNode } from './effectImpl';
 import { Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
@@ -25,7 +25,7 @@ describe('EnergyRuntime', () => {
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
       const runtime = new Runtime();
-      runtime.activeEffect = new EffectImpl(
+      runtime.activeEffect = createEffectNode(
         RUNTIME.asyncScheduler,
         compute(() => 1),
         () => {},
