@@ -2,8 +2,7 @@ import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { compute } from './compute';
-import { effect, syncEffect } from './effect';
-import { createEffectNode, runEffect } from './effectImpl';
+import { createEffectNode, effect, runEffect, syncEffect } from './effect';
 import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,

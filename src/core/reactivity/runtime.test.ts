@@ -1,5 +1,5 @@
 import { compute } from './compute';
-import { createEffectNode } from './effectImpl';
+import { createEffectNode } from './effect';
 import { Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
