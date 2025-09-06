@@ -10,21 +10,28 @@ main();
 async function main() {
   const bench = new Bench();
 
-  bench.add('DEV: compute + syncEffect', () => {
+  bench.add(
+    'avoidablePropagation (syncEffect)',
+    avoidablePropagation(DEV_CORE),
+  );
+
+  // bench.add('REF: avoidablePropagation', avoidablePropagation(REF_CORE));
+
+  bench.add('compute (syncEffect)', () => {
     return createDevComputeTest(DEV_CORE, { sync: true });
   });
 
-  bench.add('DEV: compute + effect    ', () => {
+  // bench.add('REF: compute + syncEffect', () => {
+  //   return createReferenceComputeTest(REF_CORE, { sync: true });
+  // });
+
+  bench.add('compute (async effect)    ', () => {
     return createDevComputeTest(DEV_CORE, { sync: false });
   });
 
-  bench.add('REF: compute + syncEffect', () => {
-    return createReferenceComputeTest(REF_CORE, { sync: true });
-  });
-
-  bench.add('REF: compute + effect    ', () => {
-    return createReferenceComputeTest(REF_CORE, { sync: false });
-  });
+  // bench.add('REF: compute + effect    ', () => {
+  //   return createReferenceComputeTest(REF_CORE, { sync: false });
+  // });
 
   await bench.run();
 
@@ -112,4 +119,40 @@ function createLatch() {
   });
 
   return result;
+}
+
+// heavy computation
+function busy() {
+  let a = 0;
+  for (let i = 0; i < 1_00; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    a++;
+  }
+}
+
+/** avoidable change propagation  */
+export function avoidablePropagation(core) {
+  const { atom, compute, syncEffect, batch } = core;
+
+  let head = atom(0);
+  let computed1 = compute(() => head());
+  let computed2 = compute(() => (computed1(), 0));
+  let computed3 = compute(() => (busy(), computed2() + 1)); // heavy computation
+  let computed4 = compute(() => computed3() + 2);
+  let computed5 = compute(() => computed4() + 3);
+
+  syncEffect(computed5, () => {
+    busy(); // heavy side effect
+  });
+
+  return () => {
+    batch(() => head.set(1));
+    console.assert(computed5() === 6);
+
+    for (let i = 0; i < 1000; i++) {
+      batch(() => head.set(i));
+
+      console.assert(computed5() === 6);
+    }
+  };
 }
