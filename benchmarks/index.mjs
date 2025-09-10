@@ -1,4 +1,3 @@
-import * as REF_CORE from 'nrgy-reference';
 import { Bench } from 'tinybench';
 
 import * as DEV_CORE from '../dist/index.js';
@@ -124,13 +123,17 @@ function createLatch() {
 // heavy computation
 function busy() {
   let a = 0;
-  for (let i = 0; i < 1_00; i++) {
+  for (let i = 0; i < 1_000; i++) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     a++;
   }
 }
 
-/** avoidable change propagation  */
+/* avoidable change propagation  */
+/*
+current: 1,415
+target: 3,900
+ */
 export function avoidablePropagation(core) {
   const { atom, compute, syncEffect, batch } = core;
 
@@ -147,12 +150,12 @@ export function avoidablePropagation(core) {
 
   return () => {
     batch(() => head.set(1));
-    console.assert(computed5() === 6);
+    if (computed5() !== 6) console.assert();
 
     for (let i = 0; i < 1000; i++) {
       batch(() => head.set(i));
 
-      console.assert(computed5() === 6);
+      if (computed5() !== 6) console.assert();
     }
   };
 }
