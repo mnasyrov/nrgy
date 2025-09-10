@@ -79,20 +79,24 @@ function set<T>(
   }
 
   if (isChanged) {
-    // Notify all consumers of this producer that its value is changed
-
-    RUNTIME.updateAtomClock();
     node.version = nextSafeInteger(node.version);
+    RUNTIME.updateAtomClock();
 
-    if (node.state === ATOM_STATE_ALIVE && !node.consumers.isEmpty()) {
-      const consumerRefs = node.consumers.head;
-      node.consumers.clear();
+    // RUNTIME.syncScheduler.schedule(() => notifyAtom(node));
+    notifyAtom(node);
+  }
+}
 
-      let item = consumerRefs;
-      while (item) {
-        item.value.value?.notify();
-        item = item.next;
-      }
+// Notify all consumers of this producer that its value is changed
+function notifyAtom(node: AtomNode<any>): void {
+  if (node.state === ATOM_STATE_ALIVE && !node.consumers.isEmpty()) {
+    const consumerRefs = node.consumers.head;
+    node.consumers.clear();
+
+    let item = consumerRefs;
+    while (item) {
+      item.value.value?.notify();
+      item = item.next;
     }
   }
 }
