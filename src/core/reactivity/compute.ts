@@ -96,18 +96,18 @@ function notify<T>(node: ComputedNode<T>): void {
 }
 
 function get<T>(node: ComputedNode<T>): T {
-  const trackingMode: boolean = !!RUNTIME.activeEffect;
+  const trackingMode: boolean = !!RUNTIME.activeConsumer;
 
   if (node.value === COMPUTING) {
-    // Our computation somehow led to a cyclic read of itself.
+    // Computation results to a cyclic read of itself.
     throw new Error('Detected cycle in computations');
   }
 
   const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
-  const mustRenewSource = RUNTIME.activeEffect && node.consumers.isEmpty();
+  const mustRenewSource = RUNTIME.activeConsumer && node.consumers.isEmpty();
 
-  if (RUNTIME.activeEffect) {
-    node.consumers.add(RUNTIME.activeEffect.getRef());
+  if (RUNTIME.activeConsumer) {
+    node.consumers.add(RUNTIME.activeConsumer.getRef());
   }
 
   if (isStale || mustRenewSource) {
@@ -121,7 +121,10 @@ function get<T>(node: ComputedNode<T>): T {
   return node.value;
 }
 
-function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
+function recomputeValue<T>(
+  node: ComputedNode<T>,
+  trackingMode: boolean,
+): boolean {
   const oldValue = node.value;
   node.value = COMPUTING;
 
@@ -147,9 +150,13 @@ function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
   ) {
     node.value = newValue;
     node.version = nextSafeInteger(node.version);
+
+    return true;
   } else {
     // No change to `valueVersion` - old and new values are
     // semantically equivalent.
     node.value = oldValue;
+
+    return false;
   }
 }

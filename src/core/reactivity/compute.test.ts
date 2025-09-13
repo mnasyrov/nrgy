@@ -497,7 +497,7 @@ describe('compute()', () => {
     runEffects();
 
     // Expect that the runtime in empty
-    expect(RUNTIME.activeEffect).toBe(undefined);
+    expect(RUNTIME.activeConsumer).toBe(undefined);
     expect(RUNTIME.asyncScheduler.isEmpty()).toBe(true);
     expect(RUNTIME.syncScheduler.isEmpty()).toBe(true);
 

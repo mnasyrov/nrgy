@@ -32,7 +32,7 @@ export const atom: AtomFn = function <T>(
     state: ATOM_STATE_ALIVE,
   };
 
-  const getter = () => get(node);
+  const getter = () => getAtomValue(node);
   getter[ATOM_SYMBOL] = node;
   getter.destroy = () => destroy(node);
   getter.set = (value: T) => set(node, value);
@@ -43,11 +43,11 @@ export const atom: AtomFn = function <T>(
   return getter;
 };
 
-function get<T>(node: AtomNode<T>): T {
+function getAtomValue<T>(node: AtomNode<T>): T {
   // Mark that this producer node has been accessed in the current reactive context.
   // RUNTIME.trackAtom(this);
-  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeEffect) {
-    node.consumers.add(RUNTIME.activeEffect.getRef());
+  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeConsumer) {
+    node.consumers.add(RUNTIME.activeConsumer.getRef());
   }
 
   return node.value;

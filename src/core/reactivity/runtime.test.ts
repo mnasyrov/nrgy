@@ -25,7 +25,7 @@ describe('EnergyRuntime', () => {
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
       const runtime = new Runtime();
-      runtime.activeEffect = createEffectNode(
+      runtime.activeConsumer = createEffectNode(
         RUNTIME.asyncScheduler,
         compute(() => 1),
         () => {},

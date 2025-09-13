@@ -16,7 +16,7 @@ export class Runtime {
   /**
    * Active effect in a tracking context
    */
-  activeEffect: ConsumerNode | undefined;
+  activeConsumer: ConsumerNode | undefined;
 
   /** @readonly */
   batchLock: number = 0;
@@ -25,7 +25,7 @@ export class Runtime {
    * Marks the current computation context as tracked
    */
   isTracked(): boolean {
-    return !!this.activeEffect;
+    return !!this.activeConsumer;
   }
 
   /**
@@ -44,14 +44,14 @@ export class Runtime {
   /**
    * Run a function in a tracked context
    */
-  runAsTracked<T>(effect: ConsumerNode, fn: () => T): T {
-    const prevEffect = this.activeEffect;
-    this.activeEffect = effect;
+  runAsTracked<T>(consumer: ConsumerNode, fn: () => T): T {
+    const prevConsumer = this.activeConsumer;
+    this.activeConsumer = consumer;
 
     try {
       return fn();
     } finally {
-      this.activeEffect = prevEffect;
+      this.activeConsumer = prevConsumer;
     }
   }
 
@@ -59,13 +59,13 @@ export class Runtime {
    * Run a function in an untracked context
    */
   runAsUntracked<T>(fn: () => T): T {
-    const prevEffect = this.activeEffect;
-    this.activeEffect = undefined;
+    const prevEffect = this.activeConsumer;
+    this.activeConsumer = undefined;
 
     try {
       return fn();
     } finally {
-      this.activeEffect = prevEffect;
+      this.activeConsumer = prevEffect;
     }
   }
 
