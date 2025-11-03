@@ -47,7 +47,7 @@ export const compute: ComputeFn = function <T>(
 
     version: 0,
     value: UNSET,
-    consumers: new LinkedList<DataRef<ObserverNode>>(),
+    observers: new LinkedList<DataRef<ObserverNode>>(),
 
     get: () => getComputedValue(node),
     getRef: () => getRef(node),
@@ -65,8 +65,8 @@ function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = UNSET;
   node.notifiedAt = undefined;
 
-  node.consumers.forEach((ref) => ref.value?.onSourceDestroy());
-  node.consumers.clear();
+  node.observers.forEach((ref) => ref.value?.onSourceDestroy());
+  node.observers.clear();
 
   if (node._ref) {
     node._ref.value = undefined;
@@ -87,8 +87,8 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
   }
   node.notifiedAt = RUNTIME.clock;
 
-  const consumerRefs = node.consumers.head;
-  node.consumers.clear();
+  const consumerRefs = node.observers.head;
+  node.observers.clear();
 
   let item = consumerRefs;
   while (item) {
@@ -106,10 +106,10 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   }
 
   const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
-  const mustRenewSource = RUNTIME.activeObserver && node.consumers.isEmpty();
+  const mustRenewSource = RUNTIME.activeObserver && node.observers.isEmpty();
 
   if (RUNTIME.activeObserver) {
-    node.consumers.add(RUNTIME.activeObserver.getRef());
+    node.observers.add(RUNTIME.activeObserver.getRef());
   }
 
   if (isStale || mustRenewSource) {

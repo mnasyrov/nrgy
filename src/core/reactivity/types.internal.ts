@@ -34,7 +34,7 @@ export type BaseSourceNode = {
   label?: string;
   version: number;
 
-  consumers: LinkedList<DataRef<ObserverNode>>;
+  observers: LinkedList<DataRef<ObserverNode>>;
 };
 
 /** @internal */
@@ -51,7 +51,7 @@ export type ComputedNode<T> = BaseSourceNode &
     version: number;
 
     _ref?: DataRef<ObserverNode>;
-    consumers: LinkedList<DataRef<ObserverNode>>;
+    observers: LinkedList<DataRef<ObserverNode>>;
     notifiedAt?: number;
 
     computation: Computation<T>;

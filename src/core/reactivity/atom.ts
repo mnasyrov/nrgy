@@ -30,7 +30,7 @@ export const atom: AtomFn = function <T>(
     version: 0,
     equal: options?.equal ?? defaultEquals,
     onDestroy: options?.onDestroy,
-    consumers: new LinkedList<DataRef<ObserverNode>>(),
+    observers: new LinkedList<DataRef<ObserverNode>>(),
     value: initialValue,
     state: ATOM_STATE_ALIVE,
   };
@@ -48,7 +48,7 @@ export const atom: AtomFn = function <T>(
 
 function getAtomValue<T>(node: AtomNode<T>): T {
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
-    node.consumers.add(RUNTIME.activeObserver.getRef());
+    node.observers.add(RUNTIME.activeObserver.getRef());
   }
 
   return node.value;
@@ -97,11 +97,11 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   }
 }
 
-// Notify all consumers of this producer that its value is changed
+// Notify all observers of this producer that its value is changed
 function notifyAtomDepsAboutChange(node: AtomNode<any>): void {
-  if (node.state === ATOM_STATE_ALIVE && !node.consumers.isEmpty()) {
-    const consumerRefs = node.consumers.head;
-    node.consumers.clear();
+  if (node.state === ATOM_STATE_ALIVE && !node.observers.isEmpty()) {
+    const consumerRefs = node.observers.head;
+    node.observers.clear();
 
     let item = consumerRefs;
     while (item) {
@@ -118,8 +118,8 @@ function destroyAtom<T>(node: AtomNode<T>): void {
 
   node.state = ATOM_STATE_PREDESTROY;
 
-  node.consumers.forEach((consumerRef) => consumerRef.value?.onSourceDestroy());
-  node.consumers.clear();
+  node.observers.forEach((consumerRef) => consumerRef.value?.onSourceDestroy());
+  node.observers.clear();
 
   node.onDestroy?.();
 
