@@ -2,7 +2,7 @@
 import { ATOM_SYMBOL } from './symbols';
 
 /**
- * A reactive value which notifies consumers of any changes.
+ * A reactive value which notifies observers for any changes.
  *
  * Atoms are functions that return their current value. To access the current value of an atom,
  * call it.
@@ -40,12 +40,12 @@ export type AtomList<TValues extends unknown[]> = [
  */
 export interface WritableAtom<T> extends Atom<T> {
   /**
-   * Directly set the atom to a new value, and notify any dependents.
+   * Directly set the atom to a new value and notify any dependents.
    */
   set(value: T): void;
 
   /**
-   * Update the value of the atom based on its current value, and
+   * Update the value of the atom based on its current value and
    * notify any dependents.
    */
   update(updateFn: (value: T) => T): void;
@@ -69,7 +69,7 @@ export type AtomOptions<T> = {
   /**
    * Atom's name
    */
-  name?: string;
+  label?: string;
 
   /**
    * A comparison function which defines equality for atom values.
@@ -101,7 +101,7 @@ export type ComputeOptions<T> = {
   /**
    * Atom's name
    */
-  name?: string;
+  label?: string;
 
   /**
    * A comparison function which defines equality for atom values.
@@ -135,6 +135,7 @@ export type EffectCallback<T> = (value: T) => unknown;
  * Options for an effect
  */
 export type EffectOptions = {
+  label?: string;
   sync?: boolean;
 
   /**

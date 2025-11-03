@@ -25,6 +25,6 @@ export function getAtomNode<T>(value: Atom<T>): AtomNode<T> {
 /**
  * Returns a name of the given Atom.
  */
-export function getAtomName(value: Atom<any>): string | undefined {
-  return getAtomNode(value).name;
+export function getAtomLabel(value: Atom<any>): string | undefined {
+  return getAtomNode(value).label;
 }

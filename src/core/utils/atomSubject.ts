@@ -39,7 +39,7 @@ export function createAtomSubject<T>(
       value: initialValue,
     },
     {
-      name: options?.name,
+      label: options?.label,
       onDestroy: options?.onDestroy,
     },
   );

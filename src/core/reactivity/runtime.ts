@@ -4,7 +4,7 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { ConsumerNode } from './types.internal';
+import { ObserverNode } from './types.internal';
 
 /**
  * @internal
@@ -13,10 +13,9 @@ export class Runtime {
   readonly asyncScheduler = createMicrotaskScheduler();
   readonly syncScheduler = createSyncTaskScheduler();
 
-  /**
-   * Active effect in a tracking context
-   */
-  activeConsumer: ConsumerNode | undefined;
+  nextId = 1;
+
+  activeObserver: ObserverNode | undefined;
 
   /** @readonly */
   batchLock: number = 0;
@@ -25,7 +24,7 @@ export class Runtime {
    * Marks the current computation context as tracked
    */
   isTracked(): boolean {
-    return !!this.activeConsumer;
+    return !!this.activeObserver;
   }
 
   /**
@@ -44,14 +43,14 @@ export class Runtime {
   /**
    * Run a function in a tracked context
    */
-  runAsTracked<T>(consumer: ConsumerNode, fn: () => T): T {
-    const prevConsumer = this.activeConsumer;
-    this.activeConsumer = consumer;
+  runAsTracked<T>(node: ObserverNode, fn: () => T): T {
+    const prev = this.activeObserver;
+    this.activeObserver = node;
 
     try {
       return fn();
     } finally {
-      this.activeConsumer = prevConsumer;
+      this.activeObserver = prev;
     }
   }
 
@@ -59,13 +58,13 @@ export class Runtime {
    * Run a function in an untracked context
    */
   runAsUntracked<T>(fn: () => T): T {
-    const prevEffect = this.activeConsumer;
-    this.activeConsumer = undefined;
+    const prev = this.activeObserver;
+    this.activeObserver = undefined;
 
     try {
       return fn();
     } finally {
-      this.activeConsumer = prevEffect;
+      this.activeObserver = prev;
     }
   }
 

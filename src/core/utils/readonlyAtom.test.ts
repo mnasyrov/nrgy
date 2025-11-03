@@ -1,5 +1,5 @@
 import { atom } from '../reactivity/atom';
-import { getAtomName, isAtom } from '../reactivity/atomUtils';
+import { getAtomLabel, isAtom } from '../reactivity/atomUtils';
 import { syncEffect } from '../reactivity/effect';
 
 import { readonlyAtom } from './readonlyAtom';
@@ -29,11 +29,11 @@ describe('readonlyAtom()', () => {
   });
 
   it('should return a name of the source atom', () => {
-    const namedAtom = atom(1, { name: 'foo' });
-    expect(getAtomName(namedAtom)).toBe('foo');
+    const namedAtom = atom(1, { label: 'foo' });
+    expect(getAtomLabel(namedAtom)).toBe('foo');
 
     const readonly = readonlyAtom(namedAtom);
-    expect(getAtomName(readonly)).toBe('foo');
+    expect(getAtomLabel(readonly)).toBe('foo');
   });
 
   test('Read-only atom should transmit "destroy" notification', () => {

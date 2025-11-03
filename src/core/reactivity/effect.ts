@@ -10,8 +10,9 @@ import {
   EffectCallback,
   EffectFn,
   EffectOptions,
+  EffectSubscription,
 } from './types';
-import { ConsumerNode, EffectNode } from './types.internal';
+import { EffectNode, ObserverNode } from './types.internal';
 
 /**
  * Creates a new synchronous effect
@@ -57,9 +58,6 @@ export const effect: EffectFn = function <T>(
 
   const fx = createEffectNode<T>(scheduler, source, fxCallback, options);
 
-  // Effect starts dirty.
-  fx.notify();
-
   return {
     destroy: () => fx.destroy(),
   };
@@ -76,29 +74,40 @@ export const effect: EffectFn = function <T>(
  */
 export function createEffectNode<T>(
   scheduler: TaskScheduler,
-  source: Atom<T>,
+  sourceAtom: Atom<T>,
   action: EffectCallback<T>,
   options?: EffectOptions,
-): EffectNode<T> {
+): EffectSubscription {
   const node: EffectNode<T> = {
+    id: RUNTIME.nextId++,
+    label: options?.label,
+
     dirty: false,
     isDestroyed: false,
     scheduler,
     action,
-    source,
+    sourceAtom,
     onError: options?.onError,
     onDestroy: options?.onDestroy,
 
     getRef: () => getRef(node),
-    destroy: () => destroy(node),
-    notify: () => notify(node),
+    destroy: () => destroyEffect(node),
+    onSourceUpdated: () => notifyEffect(node),
+    onSourceDestroy: () => onSourceDestroy(node),
   };
 
-  return node;
+  // Effect starts dirty.
+  notifyEffect(node);
+
+  const subscription: EffectSubscription = {
+    destroy: () => node.destroy(),
+  };
+
+  return subscription;
 }
 
 /** @internal */
-function getRef<T>(node: EffectNode<T>): DataRef<ConsumerNode> {
+function getRef<T>(node: EffectNode<T>): DataRef<ObserverNode> {
   if (!node.ref) {
     node.ref = { value: node };
   }
@@ -110,14 +119,14 @@ function getRef<T>(node: EffectNode<T>): DataRef<ConsumerNode> {
  *
  * Destroys the effect
  */
-function destroy<T>(node: EffectNode<T>): void {
+function destroyEffect<T>(node: EffectNode<T>): void {
   if (node.isDestroyed) {
     return;
   }
 
   node.isDestroyed = true;
   node.scheduler = undefined;
-  node.source = undefined;
+  node.sourceAtom = undefined;
   node.action = undefined;
 
   if (node.ref) {
@@ -128,12 +137,17 @@ function destroy<T>(node: EffectNode<T>): void {
   node.onDestroy?.();
 }
 
+/** @internal */
+function onSourceDestroy<T>(node: EffectNode<T>): void {
+  destroyEffect(node);
+}
+
 /**
  * @internal
  *
  * Schedule the effect to be re-run
  */
-function notify<T>(node: EffectNode<T>): void {
+function notifyEffect<T>(node: EffectNode<T>): void {
   if (node.isDestroyed) {
     return;
   }
@@ -161,7 +175,7 @@ export function runEffect<T>(node: EffectNode<T>): void {
 
   node.dirty = false;
 
-  if (node.isDestroyed || !node.action || !node.source) {
+  if (node.isDestroyed || !node.action || !node.sourceAtom) {
     return;
   }
 
@@ -170,7 +184,7 @@ export function runEffect<T>(node: EffectNode<T>): void {
   let isResultError;
 
   try {
-    sourceValue = RUNTIME.runAsTracked(node, node.source);
+    sourceValue = RUNTIME.runAsTracked(node, node.sourceAtom);
   } catch (error) {
     isResultError = true;
     resultError = error;
@@ -181,7 +195,7 @@ export function runEffect<T>(node: EffectNode<T>): void {
       return;
     }
 
-    const sourceVersion = getAtomNode(node.source).version;
+    const sourceVersion = getAtomNode(node.sourceAtom).version;
     if (node.lastValueVersion === sourceVersion) {
       // Value is not changed
       return;

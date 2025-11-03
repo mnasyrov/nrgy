@@ -18,76 +18,76 @@ export type AtomState =
   | typeof ATOM_STATE_DESTROYED;
 
 /** @internal */
-export type AtomNode<T> = {
-  /** The name of the atom */
-  name?: string;
+export type ObserverNode = {
+  id: number;
+  label?: string;
 
-  /** The version of the cached value*/
+  getRef: () => DataRef<ObserverNode>;
+
+  onSourceUpdated: () => void;
+  onSourceDestroy: () => void;
+};
+
+/** @internal */
+export type BaseSourceNode = {
+  id: number;
+  label?: string;
   version: number;
 
+  consumers: LinkedList<DataRef<ObserverNode>>;
+};
+
+/** @internal */
+export type AtomNode<T> = BaseSourceNode & {
   equal: ValueEqualityFn<T>;
   onDestroy?: () => void;
-  consumers: LinkedList<DataRef<ConsumerNode>>;
   value: T;
   state: AtomState;
 };
 
 /** @internal */
-export type ConsumerNode = {
-  /** Destroys the node */
-  destroy: () => void;
+export type ComputedNode<T> = BaseSourceNode &
+  ObserverNode & {
+    version: number;
 
-  /**
-   * The reference to this effect node
-   */
-  getRef: () => DataRef<ConsumerNode>;
+    _ref?: DataRef<ObserverNode>;
+    consumers: LinkedList<DataRef<ObserverNode>>;
+    notifiedAt?: number;
 
-  /**
-   * Schedule the effect to be re-run
-   */
-  notify: () => void;
-};
+    computation: Computation<T>;
+    clock?: number;
+    equal: ValueEqualityFn<T>;
 
-/** @internal */
-export type ComputedNode<T> = ConsumerNode & {
-  name?: string;
-  version: number;
+    /**
+     * Current value of the computation.
+     *
+     * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
+     */
+    value: T;
 
-  computation: Computation<T>;
-  _ref?: DataRef<ConsumerNode>;
-  clock?: number;
-  equal: ValueEqualityFn<T>;
+    /**
+     * If `value` is `ERRORED`, the error caught from the last computation attempt which will
+     * be re-thrown.
+     */
+    error?: unknown;
 
-  /**
-   * Current value of the computation.
-   *
-   * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
-   */
-  value: T;
-
-  /**
-   * If `value` is `ERRORED`, the error caught from the last computation attempt which will
-   * be re-thrown.
-   */
-  error?: unknown;
-
-  consumers: LinkedList<DataRef<ConsumerNode>>;
-  notifiedAt?: number;
-
-  get: () => T;
-};
+    get: () => T;
+  };
 
 /** @internal */
-export type EffectNode<T> = ConsumerNode & {
-  ref?: DataRef<ConsumerNode>;
+export type EffectNode<T> = ObserverNode & {
+  ref?: DataRef<ObserverNode>;
+
   lastValueVersion?: number;
   dirty: boolean;
   isDestroyed: boolean;
 
   scheduler?: TaskScheduler;
-  source?: Atom<T>;
+  sourceAtom?: Atom<T>;
   action?: EffectCallback<T>;
 
   onError?: (error: unknown) => void;
   onDestroy?: () => void;
+
+  destroy: () => void;
 };

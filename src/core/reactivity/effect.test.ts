@@ -98,6 +98,7 @@ describe('effect()', () => {
     expect(destroyCallback).toHaveBeenCalledTimes(0);
 
     source.destroy();
+    runEffects();
     expect(destroyCallback).toHaveBeenCalledTimes(1);
   });
 
@@ -220,8 +221,8 @@ describe('Untracked context in the atom effect with the explicit dependency', ()
 
 describe('Tracked context in the effect with implicit dependencies', () => {
   it('should be NOT possible to update any atoms', async () => {
-    const a = atom(1, { name: 'a' });
-    const b = atom(0, { name: 'b' });
+    const a = atom(1, { label: 'a' });
+    const b = atom(0, { label: 'b' });
 
     const c = compute(() => {
       const value = a();
@@ -240,8 +241,14 @@ describe('Tracked context in the effect with implicit dependencies', () => {
     expect(b()).toBe(0);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
-    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
-    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      1,
+      new AtomUpdateError('SourceAtom b'),
+    );
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      2,
+      new AtomUpdateError('SourceAtom b'),
+    );
   });
 });
 

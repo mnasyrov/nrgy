@@ -12,8 +12,9 @@ import {
   ATOM_STATE_DESTROYED,
   ATOM_STATE_PREDESTROY,
   AtomNode,
-  ConsumerNode,
+  ObserverNode,
 } from './types.internal';
+import { getSourceAtomNodeLabel } from './utils';
 
 /**
  * Factory to create a writable `Atom` that can be set or updated directly.
@@ -23,92 +24,101 @@ export const atom: AtomFn = function <T>(
   options?: AtomOptions<T>,
 ): WritableAtom<T> {
   const node: AtomNode<T> = {
-    name: options?.name,
+    id: RUNTIME.nextId++,
+    label: options?.label,
+
     version: 0,
     equal: options?.equal ?? defaultEquals,
     onDestroy: options?.onDestroy,
-    consumers: new LinkedList<DataRef<ConsumerNode>>(),
+    consumers: new LinkedList<DataRef<ObserverNode>>(),
     value: initialValue,
     state: ATOM_STATE_ALIVE,
   };
 
   const getter = () => getAtomValue(node);
   getter[ATOM_SYMBOL] = node;
-  getter.destroy = () => destroy(node);
-  getter.set = (value: T) => set(node, value);
-  getter.update = (updater: (value: T) => T) => set(node, updater(node.value));
+  getter.destroy = () => destroyAtom(node);
+  getter.set = (value: T) => setAtomValue(node, value);
+  getter.update = (updater: (value: T) => T) => updateAtomValue(node, updater);
   getter.mutate = (mutator: (value: T) => void) =>
-    set(node, undefined, mutator);
+    mutateAtomValue(node, mutator);
 
   return getter;
 };
 
 function getAtomValue<T>(node: AtomNode<T>): T {
-  // Mark that this producer node has been accessed in the current reactive context.
-  // RUNTIME.trackAtom(this);
-  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeConsumer) {
-    node.consumers.add(RUNTIME.activeConsumer.getRef());
+  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
+    node.consumers.add(RUNTIME.activeObserver.getRef());
   }
 
   return node.value;
 }
 
-function set<T>(
-  node: AtomNode<T>,
-  newValue: T | undefined,
-  mutator?: (value: T) => void,
-): void {
-  if (node.state === ATOM_STATE_DESTROYED) {
-    return;
+function setAtomValue<T>(node: AtomNode<T>, newValue: T | undefined): void {
+  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
+    throw new AtomUpdateError(getSourceAtomNodeLabel(node));
   }
 
-  if (RUNTIME.isTracked()) {
-    throw new AtomUpdateError(node.name);
-  }
-
-  let isChanged;
-  if (mutator) {
-    // Mutation bypasses equality checks
-    mutator(node.value);
-    isChanged = true;
-  } else {
-    isChanged = !node.equal(node.value, newValue!);
+  if (node.state !== ATOM_STATE_DESTROYED) {
+    const isChanged = !node.equal(node.value, newValue!);
     if (isChanged) {
       node.value = newValue!;
+      commitAtomValue(node);
     }
   }
+}
 
-  if (isChanged) {
-    node.version = nextSafeInteger(node.version);
-    RUNTIME.updateAtomClock();
+function mutateAtomValue<T>(
+  node: AtomNode<T>,
+  mutator: (value: T) => void,
+): void {
+  if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
+    throw new AtomUpdateError(getSourceAtomNodeLabel(node));
+  }
 
-    // RUNTIME.syncScheduler.schedule(() => notifyAtom(node));
-    notifyAtom(node);
+  if (node.state !== ATOM_STATE_DESTROYED) {
+    mutator(node.value);
+    commitAtomValue(node);
+  }
+}
+
+function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
+  const nextValue = updater(node.value);
+  setAtomValue(node, nextValue);
+}
+
+function commitAtomValue<T>(node: AtomNode<T>): void {
+  node.version = nextSafeInteger(node.version);
+  RUNTIME.updateAtomClock();
+
+  if (node.state === ATOM_STATE_ALIVE) {
+    // RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
+    notifyAtomDepsAboutChange(node);
   }
 }
 
 // Notify all consumers of this producer that its value is changed
-function notifyAtom(node: AtomNode<any>): void {
+function notifyAtomDepsAboutChange(node: AtomNode<any>): void {
   if (node.state === ATOM_STATE_ALIVE && !node.consumers.isEmpty()) {
     const consumerRefs = node.consumers.head;
     node.consumers.clear();
 
     let item = consumerRefs;
     while (item) {
-      item.value.value?.notify();
+      item.value.value?.onSourceUpdated();
       item = item.next;
     }
   }
 }
 
-function destroy<T>(node: AtomNode<T>): void {
+function destroyAtom<T>(node: AtomNode<T>): void {
   if (node.state !== ATOM_STATE_ALIVE) {
     return;
   }
 
   node.state = ATOM_STATE_PREDESTROY;
 
-  node.consumers.forEach((consumerRef) => consumerRef.value?.destroy());
+  node.consumers.forEach((consumerRef) => consumerRef.value?.onSourceDestroy());
   node.consumers.clear();
 
   node.onDestroy?.();

@@ -1,5 +1,3 @@
-import { compute } from './compute';
-import { createEffectNode } from './effect';
 import { Runtime, RUNTIME } from './runtime';
 
 describe('ENERGY_RUNTIME', () => {
@@ -25,19 +23,17 @@ describe('EnergyRuntime', () => {
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
       const runtime = new Runtime();
-      runtime.activeConsumer = createEffectNode(
-        RUNTIME.asyncScheduler,
-        compute(() => 1),
-        () => {},
-      );
+      const mockedObserver = {} as any;
+      runtime.activeObserver = mockedObserver;
 
       const spy = jest.fn();
       const result = runtime.runAsUntracked(() => {
+        expect(runtime.activeObserver).toBeUndefined();
         spy(runtime.isTracked());
         return 'bar';
       });
 
-      expect(runtime.isTracked()).toBe(true);
+      expect(runtime.activeObserver).toBe(mockedObserver);
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(false);

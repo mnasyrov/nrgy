@@ -4,7 +4,7 @@ import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { AtomUpdateError } from './atomUpdateError';
-import { getAtomName, getAtomNode } from './atomUtils';
+import { getAtomLabel, getAtomNode } from './atomUtils';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { RUNTIME } from './runtime';
@@ -497,7 +497,7 @@ describe('compute()', () => {
     runEffects();
 
     // Expect that the runtime in empty
-    expect(RUNTIME.activeConsumer).toBe(undefined);
+    expect(RUNTIME.activeObserver).toBe(undefined);
     expect(RUNTIME.asyncScheduler.isEmpty()).toBe(true);
     expect(RUNTIME.syncScheduler.isEmpty()).toBe(true);
 
@@ -674,20 +674,20 @@ describe('ComputedImpl()', () => {
   // });
 });
 
-describe('getAtomName() with the computed atom', () => {
-  it('should return a name of computed atoms', () => {
+describe('getAtomLabel() with the computed atom', () => {
+  it('should return a label of computed atoms', () => {
     const namelessAtom = compute(() => 1);
-    expect(getAtomName(namelessAtom)).toBe(undefined);
+    expect(getAtomLabel(namelessAtom)).toBe(undefined);
 
-    const namedAtom = compute(() => 1, { name: 'foo' });
-    expect(getAtomName(namedAtom)).toBe('foo');
+    const namedAtom = compute(() => 1, { label: 'foo' });
+    expect(getAtomLabel(namedAtom)).toBe('foo');
   });
 });
 
 describe('Tracked context in the computed expression with implicit dependencies', () => {
   it('should be NOT possible to update any atoms', async () => {
-    const a = atom(1, { name: 'a' });
-    const b = atom(0, { name: 'b' });
+    const a = atom(1, { label: 'a' });
+    const b = atom(0, { label: 'b' });
 
     const c = compute(() => {
       const value = a();
@@ -709,8 +709,14 @@ describe('Tracked context in the computed expression with implicit dependencies'
     expect(b()).toBe(1);
 
     expect(errorCallback).toHaveBeenCalledTimes(2);
-    expect(errorCallback).toHaveBeenNthCalledWith(1, new AtomUpdateError('b'));
-    expect(errorCallback).toHaveBeenNthCalledWith(2, new AtomUpdateError('b'));
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      1,
+      new AtomUpdateError('SourceAtom b'),
+    );
+    expect(errorCallback).toHaveBeenNthCalledWith(
+      2,
+      new AtomUpdateError('SourceAtom b'),
+    );
   });
 });
 

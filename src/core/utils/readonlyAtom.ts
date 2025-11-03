@@ -1,4 +1,4 @@
-import { getAtomName } from '../reactivity/atomUtils';
+import { getAtomLabel } from '../reactivity/atomUtils';
 import { compute } from '../reactivity/compute';
 import { Atom } from '../reactivity/types';
 
@@ -6,7 +6,7 @@ import { Atom } from '../reactivity/types';
  * Returns a readonly version of the source atom.
  */
 export function readonlyAtom<T>(source: Atom<T>): Atom<T> {
-  const name = getAtomName(source);
+  const label = getAtomLabel(source);
 
-  return compute(source, { name });
+  return compute(source, { label });
 }

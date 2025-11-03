@@ -6,7 +6,7 @@ import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
-import { ComputedNode, ConsumerNode } from './types.internal';
+import { ComputedNode, ObserverNode } from './types.internal';
 
 /**
  * A dedicated symbol used before a computed value has been calculated for the first time.
@@ -39,18 +39,20 @@ export const compute: ComputeFn = function <T>(
   options?: ComputeOptions<T>,
 ): Atom<T> {
   const node: ComputedNode<T> = {
+    id: RUNTIME.nextId++,
+    label: options?.label,
+
     computation: computation,
-    name: options?.name,
     equal: options?.equal ?? defaultEquals,
 
     version: 0,
     value: UNSET,
-    consumers: new LinkedList<DataRef<ConsumerNode>>(),
+    consumers: new LinkedList<DataRef<ObserverNode>>(),
 
-    destroy: () => destroy(node),
-    get: () => get(node),
+    get: () => getComputedValue(node),
     getRef: () => getRef(node),
-    notify: () => notify(node),
+    onSourceUpdated: () => notifyComputed(node),
+    onSourceDestroy: () => destroyComputed(node),
   };
 
   const getter = node.get as any;
@@ -59,11 +61,11 @@ export const compute: ComputeFn = function <T>(
   return getter;
 };
 
-function destroy<T>(node: ComputedNode<T>): void {
+function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = UNSET;
   node.notifiedAt = undefined;
 
-  node.consumers.forEach((ref) => ref.value?.destroy());
+  node.consumers.forEach((ref) => ref.value?.onSourceDestroy());
   node.consumers.clear();
 
   if (node._ref) {
@@ -72,14 +74,14 @@ function destroy<T>(node: ComputedNode<T>): void {
   }
 }
 
-function getRef<T>(node: ComputedNode<T>): DataRef<ConsumerNode> {
+function getRef<T>(node: ComputedNode<T>): DataRef<ObserverNode> {
   if (!node._ref) {
     node._ref = { value: node };
   }
   return node._ref;
 }
 
-function notify<T>(node: ComputedNode<T>): void {
+function notifyComputed<T>(node: ComputedNode<T>): void {
   if (node.notifiedAt === RUNTIME.clock) {
     return;
   }
@@ -90,24 +92,24 @@ function notify<T>(node: ComputedNode<T>): void {
 
   let item = consumerRefs;
   while (item) {
-    item.value.value?.notify();
+    item.value.value?.onSourceUpdated();
     item = item.next;
   }
 }
 
-function get<T>(node: ComputedNode<T>): T {
-  const trackingMode: boolean = !!RUNTIME.activeConsumer;
+function getComputedValue<T>(node: ComputedNode<T>): T {
+  const trackingMode: boolean = !!RUNTIME.activeObserver;
 
   if (node.value === COMPUTING) {
-    // Computation results to a cyclic read of itself.
+    // Computation results in a cyclic read of itself.
     throw new Error('Detected cycle in computations');
   }
 
   const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
-  const mustRenewSource = RUNTIME.activeConsumer && node.consumers.isEmpty();
+  const mustRenewSource = RUNTIME.activeObserver && node.consumers.isEmpty();
 
-  if (RUNTIME.activeConsumer) {
-    node.consumers.add(RUNTIME.activeConsumer.getRef());
+  if (RUNTIME.activeObserver) {
+    node.consumers.add(RUNTIME.activeObserver.getRef());
   }
 
   if (isStale || mustRenewSource) {
@@ -121,10 +123,7 @@ function get<T>(node: ComputedNode<T>): T {
   return node.value;
 }
 
-function recomputeValue<T>(
-  node: ComputedNode<T>,
-  trackingMode: boolean,
-): boolean {
+function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
   const oldValue = node.value;
   node.value = COMPUTING;
 
@@ -150,13 +149,9 @@ function recomputeValue<T>(
   ) {
     node.value = newValue;
     node.version = nextSafeInteger(node.version);
-
-    return true;
   } else {
     // No change to `valueVersion` - old and new values are
     // semantically equivalent.
     node.value = oldValue;
-
-    return false;
   }
 }

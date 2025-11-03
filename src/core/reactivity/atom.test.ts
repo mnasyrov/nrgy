@@ -38,7 +38,7 @@ describe('WritableAtom', () => {
       store.set({ value: 2 });
       expect(store()).toEqual({ value: 2 });
 
-      // Do not update destroyed atom
+      // Do not update the destroyed atom
       store.destroy();
       store.set({ value: 3 });
       expect(store()).toEqual({ value: 2 });

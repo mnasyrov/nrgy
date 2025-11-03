@@ -1,5 +1,5 @@
 import { atom } from './atom';
-import { getAtomName, getAtomNode, isAtom } from './atomUtils';
+import { getAtomLabel, getAtomNode, isAtom } from './atomUtils';
 import { compute } from './compute';
 
 describe('isAtom()', () => {
@@ -26,9 +26,9 @@ describe('getAtomNode()', () => {
 describe('getAtomName()', () => {
   it('should return a name of writable and read-only atoms', () => {
     const namelessAtom = atom(1);
-    expect(getAtomName(namelessAtom)).toBe(undefined);
+    expect(getAtomLabel(namelessAtom)).toBe(undefined);
 
-    const namedAtom = atom(1, { name: 'foo' });
-    expect(getAtomName(namedAtom)).toBe('foo');
+    const namedAtom = atom(1, { label: 'foo' });
+    expect(getAtomLabel(namedAtom)).toBe('foo');
   });
 });

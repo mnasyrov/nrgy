@@ -9,7 +9,7 @@ describe('declareStore() #1', () => {
 
   it('should declare a store with updates', () => {
     const createStore = declareStore({
-      options: { name: 'counterStore' },
+      options: { label: 'counterStore' },
       initialState: 0,
       updates: COUNTER_UPDATES,
     });
@@ -26,7 +26,7 @@ describe('declareStore() #1', () => {
 
   it('should return a factory which can override initial parameters', () => {
     const createStore = declareStore({
-      options: { name: 'counterStore' },
+      options: { label: 'counterStore' },
       initialState: 0,
       updates: COUNTER_UPDATES,
     });
