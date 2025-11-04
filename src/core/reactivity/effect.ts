@@ -97,7 +97,8 @@ export function createEffectNode<T>(
   };
 
   // Effect starts dirty.
-  notifyEffect(node);
+  node.dirty = true;
+  scheduler.schedule(() => runEffect(node));
 
   const subscription: EffectSubscription = {
     destroy: () => node.destroy(),
