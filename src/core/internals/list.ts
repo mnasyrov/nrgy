@@ -4,47 +4,55 @@ export type ListItem<T> = T & { next?: ListItem<T> };
 /** @internal */
 export type ListEntry<T> = { value: T; next?: ListEntry<T> };
 
+export type LinkedList<T> = {
+  head?: ListEntry<T>;
+  tail?: ListEntry<T>;
+};
+
 /** @internal */
-export class LinkedList<T> {
-  head: ListEntry<T> | undefined;
-  tail: ListEntry<T> | undefined;
+export function cloneLinkedList<T>(list: LinkedList<T>): LinkedList<T> {
+  return {
+    head: list.head,
+    tail: list.tail,
+  };
+}
 
-  clonePointers(): LinkedList<T> {
-    const result = new LinkedList<T>();
-    result.head = this.head;
-    result.tail = this.tail;
+/** @internal */
+export function isEmptyLinkedList<T>(list: LinkedList<T>): boolean {
+  return !list.head;
+}
 
-    return result;
+/** @internal */
+export function clearLinkedList<T>(list: LinkedList<T>): void {
+  list.head = undefined;
+  list.tail = undefined;
+}
+
+/** @internal */
+export function addToHeadLinkedList<T>(list: LinkedList<T>, value: T): void {
+  const node = { value, next: list.head };
+  list.head = node;
+  if (!list.tail) {
+    list.tail = node;
   }
+}
 
-  isEmpty(): boolean {
-    return !this.head;
-  }
+/** @internal */
+export function appendToLinkedList<T>(list: LinkedList<T>, value: T): void {
+  const node = { value };
+  if (list.tail) list.tail.next = node;
+  list.tail = node;
+  if (!list.head) list.head = node;
+}
 
-  clear(): void {
-    this.head = undefined;
-    this.tail = undefined;
-  }
-
-  addToHead(value: T): void {
-    const node = { value, next: this.head };
-    this.head = node;
-    if (!this.tail) this.tail = node;
-  }
-
-  add(value: T): void {
-    const node = { value };
-    if (this.tail) this.tail.next = node;
-    this.tail = node;
-    if (!this.head) this.head = node;
-  }
-
-  forEach(fn: (value: T) => void) {
-    let node = this.head;
-
-    while (node) {
-      fn(node.value);
-      node = node.next;
-    }
+/** @internal */
+export function forEachInLinkedList<T>(
+  list: LinkedList<T>,
+  fn: (value: T) => void,
+): void {
+  let node = list.head;
+  while (node) {
+    fn(node.value);
+    node = node.next;
   }
 }

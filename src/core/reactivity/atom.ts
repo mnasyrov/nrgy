@@ -1,6 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { DataRef } from '../common/utilityTypes';
-import { LinkedList } from '../internals/list';
+import { appendToLinkedList, forEachInLinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
@@ -12,7 +11,6 @@ import {
   ATOM_STATE_DESTROYED,
   ATOM_STATE_PREDESTROY,
   AtomNode,
-  ObserverNode,
 } from './types.internal';
 import { getSourceAtomNodeLabel } from './utils';
 
@@ -30,7 +28,7 @@ export const atom: AtomFn = function <T>(
     version: 0,
     equal: options?.equal ?? defaultEquals,
     onDestroy: options?.onDestroy,
-    observers: new LinkedList<DataRef<ObserverNode>>(),
+    observers: {},
     value: initialValue,
     state: ATOM_STATE_ALIVE,
   };
@@ -48,7 +46,7 @@ export const atom: AtomFn = function <T>(
 
 function getAtomValue<T>(node: AtomNode<T>): T {
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
-    node.observers.add(RUNTIME.activeObserver.getRef());
+    appendToLinkedList(node.observers, RUNTIME.activeObserver.getRef());
   }
 
   return node.value;
@@ -99,11 +97,11 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
 
 // Notify all observers of this producer that its value is changed
 function notifyAtomDepsAboutChange(node: AtomNode<any>): void {
-  if (node.state === ATOM_STATE_ALIVE && !node.observers.isEmpty()) {
-    const consumerRefs = node.observers.head;
-    node.observers.clear();
+  if (node.state === ATOM_STATE_ALIVE && node.observers.head) {
+    const prevObservers = node.observers;
+    node.observers = {};
 
-    let item = consumerRefs;
+    let item = prevObservers.head;
     while (item) {
       item.value.value?.onSourceUpdated();
       item = item.next;
@@ -118,8 +116,8 @@ function destroyAtom<T>(node: AtomNode<T>): void {
 
   node.state = ATOM_STATE_PREDESTROY;
 
-  node.observers.forEach((consumerRef) => consumerRef.value?.onSourceDestroy());
-  node.observers.clear();
+  forEachInLinkedList(node.observers, (ref) => ref.value?.onSourceDestroy());
+  node.observers = {};
 
   node.onDestroy?.();
 

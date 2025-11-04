@@ -1,6 +1,6 @@
 import { defaultEquals } from '../common/defaultEquals';
 import { DataRef } from '../common/utilityTypes';
-import { LinkedList } from '../internals/list';
+import { appendToLinkedList, forEachInLinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { RUNTIME } from './runtime';
@@ -47,7 +47,7 @@ export const compute: ComputeFn = function <T>(
 
     version: 0,
     value: UNSET,
-    observers: new LinkedList<DataRef<ObserverNode>>(),
+    observers: {},
 
     get: () => getComputedValue(node),
     getRef: () => getRef(node),
@@ -65,8 +65,8 @@ function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = UNSET;
   node.notifiedAt = undefined;
 
-  node.observers.forEach((ref) => ref.value?.onSourceDestroy());
-  node.observers.clear();
+  forEachInLinkedList(node.observers, (ref) => ref.value?.onSourceDestroy());
+  node.observers = {};
 
   if (node._ref) {
     node._ref.value = undefined;
@@ -88,7 +88,7 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
   node.notifiedAt = RUNTIME.clock;
 
   const consumerRefs = node.observers.head;
-  node.observers.clear();
+  node.observers = {};
 
   let item = consumerRefs;
   while (item) {
@@ -106,10 +106,10 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   }
 
   const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
-  const mustRenewSource = RUNTIME.activeObserver && node.observers.isEmpty();
+  const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
 
   if (RUNTIME.activeObserver) {
-    node.observers.add(RUNTIME.activeObserver.getRef());
+    appendToLinkedList(node.observers, RUNTIME.activeObserver.getRef());
   }
 
   if (isStale || mustRenewSource) {
