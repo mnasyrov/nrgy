@@ -6,27 +6,14 @@ import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
-import { ComputedNode, ObserverNode } from './types.internal';
-
-/**
- * A dedicated symbol used before a computed value has been calculated for the first time.
- * Explicitly typed as `any` so we can use it as atom's value.
- */
-const UNSET: any = Symbol('UNSET');
-
-/**
- * A dedicated symbol used in place of a computed atom value to indicate that a given computation
- * is in progress. Used to detect cycles in computation chains.
- * Explicitly typed as `any` so we can use it as atom's value.
- */
-const COMPUTING: any = Symbol('COMPUTING');
-
-/**
- * A dedicated symbol used in place of a computed atom value to indicate that a given computation
- * failed. The thrown error is cached until the computation gets dirty again.
- * Explicitly typed as `any` so we can use it as atom's value.
- */
-const ERRORED: any = Symbol('ERRORED');
+import {
+  COMPUTED_STATUS_COMPUTING,
+  COMPUTED_STATUS_ERROR,
+  COMPUTED_STATUS_OK,
+  COMPUTED_STATUS_UNSET,
+  ComputedNode,
+  ObserverNode,
+} from './types.internal';
 
 /**
  * Create a computed `Atom` which derives a reactive value from an expression.
@@ -46,7 +33,8 @@ export const compute: ComputeFn = function <T>(
     equal: options?.equal ?? defaultEquals,
 
     version: 0,
-    value: UNSET,
+    value: undefined as any,
+    status: COMPUTED_STATUS_UNSET,
     observers: {},
 
     get: () => getComputedValue(node),
@@ -62,7 +50,8 @@ export const compute: ComputeFn = function <T>(
 };
 
 function destroyComputed<T>(node: ComputedNode<T>): void {
-  node.value = UNSET;
+  node.value = undefined as any;
+  node.status = COMPUTED_STATUS_UNSET;
   node.notifiedAt = undefined;
 
   forEachInList(node.observers, (ref) => ref.value?.onSourceDestroy());
@@ -100,12 +89,13 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
 function getComputedValue<T>(node: ComputedNode<T>): T {
   const trackingMode: boolean = !!RUNTIME.activeObserver;
 
-  if (node.value === COMPUTING) {
+  if (node.status === COMPUTED_STATUS_COMPUTING) {
     // Computation results in a cyclic read of itself.
     throw new Error('Detected cycle in computations');
   }
 
-  const isStale = node.clock !== RUNTIME.clock || node.value === UNSET;
+  const isStale =
+    node.clock !== RUNTIME.clock || node.status === COMPUTED_STATUS_UNSET;
   const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
 
   if (RUNTIME.activeObserver) {
@@ -116,7 +106,7 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
     recomputeValue(node, trackingMode);
   }
 
-  if (node.value === ERRORED) {
+  if (node.status === COMPUTED_STATUS_ERROR) {
     throw node.error;
   }
 
@@ -124,34 +114,30 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
 }
 
 function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
-  const oldValue = node.value;
-  node.value = COMPUTING;
-
-  let newValue: T;
+  const noOldValue =
+    node.status === COMPUTED_STATUS_UNSET ||
+    node.status === COMPUTED_STATUS_ERROR;
+  node.status = COMPUTED_STATUS_COMPUTING;
 
   try {
-    newValue = trackingMode
+    const newValue: T = trackingMode
       ? RUNTIME.runAsTracked(node, node.computation)
       : node.computation();
+
+    node.status = COMPUTED_STATUS_OK;
+
+    if (noOldValue || !node.equal(node.value, newValue)) {
+      node.value = newValue;
+      node.version = nextSafeInteger(node.version);
+      node.error = undefined;
+    }
   } catch (err) {
-    newValue = ERRORED;
+    node.value = undefined as any;
+    node.status = COMPUTED_STATUS_ERROR;
+    node.version = nextSafeInteger(node.version);
     node.error = err;
   }
 
   // As we're re-running the computation, update our dependent tracking version number.
   node.clock = RUNTIME.clock;
-
-  if (
-    oldValue === UNSET ||
-    oldValue === ERRORED ||
-    newValue === ERRORED ||
-    !node.equal(oldValue, newValue)
-  ) {
-    node.value = newValue;
-    node.version = nextSafeInteger(node.version);
-  } else {
-    // No change to `valueVersion` - old and new values are
-    // semantically equivalent.
-    node.value = oldValue;
-  }
 }

@@ -90,7 +90,8 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   RUNTIME.updateAtomClock();
 
   if (node.state === ATOM_STATE_ALIVE) {
-    RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
+    // RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
+    notifyAtomDepsAboutChange(node);
   }
 }
 

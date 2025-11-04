@@ -46,6 +46,12 @@ export type AtomNode<T> = BaseSourceNode & {
 };
 
 /** @internal */
+export const COMPUTED_STATUS_OK = 0;
+export const COMPUTED_STATUS_UNSET = 1;
+export const COMPUTED_STATUS_COMPUTING = 2;
+export const COMPUTED_STATUS_ERROR = 3;
+
+/** @internal */
 export type ComputedNode<T> = BaseSourceNode &
   ObserverNode & {
     version: number;
@@ -64,6 +70,11 @@ export type ComputedNode<T> = BaseSourceNode &
      * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
      */
     value: T;
+    status:
+      | typeof COMPUTED_STATUS_OK
+      | typeof COMPUTED_STATUS_UNSET
+      | typeof COMPUTED_STATUS_COMPUTING
+      | typeof COMPUTED_STATUS_ERROR;
 
     /**
      * If `value` is `ERRORED`, the error caught from the last computation attempt which will
