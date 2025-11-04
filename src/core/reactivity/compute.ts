@@ -1,6 +1,6 @@
 import { defaultEquals } from '../common/defaultEquals';
 import { DataRef } from '../common/utilityTypes';
-import { appendToLinkedList, forEachInLinkedList } from '../internals/list';
+import { appendToList, forEachInList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { RUNTIME } from './runtime';
@@ -65,7 +65,7 @@ function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = UNSET;
   node.notifiedAt = undefined;
 
-  forEachInLinkedList(node.observers, (ref) => ref.value?.onSourceDestroy());
+  forEachInList(node.observers, (ref) => ref.value?.onSourceDestroy());
   node.observers = {};
 
   if (node._ref) {
@@ -109,7 +109,7 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
 
   if (RUNTIME.activeObserver) {
-    appendToLinkedList(node.observers, RUNTIME.activeObserver.getRef());
+    appendToList(node.observers, RUNTIME.activeObserver.getRef());
   }
 
   if (isStale || mustRenewSource) {

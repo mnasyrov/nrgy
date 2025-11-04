@@ -1,4 +1,4 @@
-import { createQueue } from '../internals/queue';
+import { appendToList, LinkedList, popListHead } from '../internals/list';
 import { nrgyReportError } from '../internals/reportError';
 
 /**
@@ -37,7 +37,7 @@ export function createMicrotaskScheduler(
 ): TaskScheduler {
   const onError = options?.onError ?? nrgyReportError;
 
-  const queue = createQueue<() => void>();
+  const queue: LinkedList<() => void> = {};
   let isPlanned = false;
   let isActive = false;
   let isPaused = false;
@@ -49,7 +49,7 @@ export function createMicrotaskScheduler(
     isActive = true;
 
     let action;
-    while (!isPaused && (action = queue.get())) {
+    while (!isPaused && (action = popListHead(queue))) {
       try {
         action();
       } catch (error) {
@@ -61,10 +61,10 @@ export function createMicrotaskScheduler(
   };
 
   return {
-    isEmpty: () => queue.isEmpty(),
+    isEmpty: () => !queue.head,
     schedule: (entry) => {
-      const prevEmpty = queue.isEmpty();
-      queue.add(entry);
+      const prevEmpty = !queue.head;
+      appendToList(queue, entry);
 
       if (prevEmpty && !isActive && !isPlanned) {
         isPlanned = true;
@@ -80,7 +80,7 @@ export function createMicrotaskScheduler(
     resume: () => {
       isPaused = false;
 
-      if (!isPlanned && !queue.isEmpty()) {
+      if (!isPlanned && queue.head) {
         isPaused = true;
         queueMicrotask(execute);
       }
@@ -96,7 +96,7 @@ export function createSyncTaskScheduler(
 ): TaskScheduler {
   const onError = options?.onError ?? nrgyReportError;
 
-  const queue = createQueue<() => void>();
+  const queue: LinkedList<() => void> = {};
   let isActive = false;
   let isPaused = false;
 
@@ -106,7 +106,7 @@ export function createSyncTaskScheduler(
     isActive = true;
 
     let action;
-    while (!isPaused && (action = queue.get())) {
+    while (!isPaused && (action = popListHead(queue))) {
       try {
         action();
       } catch (error) {
@@ -117,9 +117,9 @@ export function createSyncTaskScheduler(
   };
 
   return {
-    isEmpty: () => queue.isEmpty(),
+    isEmpty: () => !queue.head,
     schedule: (entry) => {
-      queue.add(entry);
+      appendToList(queue, entry);
       if (!isActive) execute();
     },
     execute,
@@ -130,7 +130,7 @@ export function createSyncTaskScheduler(
     resume: () => {
       isPaused = false;
 
-      if (!queue.isEmpty()) {
+      if (queue.head) {
         execute();
       }
     },

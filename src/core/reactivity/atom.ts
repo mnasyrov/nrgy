@@ -1,5 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { appendToLinkedList, forEachInLinkedList } from '../internals/list';
+import { appendToList, forEachInList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
@@ -46,7 +46,7 @@ export const atom: AtomFn = function <T>(
 
 function getAtomValue<T>(node: AtomNode<T>): T {
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
-    appendToLinkedList(node.observers, RUNTIME.activeObserver.getRef());
+    appendToList(node.observers, RUNTIME.activeObserver.getRef());
   }
 
   return node.value;
@@ -90,8 +90,7 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   RUNTIME.updateAtomClock();
 
   if (node.state === ATOM_STATE_ALIVE) {
-    // RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
-    notifyAtomDepsAboutChange(node);
+    RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
   }
 }
 
@@ -116,7 +115,7 @@ function destroyAtom<T>(node: AtomNode<T>): void {
 
   node.state = ATOM_STATE_PREDESTROY;
 
-  forEachInLinkedList(node.observers, (ref) => ref.value?.onSourceDestroy());
+  forEachInList(node.observers, (ref) => ref.value?.onSourceDestroy());
   node.observers = {};
 
   node.onDestroy?.();
