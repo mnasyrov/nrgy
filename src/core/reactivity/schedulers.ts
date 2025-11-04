@@ -1,5 +1,4 @@
 import { appendToList, LinkedList, popListHead } from '../internals/list';
-import { nrgyReportError } from '../internals/reportError';
 
 /**
  * Task scheduler interface
@@ -22,21 +21,9 @@ export type TaskScheduler = Readonly<{
 }>;
 
 /**
- * Task scheduler options
- */
-export type TaskSchedulerOptions = {
-  /** An error handler */
-  onError?: (error: unknown) => void;
-};
-
-/**
  * Creates a microtask scheduler
  */
-export function createMicrotaskScheduler(
-  options?: TaskSchedulerOptions,
-): TaskScheduler {
-  const onError = options?.onError ?? nrgyReportError;
-
+export function createMicrotaskScheduler(): TaskScheduler {
   const queue: LinkedList<() => void> = {};
   let isPlanned = false;
   let isActive = false;
@@ -50,11 +37,7 @@ export function createMicrotaskScheduler(
 
     let action;
     while (!isPaused && (action = popListHead(queue))) {
-      try {
-        action();
-      } catch (error) {
-        onError(error);
-      }
+      action();
     }
 
     isActive = false;
@@ -91,11 +74,7 @@ export function createMicrotaskScheduler(
 /**
  * Creates a synchronous task scheduler
  */
-export function createSyncTaskScheduler(
-  options?: TaskSchedulerOptions,
-): TaskScheduler {
-  const onError = options?.onError ?? nrgyReportError;
-
+export function createSyncTaskScheduler(): TaskScheduler {
   const queue: LinkedList<() => void> = {};
   let isActive = false;
   let isPaused = false;
@@ -107,11 +86,7 @@ export function createSyncTaskScheduler(
 
     let action;
     while (!isPaused && (action = popListHead(queue))) {
-      try {
-        action();
-      } catch (error) {
-        onError(error);
-      }
+      action();
     }
     isActive = false;
   };

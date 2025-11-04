@@ -1,3 +1,4 @@
+import { nrgyReportError } from '../internals/reportError';
 import { RUNTIME } from '../reactivity/runtime';
 import { createScope } from '../scope/createScope';
 import { Scope } from '../scope/types';
@@ -164,13 +165,19 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     this.scope = this.context.scope;
     this.params = this.context.params;
 
-    RUNTIME.asyncScheduler.schedule(() => this.onCreated());
+    RUNTIME.asyncScheduler.schedule(() => {
+      try {
+        this.onCreated();
+      } catch (error) {
+        nrgyReportError(error);
+      }
+    });
   }
 
   /**
    * Called when the controller is created.
    *
-   * This callback is called in a next microtask as soon as the controller is created.
+   * This callback is called in the next microtask as soon as the controller is created.
    */
   protected onCreated(): void {
     // Do nothing
