@@ -1,7 +1,6 @@
 import { Observable, skip, Unsubscribable } from 'rxjs';
 
 import { atom, Atom, compute } from '../core';
-import { RUNTIME } from '../core/reactivity/runtime';
 import { DestroyableAtom } from '../core/reactivity/types';
 import { observe } from '../rxjs';
 
@@ -23,7 +22,7 @@ export type Query<T> = Readonly<{
  */
 export function toQuery<T>(source: Atom<T>): Query<T> {
   return {
-    get: () => RUNTIME.runAsUntracked(() => source()),
+    get: () => source(),
     value$: observe(source),
   };
 }

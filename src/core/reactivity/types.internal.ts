@@ -50,6 +50,7 @@ export const COMPUTED_STATUS_OK = 0;
 export const COMPUTED_STATUS_UNSET = 1;
 export const COMPUTED_STATUS_COMPUTING = 2;
 export const COMPUTED_STATUS_ERROR = 3;
+export const COMPUTED_STATUS_STALE = 4;
 
 /** @internal */
 export type ComputedNode<T> = BaseSourceNode &
@@ -61,7 +62,6 @@ export type ComputedNode<T> = BaseSourceNode &
     notifiedAt?: number;
 
     computation: Computation<T>;
-    clock?: number;
     equal: ValueEqualityFn<T>;
 
     /**
@@ -74,7 +74,8 @@ export type ComputedNode<T> = BaseSourceNode &
       | typeof COMPUTED_STATUS_OK
       | typeof COMPUTED_STATUS_UNSET
       | typeof COMPUTED_STATUS_COMPUTING
-      | typeof COMPUTED_STATUS_ERROR;
+      | typeof COMPUTED_STATUS_ERROR
+      | typeof COMPUTED_STATUS_STALE;
 
     /**
      * If `value` is `ERRORED`, the error caught from the last computation attempt which will

@@ -10,6 +10,7 @@ import {
   COMPUTED_STATUS_COMPUTING,
   COMPUTED_STATUS_ERROR,
   COMPUTED_STATUS_OK,
+  COMPUTED_STATUS_STALE,
   COMPUTED_STATUS_UNSET,
   ComputedNode,
   ObserverNode,
@@ -76,6 +77,8 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
   }
   node.notifiedAt = RUNTIME.clock;
 
+  node.status = COMPUTED_STATUS_STALE;
+
   const consumerRefs = node.observers.head;
   node.observers = {};
 
@@ -87,15 +90,14 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
 }
 
 function getComputedValue<T>(node: ComputedNode<T>): T {
-  const trackingMode: boolean = !!RUNTIME.activeObserver;
-
   if (node.status === COMPUTED_STATUS_COMPUTING) {
     // Computation results in a cyclic read of itself.
     throw new Error('Detected cycle in computations');
   }
 
   const isStale =
-    node.clock !== RUNTIME.clock || node.status === COMPUTED_STATUS_UNSET;
+    node.status === COMPUTED_STATUS_STALE ||
+    node.status === COMPUTED_STATUS_UNSET;
   const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
 
   if (RUNTIME.activeObserver) {
@@ -103,7 +105,7 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   }
 
   if (isStale || mustRenewSource) {
-    recomputeValue(node, trackingMode);
+    recomputeValue(node);
   }
 
   if (node.status === COMPUTED_STATUS_ERROR) {
@@ -113,16 +115,14 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   return node.value;
 }
 
-function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
+function recomputeValue<T>(node: ComputedNode<T>): void {
   const noOldValue =
     node.status === COMPUTED_STATUS_UNSET ||
     node.status === COMPUTED_STATUS_ERROR;
   node.status = COMPUTED_STATUS_COMPUTING;
 
   try {
-    const newValue: T = trackingMode
-      ? RUNTIME.runAsTracked(node, node.computation)
-      : node.computation();
+    const newValue: T = RUNTIME.runAsTracked(node, node.computation);
 
     node.status = COMPUTED_STATUS_OK;
 
@@ -137,7 +137,4 @@ function recomputeValue<T>(node: ComputedNode<T>, trackingMode: boolean): void {
     node.version = nextSafeInteger(node.version);
     node.error = err;
   }
-
-  // As we're re-running the computation, update our dependent tracking version number.
-  node.clock = RUNTIME.clock;
 }

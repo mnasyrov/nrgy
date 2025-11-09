@@ -15,17 +15,11 @@ export class Runtime {
 
   nextId = 1;
 
+  /** @readonly */
   activeObserver: ObserverNode | undefined;
 
   /** @readonly */
   batchLock: number = 0;
-
-  /**
-   * Marks the current computation context as tracked
-   */
-  isTracked(): boolean {
-    return !!this.activeObserver;
-  }
 
   /**
    * @readonly

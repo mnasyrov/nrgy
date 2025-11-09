@@ -26,17 +26,13 @@ describe('EnergyRuntime', () => {
       const mockedObserver = {} as any;
       runtime.activeObserver = mockedObserver;
 
-      const spy = jest.fn();
       const result = runtime.runAsUntracked(() => {
         expect(runtime.activeObserver).toBeUndefined();
-        spy(runtime.isTracked());
         return 'bar';
       });
 
       expect(runtime.activeObserver).toBe(mockedObserver);
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(false);
       expect(result).toEqual('bar');
     });
   });

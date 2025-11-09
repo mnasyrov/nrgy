@@ -100,7 +100,7 @@ describe('compute()', () => {
     expect(results).toEqual(['a1, i0', 'a2, i2', 'b2, i3', 'b3, i4', 'b3, i5']);
   });
 
-  it('should not compute external dependencies in an atom was not changed', async () => {
+  it('should not compute external dependencies if the atom was not changed', async () => {
     let value = 1;
     const subscribed = compute(() => value);
     const notSubscribed = compute(() => value);
@@ -131,8 +131,8 @@ describe('compute()', () => {
 
     // Trigger recalculations
     atom(10).set(11);
-    expect(subscribed()).toBe(4);
-    expect(notSubscribed()).toBe(4);
+    expect(subscribed()).toBe(1);
+    expect(notSubscribed()).toBe(1);
 
     expect(results).toEqual([1]);
   });
@@ -700,21 +700,24 @@ describe('Tracked context in the computed expression with implicit dependencies'
 
     const errorCallback = jest.fn();
     effect(c, () => {}, { onError: errorCallback });
-
     runEffects();
-    expect(b()).toBe(1);
-
-    a.set(2);
-    runEffects();
-    expect(b()).toBe(1);
-
-    expect(errorCallback).toHaveBeenCalledTimes(2);
+    expect(errorCallback).toHaveBeenCalledTimes(1);
     expect(errorCallback).toHaveBeenNthCalledWith(
       1,
       new AtomUpdateError('SourceAtom b'),
     );
+
+    runEffects();
+    expect(b()).toBe(0);
+
+    errorCallback.mockClear();
+    a.set(2);
+    runEffects();
+    expect(b()).toBe(0);
+
+    expect(errorCallback).toHaveBeenCalledTimes(1);
     expect(errorCallback).toHaveBeenNthCalledWith(
-      2,
+      1,
       new AtomUpdateError('SourceAtom b'),
     );
   });
