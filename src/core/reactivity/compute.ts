@@ -89,6 +89,15 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
   }
 }
 
+export function notifyComputed2<T>(node: ComputedNode<T>): void {
+  if (node.notifiedAt === RUNTIME.clock) {
+    return;
+  }
+  node.notifiedAt = RUNTIME.clock;
+
+  node.status = COMPUTED_STATUS_STALE;
+}
+
 function getComputedValue<T>(node: ComputedNode<T>): T {
   if (node.status === COMPUTED_STATUS_COMPUTING) {
     // Computation results in a cyclic read of itself.

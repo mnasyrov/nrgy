@@ -46,6 +46,32 @@ export function appendToList<T>(list: LinkedList<T>, value: T): void {
 }
 
 /** @internal */
+export function appendListToEnd<T>(
+  list1: LinkedList<T>,
+  list2: LinkedList<T>,
+): void {
+  if (!list1.head) list1.head = list2.head;
+  if (list1.tail) list1.tail.next = list2.head;
+  list1.tail = list2.tail;
+}
+
+/** @internal */
+export function appendListToHead<T>(
+  list1: LinkedList<T>,
+  list2: LinkedList<T>,
+): void {
+  if (!list2.head) return;
+  if (!list1.head) {
+    list1.head = list2.head;
+    list1.tail = list2.tail;
+  } else {
+    list2.tail!.next = list1.head;
+    list1.head = list2.head;
+    list1.tail = list2.tail;
+  }
+}
+
+/** @internal */
 export function forEachInList<T>(
   list: LinkedList<T>,
   fn: (value: T) => void,

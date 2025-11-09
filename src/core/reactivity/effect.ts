@@ -148,7 +148,7 @@ function onSourceDestroy<T>(node: EffectNode<T>): void {
  *
  * Schedule the effect to be re-run
  */
-function notifyEffect<T>(node: EffectNode<T>): void {
+export function notifyEffect<T>(node: EffectNode<T>): void {
   if (node.isDestroyed) {
     return;
   }

@@ -1,8 +1,17 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { appendToList, forEachInList } from '../internals/list';
+import { DataRef } from '../common/utilityTypes';
+import {
+  appendListToHead,
+  appendToList,
+  forEachInList,
+  LinkedList,
+  popListHead,
+} from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
+import { notifyComputed2 } from './compute';
+import { notifyEffect } from './effect';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { AtomFn, AtomOptions, WritableAtom } from './types';
@@ -11,6 +20,10 @@ import {
   ATOM_STATE_DESTROYED,
   ATOM_STATE_PREDESTROY,
   AtomNode,
+  EffectNode,
+  isComputedNode,
+  isEffectNode,
+  ObserverNode,
 } from './types.internal';
 import { getSourceAtomNodeLabel } from './utils';
 
@@ -96,16 +109,32 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
 }
 
 // Notify all observers of this producer that its value is changed
-function notifyAtomDepsAboutChange(node: AtomNode<any>): void {
-  if (node.state === ATOM_STATE_ALIVE && node.observers.head) {
-    const prevObservers = node.observers;
-    node.observers = {};
+function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
+  if (sourceNode.state !== ATOM_STATE_ALIVE || !sourceNode.observers.head) {
+    return;
+  }
 
-    let item = prevObservers.head;
-    while (item) {
-      item.value.value?.onSourceUpdated();
-      item = item.next;
+  const effectQueue: LinkedList<EffectNode<any>> = {};
+  const observerQueue = sourceNode.observers;
+  sourceNode.observers = {};
+
+  let observer: DataRef<ObserverNode> | undefined;
+  while ((observer = popListHead(observerQueue))) {
+    const node = observer?.value;
+    if (!node) continue;
+
+    if (isComputedNode(node)) {
+      notifyComputed2(node);
+      appendListToHead(observerQueue, node.observers);
+      node.observers = {};
+    } else if (isEffectNode(node)) {
+      appendToList(effectQueue, node);
     }
+  }
+
+  let effectNode: EffectNode<any> | undefined;
+  while ((effectNode = popListHead(effectQueue))) {
+    notifyEffect(effectNode);
   }
 }
 

@@ -103,3 +103,13 @@ export type EffectNode<T> = ObserverNode & {
 
   destroy: () => void;
 };
+
+/** @internal */
+export function isComputedNode(node: ObserverNode): node is ComputedNode<any> {
+  return (node as ComputedNode<any>).computation !== undefined;
+}
+
+/** @internal */
+export function isEffectNode(node: ObserverNode): node is EffectNode<any> {
+  return (node as EffectNode<any>).sourceAtom !== undefined;
+}
