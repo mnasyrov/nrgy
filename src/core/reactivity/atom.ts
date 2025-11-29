@@ -1,5 +1,4 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { DataRef } from '../common/utilityTypes';
 import {
   appendListToEnd,
   appendListToHead,
@@ -12,7 +11,7 @@ import { nextSafeInteger } from '../internals/nextSafeInteger';
 import { AtomUpdateError } from './atomUpdateError';
 import { destroyComputed, notifyComputed } from './compute';
 import { destroyEffect, notifyEffect } from './effect';
-import { RUNTIME } from './runtime';
+import { getObserverRef, RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { AtomFn, AtomOptions, WritableAtom } from './types';
 import {
@@ -23,7 +22,7 @@ import {
   EffectNode,
   isComputedNode,
   isEffectNode,
-  ObserverNode,
+  ObserverRef,
 } from './types.internal';
 import { getSourceAtomNodeLabel } from './utils';
 
@@ -59,7 +58,7 @@ export const atom: AtomFn = function <T>(
 
 function getAtomValue<T>(node: AtomNode<T>): T {
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
-    appendToList(node.observers, RUNTIME.activeObserver.getRef());
+    appendToList(node.observers, getObserverRef(RUNTIME.activeObserver));
   }
 
   return node.value;
@@ -118,9 +117,9 @@ function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
   const observerQueue = sourceNode.observers;
   sourceNode.observers = {};
 
-  let observer: DataRef<ObserverNode> | undefined;
-  while ((observer = popListHead(observerQueue))) {
-    const node = observer?.value;
+  let observerRef: ObserverRef | undefined;
+  while ((observerRef = popListHead(observerQueue))) {
+    const node = observerRef?.node;
     if (!node) continue;
 
     if (isComputedNode(node)) {
@@ -149,9 +148,9 @@ function destroyAtom<T>(sourceNode: AtomNode<T>): void {
   const observerQueue = sourceNode.observers;
   sourceNode.observers = {};
 
-  let observerRef: DataRef<ObserverNode> | undefined;
+  let observerRef: ObserverRef | undefined;
   while ((observerRef = popListHead(observerQueue))) {
-    const node = observerRef?.value;
+    const node = observerRef?.node;
     if (!node) continue;
 
     if (isComputedNode(node)) {

@@ -1,4 +1,3 @@
-import { DataRef } from '../common/utilityTypes';
 import { LinkedList } from '../internals/list';
 
 import { TaskScheduler } from './schedulers';
@@ -22,9 +21,11 @@ export type ObserverNode = {
   id: number;
   label?: string;
 
-  ref?: DataRef<ObserverNode>;
-  getRef: () => DataRef<ObserverNode>;
+  ref?: ObserverRef;
 };
+
+/** @internal */
+export type ObserverRef = { node: ObserverNode | undefined };
 
 /** @internal */
 export type BaseSourceNode = {
@@ -32,7 +33,7 @@ export type BaseSourceNode = {
   label?: string;
   version: number;
 
-  observers: LinkedList<DataRef<ObserverNode>>;
+  observers: LinkedList<ObserverRef>;
 };
 
 /** @internal */
@@ -55,8 +56,8 @@ export type ComputedNode<T> = BaseSourceNode &
   ObserverNode & {
     version: number;
 
-    _ref?: DataRef<ObserverNode>;
-    observers: LinkedList<DataRef<ObserverNode>>;
+    _ref?: ObserverRef;
+    observers: LinkedList<ObserverRef>;
     notifiedAt?: number;
 
     computation: Computation<T>;

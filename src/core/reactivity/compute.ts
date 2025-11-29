@@ -1,9 +1,8 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { DataRef } from '../common/utilityTypes';
 import { appendToList, LinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
-import { RUNTIME } from './runtime';
+import { getObserverRef, RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
 import {
@@ -13,7 +12,7 @@ import {
   COMPUTED_STATUS_STALE,
   COMPUTED_STATUS_UNSET,
   ComputedNode,
-  ObserverNode,
+  ObserverRef,
 } from './types.internal';
 
 /**
@@ -37,8 +36,6 @@ export const compute: ComputeFn = function <T>(
     value: undefined as any,
     status: COMPUTED_STATUS_UNSET,
     observers: {},
-
-    getRef: () => getRef(node),
   };
 
   const getter = () => getComputedValue(node);
@@ -56,22 +53,15 @@ export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.observers = {};
 
   if (node._ref) {
-    node._ref.value = undefined;
+    node._ref.node = undefined;
     node._ref = undefined;
   }
-}
-
-function getRef<T>(node: ComputedNode<T>): DataRef<ObserverNode> {
-  if (!node._ref) {
-    node._ref = { value: node };
-  }
-  return node._ref;
 }
 
 /** @internal */
 export function notifyComputed<T>(
   node: ComputedNode<T>,
-): LinkedList<DataRef<ObserverNode>> | undefined {
+): LinkedList<ObserverRef> | undefined {
   if (node.notifiedAt === RUNTIME.clock) {
     return;
   }
@@ -97,7 +87,7 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
 
   if (RUNTIME.activeObserver) {
-    appendToList(node.observers, RUNTIME.activeObserver.getRef());
+    appendToList(node.observers, getObserverRef(RUNTIME.activeObserver));
   }
 
   if (isStale || mustRenewSource) {

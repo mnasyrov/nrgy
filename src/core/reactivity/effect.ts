@@ -1,4 +1,3 @@
-import { DataRef } from '../common/utilityTypes';
 import { combineAtoms } from '../utils/combineAtoms';
 
 import { getAtomNode } from './atomUtils';
@@ -12,7 +11,7 @@ import {
   EffectOptions,
   EffectSubscription,
 } from './types';
-import { EffectNode, ObserverNode } from './types.internal';
+import { EffectNode } from './types.internal';
 
 /**
  * Creates a new synchronous effect
@@ -81,33 +80,23 @@ export function createEffectNode<T>(
   const node: EffectNode<T> = {
     id: RUNTIME.nextId++,
     label: options?.label,
-
-    dirty: false,
     isDestroyed: false,
+
+    // Effect starts dirty.
+    dirty: true,
+
     scheduler,
     action,
     sourceAtom,
     onError: options?.onError,
     onDestroy: options?.onDestroy,
-
-    getRef: () => getRef(node),
   };
 
-  // Effect starts dirty.
-  node.dirty = true;
   scheduler.schedule(() => runEffect(node));
 
   return {
     destroy: () => destroyEffect(node),
   };
-}
-
-/** @internal */
-function getRef<T>(node: EffectNode<T>): DataRef<ObserverNode> {
-  if (!node.ref) {
-    node.ref = { value: node };
-  }
-  return node.ref;
 }
 
 /**
@@ -126,7 +115,7 @@ export function destroyEffect<T>(node: EffectNode<T>): void {
   node.action = undefined;
 
   if (node.ref) {
-    node.ref.value = undefined;
+    node.ref.node = undefined;
     node.ref = undefined;
   }
 
