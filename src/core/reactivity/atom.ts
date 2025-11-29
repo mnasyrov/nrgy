@@ -13,7 +13,7 @@ import { destroyComputed, notifyComputed } from './compute';
 import { destroyEffect, notifyEffect } from './effect';
 import { getObserverRef, RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
-import { AtomFn, AtomOptions, WritableAtom } from './types';
+import { AtomFn, AtomOptions, SourceAtom } from './types';
 import {
   ATOM_STATE_ALIVE,
   ATOM_STATE_DESTROYED,
@@ -32,7 +32,7 @@ import { getSourceAtomNodeLabel } from './utils';
 export const atom: AtomFn = function <T>(
   initialValue: T,
   options?: AtomOptions<T>,
-): WritableAtom<T> {
+): SourceAtom<T> {
   const node: AtomNode<T> = {
     id: RUNTIME.nextId++,
     label: options?.label,

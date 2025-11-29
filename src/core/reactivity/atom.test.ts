@@ -3,7 +3,7 @@ import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { effect, syncEffect } from './effect';
-import { WritableAtom } from './types';
+import { SourceAtom } from './types';
 
 describe('atom()', () => {
   it('should create a value store with the provided initial state', () => {
@@ -153,7 +153,7 @@ describe('WritableAtom', () => {
     });
 
     it('should allow `onDestroy` callback to change its value', async () => {
-      const store: WritableAtom<number> = atom<number>(1, {
+      const store: SourceAtom<number> = atom<number>(1, {
         onDestroy: () => store.set(0),
       });
 

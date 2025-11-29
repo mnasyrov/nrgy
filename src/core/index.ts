@@ -20,7 +20,7 @@ export type {
   EffectOptions,
   EffectSubscription,
   ValueEqualityFn,
-  WritableAtom,
+  SourceAtom,
 } from './reactivity/types';
 
 export { atom } from './reactivity/atom';

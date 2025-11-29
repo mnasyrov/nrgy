@@ -1,5 +1,5 @@
 import { atom } from '../reactivity/atom';
-import { AtomOptions, WritableAtom } from '../reactivity/types';
+import { AtomOptions, SourceAtom } from '../reactivity/types';
 
 /**
  * A function to update a state.
@@ -84,7 +84,7 @@ export type StoreUpdates<
 export type Store<
   State,
   Updates extends StateUpdates<State>,
-> = WritableAtom<State> & { readonly updates: StoreUpdates<State, Updates> };
+> = SourceAtom<State> & { readonly updates: StoreUpdates<State, Updates> };
 
 export type StoreOptions<
   State,
@@ -120,7 +120,7 @@ export function createStore<
  * Creates StateUpdates for updating the store by provided state mutations
  */
 export function createStoreUpdates<State, Updates extends StateUpdates<State>>(
-  atomUpdate: WritableAtom<State>['update'],
+  atomUpdate: SourceAtom<State>['update'],
   stateUpdates: Updates,
 ): StoreUpdates<State, Updates> {
   const updates: any = {};

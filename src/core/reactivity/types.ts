@@ -36,9 +36,9 @@ export type AtomList<TValues extends unknown[]> = [
 ];
 
 /**
- * A writable `Atom` with a value that can be mutated via a setter interface.
+ * A source `Atom` with a value that can be mutated via a setter interface.
  */
-export interface WritableAtom<T> extends Atom<T> {
+export interface SourceAtom<T> extends Atom<T> {
   /**
    * Directly set the atom to a new value and notify any dependents.
    */
@@ -86,7 +86,7 @@ export type AtomOptions<T> = {
  * Factory to create a writable `Atom` that can be set or updated directly.
  */
 export interface AtomFn {
-  <T>(initialValue: T, options?: AtomOptions<T>): WritableAtom<T>;
+  <T>(initialValue: T, options?: AtomOptions<T>): SourceAtom<T>;
 }
 
 /**

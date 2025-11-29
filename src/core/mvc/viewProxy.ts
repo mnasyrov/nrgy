@@ -1,6 +1,6 @@
 import { Emitter } from '../internals/emitter';
 import { atom } from '../reactivity/atom';
-import { Atom, WritableAtom } from '../reactivity/types';
+import { Atom, SourceAtom } from '../reactivity/types';
 import { createScope } from '../scope/createScope';
 import { readonlyAtom } from '../utils/readonlyAtom';
 
@@ -60,7 +60,7 @@ export function createViewProxy<TProps extends ViewProps>(
   initialProps?: TProps,
 ): ViewProxy<TProps> {
   const status = atom<ViewStatus>(ViewStatuses.unmounted);
-  const props: Record<string, WritableAtom<any>> = {};
+  const props: Record<string, SourceAtom<any>> = {};
   const readonlyProps: Record<string, Atom<any>> = {};
 
   const scope = createScope();
