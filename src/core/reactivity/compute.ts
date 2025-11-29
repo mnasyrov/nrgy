@@ -1,6 +1,6 @@
 import { defaultEquals } from '../common/defaultEquals';
 import { DataRef } from '../common/utilityTypes';
-import { appendToList, forEachInList } from '../internals/list';
+import { appendToList, LinkedList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { RUNTIME } from './runtime';
@@ -38,24 +38,21 @@ export const compute: ComputeFn = function <T>(
     status: COMPUTED_STATUS_UNSET,
     observers: {},
 
-    get: () => getComputedValue(node),
     getRef: () => getRef(node),
-    onSourceUpdated: () => notifyComputed(node),
-    onSourceDestroy: () => destroyComputed(node),
   };
 
-  const getter = node.get as any;
+  const getter = () => getComputedValue(node);
   getter[ATOM_SYMBOL] = node;
 
   return getter;
 };
 
-function destroyComputed<T>(node: ComputedNode<T>): void {
+/** @internal */
+export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = undefined as any;
   node.status = COMPUTED_STATUS_UNSET;
   node.notifiedAt = undefined;
 
-  forEachInList(node.observers, (ref) => ref.value?.onSourceDestroy());
   node.observers = {};
 
   if (node._ref) {
@@ -71,7 +68,10 @@ function getRef<T>(node: ComputedNode<T>): DataRef<ObserverNode> {
   return node._ref;
 }
 
-function notifyComputed<T>(node: ComputedNode<T>): void {
+/** @internal */
+export function notifyComputed<T>(
+  node: ComputedNode<T>,
+): LinkedList<DataRef<ObserverNode>> | undefined {
   if (node.notifiedAt === RUNTIME.clock) {
     return;
   }
@@ -79,23 +79,10 @@ function notifyComputed<T>(node: ComputedNode<T>): void {
 
   node.status = COMPUTED_STATUS_STALE;
 
-  const consumerRefs = node.observers.head;
+  const observersForNotification = node.observers;
   node.observers = {};
 
-  let item = consumerRefs;
-  while (item) {
-    item.value.value?.onSourceUpdated();
-    item = item.next;
-  }
-}
-
-export function notifyComputed2<T>(node: ComputedNode<T>): void {
-  if (node.notifiedAt === RUNTIME.clock) {
-    return;
-  }
-  node.notifiedAt = RUNTIME.clock;
-
-  node.status = COMPUTED_STATUS_STALE;
+  return observersForNotification;
 }
 
 function getComputedValue<T>(node: ComputedNode<T>): T {
@@ -124,7 +111,8 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   return node.value;
 }
 
-function recomputeValue<T>(node: ComputedNode<T>): void {
+/** @internal */
+function recomputeValue<T>(node: ComputedNode<T>): boolean {
   const noOldValue =
     node.status === COMPUTED_STATUS_UNSET ||
     node.status === COMPUTED_STATUS_ERROR;
@@ -139,6 +127,7 @@ function recomputeValue<T>(node: ComputedNode<T>): void {
       node.value = newValue;
       node.version = nextSafeInteger(node.version);
       node.error = undefined;
+      return true;
     }
   } catch (err) {
     node.value = undefined as any;
@@ -146,4 +135,6 @@ function recomputeValue<T>(node: ComputedNode<T>): void {
     node.version = nextSafeInteger(node.version);
     node.error = err;
   }
+
+  return false;
 }

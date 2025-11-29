@@ -1,17 +1,17 @@
 import { defaultEquals } from '../common/defaultEquals';
 import { DataRef } from '../common/utilityTypes';
 import {
+  appendListToEnd,
   appendListToHead,
   appendToList,
-  forEachInList,
   LinkedList,
   popListHead,
 } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
-import { notifyComputed2 } from './compute';
-import { notifyEffect } from './effect';
+import { destroyComputed, notifyComputed } from './compute';
+import { destroyEffect, notifyEffect } from './effect';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { AtomFn, AtomOptions, WritableAtom } from './types';
@@ -124,9 +124,10 @@ function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
     if (!node) continue;
 
     if (isComputedNode(node)) {
-      notifyComputed2(node);
-      appendListToHead(observerQueue, node.observers);
-      node.observers = {};
+      const nextObservers = notifyComputed(node);
+      if (nextObservers) {
+        appendListToHead(observerQueue, nextObservers);
+      }
     } else if (isEffectNode(node)) {
       appendToList(effectQueue, node);
     }
@@ -138,17 +139,29 @@ function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
   }
 }
 
-function destroyAtom<T>(node: AtomNode<T>): void {
-  if (node.state !== ATOM_STATE_ALIVE) {
+/** @internal */
+function destroyAtom<T>(sourceNode: AtomNode<T>): void {
+  if (sourceNode.state !== ATOM_STATE_ALIVE) {
     return;
   }
+  sourceNode.state = ATOM_STATE_PREDESTROY;
 
-  node.state = ATOM_STATE_PREDESTROY;
+  const observerQueue = sourceNode.observers;
+  sourceNode.observers = {};
 
-  forEachInList(node.observers, (ref) => ref.value?.onSourceDestroy());
-  node.observers = {};
+  let observerRef: DataRef<ObserverNode> | undefined;
+  while ((observerRef = popListHead(observerQueue))) {
+    const node = observerRef?.value;
+    if (!node) continue;
 
-  node.onDestroy?.();
+    if (isComputedNode(node)) {
+      appendListToEnd(observerQueue, node.observers);
+      destroyComputed(node);
+    } else if (isEffectNode(node)) {
+      destroyEffect(node);
+    }
+  }
 
-  node.state = ATOM_STATE_DESTROYED;
+  sourceNode.onDestroy?.();
+  sourceNode.state = ATOM_STATE_DESTROYED;
 }

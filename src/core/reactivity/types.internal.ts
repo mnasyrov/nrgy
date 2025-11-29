@@ -22,10 +22,8 @@ export type ObserverNode = {
   id: number;
   label?: string;
 
+  ref?: DataRef<ObserverNode>;
   getRef: () => DataRef<ObserverNode>;
-
-  onSourceUpdated: () => void;
-  onSourceDestroy: () => void;
 };
 
 /** @internal */
@@ -82,14 +80,10 @@ export type ComputedNode<T> = BaseSourceNode &
      * be re-thrown.
      */
     error?: unknown;
-
-    get: () => T;
   };
 
 /** @internal */
 export type EffectNode<T> = ObserverNode & {
-  ref?: DataRef<ObserverNode>;
-
   lastValueVersion?: number;
   dirty: boolean;
   isDestroyed: boolean;
@@ -100,8 +94,6 @@ export type EffectNode<T> = ObserverNode & {
 
   onError?: (error: unknown) => void;
   onDestroy?: () => void;
-
-  destroy: () => void;
 };
 
 /** @internal */

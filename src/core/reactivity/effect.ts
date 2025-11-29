@@ -91,20 +91,15 @@ export function createEffectNode<T>(
     onDestroy: options?.onDestroy,
 
     getRef: () => getRef(node),
-    destroy: () => destroyEffect(node),
-    onSourceUpdated: () => notifyEffect(node),
-    onSourceDestroy: () => onSourceDestroy(node),
   };
 
   // Effect starts dirty.
   node.dirty = true;
   scheduler.schedule(() => runEffect(node));
 
-  const subscription: EffectSubscription = {
-    destroy: () => node.destroy(),
+  return {
+    destroy: () => destroyEffect(node),
   };
-
-  return subscription;
 }
 
 /** @internal */
@@ -120,7 +115,7 @@ function getRef<T>(node: EffectNode<T>): DataRef<ObserverNode> {
  *
  * Destroys the effect
  */
-function destroyEffect<T>(node: EffectNode<T>): void {
+export function destroyEffect<T>(node: EffectNode<T>): void {
   if (node.isDestroyed) {
     return;
   }
@@ -136,11 +131,6 @@ function destroyEffect<T>(node: EffectNode<T>): void {
   }
 
   node.onDestroy?.();
-}
-
-/** @internal */
-function onSourceDestroy<T>(node: EffectNode<T>): void {
-  destroyEffect(node);
 }
 
 /**
