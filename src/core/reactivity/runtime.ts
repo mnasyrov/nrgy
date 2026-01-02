@@ -4,7 +4,7 @@ import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
 } from './schedulers';
-import { ObserverNode, ObserverRef } from './types.internal';
+import { ObserverNode } from './types.internal';
 
 /**
  * @internal
@@ -94,11 +94,3 @@ export class Runtime {
  * The energy runtime
  */
 export const RUNTIME = new Runtime();
-
-/** @internal */
-export function getObserverRef(node: ObserverNode): ObserverRef {
-  if (!node.ref) {
-    node.ref = { node };
-  }
-  return node.ref;
-}

@@ -1,8 +1,8 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { appendToList, LinkedList } from '../internals/list';
+import { forEachInList } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
-import { getObserverRef, RUNTIME } from './runtime';
+import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
 import {
@@ -12,8 +12,9 @@ import {
   COMPUTED_STATUS_STALE,
   COMPUTED_STATUS_UNSET,
   ComputedNode,
-  ObserverRef,
+  destroyEffect,
 } from './types.internal';
+import { appendObserverToNode, hasNoObservers } from './utils';
 
 /**
  * Create a computed `Atom` which derives a reactive value from an expression.
@@ -35,7 +36,9 @@ export const compute: ComputeFn = function <T>(
     version: 0,
     value: undefined as any,
     status: COMPUTED_STATUS_UNSET,
-    observers: {},
+
+    computedRefs: {},
+    effectRefs: {},
   };
 
   const getter = () => getComputedValue(node);
@@ -50,29 +53,15 @@ export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.status = COMPUTED_STATUS_UNSET;
   node.notifiedAt = undefined;
 
-  node.observers = {};
+  forEachInList(node.effectRefs, ({ node }) => node && destroyEffect(node));
+  forEachInList(node.computedRefs, ({ node }) => node && destroyComputed(node));
+  node.effectRefs = {};
+  node.computedRefs = {};
 
   if (node._ref) {
     node._ref.node = undefined;
     node._ref = undefined;
   }
-}
-
-/** @internal */
-export function notifyComputed<T>(
-  node: ComputedNode<T>,
-): LinkedList<ObserverRef> | undefined {
-  if (node.notifiedAt === RUNTIME.clock) {
-    return;
-  }
-  node.notifiedAt = RUNTIME.clock;
-
-  node.status = COMPUTED_STATUS_STALE;
-
-  const observersForNotification = node.observers;
-  node.observers = {};
-
-  return observersForNotification;
 }
 
 function getComputedValue<T>(node: ComputedNode<T>): T {
@@ -84,14 +73,14 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   const isStale =
     node.status === COMPUTED_STATUS_STALE ||
     node.status === COMPUTED_STATUS_UNSET;
-  const mustRenewSource = RUNTIME.activeObserver && !node.observers.head;
+  const mustRenewSource = RUNTIME.activeObserver && hasNoObservers(node);
 
   if (RUNTIME.activeObserver) {
-    appendToList(node.observers, getObserverRef(RUNTIME.activeObserver));
+    appendObserverToNode(node, RUNTIME.activeObserver);
   }
 
   if (isStale || mustRenewSource) {
-    recomputeValue(node);
+    recomputeValue(node, true);
   }
 
   if (node.status === COMPUTED_STATUS_ERROR) {
@@ -102,14 +91,20 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
 }
 
 /** @internal */
-function recomputeValue<T>(node: ComputedNode<T>): boolean {
+function recomputeValue<T>(node: ComputedNode<T>, tracking: boolean): boolean {
+  let prevObserver;
+  if (tracking) {
+    prevObserver = RUNTIME.activeObserver;
+    RUNTIME.activeObserver = node;
+  }
+
   const noOldValue =
     node.status === COMPUTED_STATUS_UNSET ||
     node.status === COMPUTED_STATUS_ERROR;
   node.status = COMPUTED_STATUS_COMPUTING;
 
   try {
-    const newValue: T = RUNTIME.runAsTracked(node, node.computation);
+    const newValue: T = node.computation();
 
     node.status = COMPUTED_STATUS_OK;
 
@@ -124,6 +119,10 @@ function recomputeValue<T>(node: ComputedNode<T>): boolean {
     node.status = COMPUTED_STATUS_ERROR;
     node.version = nextSafeInteger(node.version);
     node.error = err;
+  } finally {
+    if (tracking) {
+      RUNTIME.activeObserver = prevObserver;
+    }
   }
 
   return false;

@@ -2,16 +2,16 @@ import { defaultEquals } from '../common/defaultEquals';
 import {
   appendListToEnd,
   appendListToHead,
-  appendToList,
+  forEachInList,
   LinkedList,
   popListHead,
 } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
-import { destroyComputed, notifyComputed } from './compute';
-import { destroyEffect, notifyEffect } from './effect';
-import { getObserverRef, RUNTIME } from './runtime';
+import { destroyComputed } from './compute';
+import { notifyEffect } from './effect';
+import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
 import { AtomFn, AtomOptions, SourceAtom } from './types';
 import {
@@ -19,12 +19,16 @@ import {
   ATOM_STATE_DESTROYED,
   ATOM_STATE_PREDESTROY,
   AtomNode,
-  EffectNode,
-  isComputedNode,
-  isEffectNode,
-  ObserverRef,
+  COMPUTED_STATUS_STALE,
+  ComputedNodeRef,
+  destroyEffect,
+  EffectNodeRef,
 } from './types.internal';
-import { getSourceAtomNodeLabel } from './utils';
+import {
+  appendObserverToNode,
+  getSourceAtomNodeLabel,
+  hasNoObservers,
+} from './utils';
 
 /**
  * Factory to create a writable `Atom` that can be set or updated directly.
@@ -40,9 +44,11 @@ export const atom: AtomFn = function <T>(
     version: 0,
     equal: options?.equal ?? defaultEquals,
     onDestroy: options?.onDestroy,
-    observers: {},
     value: initialValue,
     state: ATOM_STATE_ALIVE,
+
+    computedRefs: {},
+    effectRefs: {},
   };
 
   const getter = () => getAtomValue(node);
@@ -58,7 +64,7 @@ export const atom: AtomFn = function <T>(
 
 function getAtomValue<T>(node: AtomNode<T>): T {
   if (node.state === ATOM_STATE_ALIVE && RUNTIME.activeObserver) {
-    appendToList(node.observers, getObserverRef(RUNTIME.activeObserver));
+    appendObserverToNode(node, RUNTIME.activeObserver);
   }
 
   return node.value;
@@ -109,32 +115,36 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
 
 // Notify all observers of this producer that its value is changed
 function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
-  if (sourceNode.state !== ATOM_STATE_ALIVE || !sourceNode.observers.head) {
+  if (sourceNode.state !== ATOM_STATE_ALIVE || hasNoObservers(sourceNode)) {
     return;
   }
 
-  const effectQueue: LinkedList<EffectNode<any>> = {};
-  const observerQueue = sourceNode.observers;
-  sourceNode.observers = {};
+  const computedRefsQueue: LinkedList<ComputedNodeRef> = {};
+  const effectRefQueue: LinkedList<EffectNodeRef> = {};
+  appendListToEnd(computedRefsQueue, sourceNode.computedRefs);
+  appendListToEnd(effectRefQueue, sourceNode.effectRefs);
+  sourceNode.computedRefs = {};
+  sourceNode.effectRefs = {};
 
-  let observerRef: ObserverRef | undefined;
-  while ((observerRef = popListHead(observerQueue))) {
-    const node = observerRef?.node;
-    if (!node) continue;
+  let computedRef: ComputedNodeRef | undefined;
+  while ((computedRef = popListHead(computedRefsQueue))) {
+    const computedNode = computedRef?.node;
+    if (!computedNode) continue;
 
-    if (isComputedNode(node)) {
-      const nextObservers = notifyComputed(node);
-      if (nextObservers) {
-        appendListToHead(observerQueue, nextObservers);
-      }
-    } else if (isEffectNode(node)) {
-      appendToList(effectQueue, node);
+    if (computedNode.notifiedAt !== RUNTIME.clock) {
+      appendListToHead(computedRefsQueue, computedNode.computedRefs);
+      appendListToEnd(effectRefQueue, computedNode.effectRefs);
+      computedNode.notifiedAt = RUNTIME.clock;
+      computedNode.status = COMPUTED_STATUS_STALE;
+      computedNode.computedRefs = {};
+      computedNode.effectRefs = {};
     }
   }
 
-  let effectNode: EffectNode<any> | undefined;
-  while ((effectNode = popListHead(effectQueue))) {
-    notifyEffect(effectNode);
+  let effectNodeRef: EffectNodeRef | undefined;
+  while ((effectNodeRef = popListHead(effectRefQueue))) {
+    const effectNode = effectNodeRef?.node;
+    if (effectNode) notifyEffect(effectNode);
   }
 }
 
@@ -145,21 +155,16 @@ function destroyAtom<T>(sourceNode: AtomNode<T>): void {
   }
   sourceNode.state = ATOM_STATE_PREDESTROY;
 
-  const observerQueue = sourceNode.observers;
-  sourceNode.observers = {};
-
-  let observerRef: ObserverRef | undefined;
-  while ((observerRef = popListHead(observerQueue))) {
-    const node = observerRef?.node;
-    if (!node) continue;
-
-    if (isComputedNode(node)) {
-      appendListToEnd(observerQueue, node.observers);
-      destroyComputed(node);
-    } else if (isEffectNode(node)) {
-      destroyEffect(node);
-    }
-  }
+  forEachInList(
+    sourceNode.effectRefs,
+    ({ node }) => node && destroyEffect(node),
+  );
+  forEachInList(
+    sourceNode.computedRefs,
+    ({ node }) => node && destroyComputed(node),
+  );
+  sourceNode.effectRefs = {};
+  sourceNode.computedRefs = {};
 
   sourceNode.onDestroy?.();
   sourceNode.state = ATOM_STATE_DESTROYED;

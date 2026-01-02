@@ -52,7 +52,7 @@ export function appendListToEnd<T>(
 ): void {
   if (!list1.head) list1.head = list2.head;
   if (list1.tail) list1.tail.next = list2.head;
-  list1.tail = list2.tail;
+  if (list2.tail) list1.tail = list2.tail;
 }
 
 /** @internal */
@@ -79,6 +79,24 @@ export function forEachInList<T>(
   let node = list.head;
   while (node) {
     fn(node.value);
+    node = node.next;
+  }
+}
+
+/** @internal */
+export function copyToList<T>(
+  source: LinkedList<T>,
+  target: LinkedList<T>,
+): void {
+  let node = source.head;
+  while (node) {
+    // appendToListEnd(target, node.value);
+
+    const copy = { value: node.value };
+    if (target.tail) target.tail.next = copy;
+    target.tail = copy;
+    if (!target.head) target.head = copy;
+
     node = node.next;
   }
 }

@@ -2,16 +2,14 @@ import { combineAtoms } from '../utils/combineAtoms';
 
 import { getAtomNode } from './atomUtils';
 import { RUNTIME } from './runtime';
-import { TaskScheduler } from './schedulers';
 import {
   Atom,
   AtomList,
   EffectCallback,
   EffectFn,
   EffectOptions,
-  EffectSubscription,
 } from './types';
-import { EffectNode } from './types.internal';
+import { destroyEffect, EffectNode } from './types.internal';
 
 /**
  * Creates a new synchronous effect
@@ -28,14 +26,13 @@ export const syncEffect: EffectFn = function <T>(
  * Creates a new effect
  */
 export const effect: EffectFn = function <T>(
-  source: Atom<T> | AtomList<T[]>,
+  sourceArg: Atom<T> | AtomList<T[]>,
   callback: EffectCallback<T>,
   options?: EffectOptions,
 ) {
-  if (Array.isArray(source)) {
-    const list = combineAtoms(source);
-    return effect(list as any, callback as any, options);
-  }
+  const sourceAtom: Atom<any> = Array.isArray(sourceArg)
+    ? combineAtoms(sourceArg)
+    : sourceArg;
 
   const scheduler = options?.sync
     ? RUNTIME.syncScheduler
@@ -55,28 +52,6 @@ export const effect: EffectFn = function <T>(
     };
   }
 
-  const fx = createEffectNode<T>(scheduler, source, fxCallback, options);
-
-  return {
-    destroy: () => fx.destroy(),
-  };
-};
-
-/**
- * @internal
- *
- * AtomEffect watches a reactive expression and allows it to be scheduled to re-run
- * when any dependencies notify of a change.
- *
- * `AtomEffect` doesn't run reactive expressions itself, but relies on a consumer-provided
- * scheduling operation to coordinate calling `AtomEffect.run()`.
- */
-export function createEffectNode<T>(
-  scheduler: TaskScheduler,
-  sourceAtom: Atom<T>,
-  action: EffectCallback<T>,
-  options?: EffectOptions,
-): EffectSubscription {
   const node: EffectNode<T> = {
     id: RUNTIME.nextId++,
     label: options?.label,
@@ -86,7 +61,7 @@ export function createEffectNode<T>(
     dirty: true,
 
     scheduler,
-    action,
+    action: fxCallback,
     sourceAtom,
     onError: options?.onError,
     onDestroy: options?.onDestroy,
@@ -97,30 +72,7 @@ export function createEffectNode<T>(
   return {
     destroy: () => destroyEffect(node),
   };
-}
-
-/**
- * @internal
- *
- * Destroys the effect
- */
-export function destroyEffect<T>(node: EffectNode<T>): void {
-  if (node.isDestroyed) {
-    return;
-  }
-
-  node.isDestroyed = true;
-  node.scheduler = undefined;
-  node.sourceAtom = undefined;
-  node.action = undefined;
-
-  if (node.ref) {
-    node.ref.node = undefined;
-    node.ref = undefined;
-  }
-
-  node.onDestroy?.();
-}
+};
 
 /**
  * @internal

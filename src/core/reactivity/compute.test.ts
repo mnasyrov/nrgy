@@ -1,4 +1,5 @@
 import { collectAtomChanges } from '../../test/collectAtomChanges';
+import { flushMicrotasks } from '../../test/flushMicrotasks';
 import { createScope } from '../scope/createScope';
 import { runEffects } from '../utils/runEffects';
 
@@ -441,39 +442,107 @@ describe('compute()', () => {
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
+      { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
     ]);
   });
 
-  it('should handle recursion during store updates: Intermediate compute', async () => {
-    const store = atom({ a: 0, result: { value: 0 } });
+  it('should do not lost sync effect of an intermediate computed', async () => {
+    const source = atom({ a: 0 }, { label: 'source' });
 
-    const a = compute(() => store().a);
-    const nextResult = compute(() => ({ value: a() }), {
-      equal: (a, b) => a.value === b.value,
-    });
+    const a = compute(() => source().a, { label: 'a' });
+    const b = compute(() => a() + 10, { label: 'b' });
+
+    const sourceChanges: any[] = [];
+    syncEffect(source, (value) => sourceChanges.push(value));
+
+    const bChanges: any[] = [];
+    syncEffect(b, (value) => bChanges.push(value));
+
+    source.set({ a: 1 });
+
+    expect(sourceChanges).toEqual([{ a: 0 }, { a: 1 }]);
+    expect(bChanges).toEqual([10, 11]);
+  });
+
+  it('should do not lost async effect of an intermediate computed', async () => {
+    const source = atom({ a: 0 }, { label: 'source' });
+
+    const a = compute(() => source().a, { label: 'a' });
+    const b = compute(() => a() + 10, { label: 'b' });
+
+    const sourceChanges: any[] = [];
+    effect(source, (value) => sourceChanges.push(value));
+
+    const bChanges: any[] = [];
+    effect(b, (value) => bChanges.push(value));
+
+    await flushMicrotasks();
+    source.set({ a: 1 });
+    await flushMicrotasks();
+
+    expect(sourceChanges).toEqual([{ a: 0 }, { a: 1 }]);
+    expect(bChanges).toEqual([10, 11]);
+  });
+
+  it('should handle recursion during store updates: Intermediate compute', async () => {
+    const source = atom({ a: 0, b: 0 }, { label: 'source' });
+
+    const a = compute(() => source().a, { label: 'a' });
+    const b = compute(() => a() + 10, { label: 'b' });
 
     const subscription = effect(
-      nextResult,
-      (result) => {
-        store.update((state) => ({ ...state, result }));
+      b,
+      (value) => {
+        source.update((state) => ({ ...state, b: value }));
       },
-      { waitChanges: true },
+      { label: 'Update the source when "b" is changed' },
     );
 
-    const changes = await collectAtomChanges(store, async () => {
-      runEffects();
+    const sourceChanges: any[] = [];
+    syncEffect(source, (value) => sourceChanges.push(value));
 
-      store.update((state) => ({ ...state, a: 1 }));
-
-      runEffects();
-    });
+    await flushMicrotasks();
+    source.update((state) => ({ ...state, a: 1 }));
+    await flushMicrotasks();
 
     subscription?.destroy();
 
-    expect(changes).toEqual([
-      { a: 0, result: { value: 0 } },
-      { a: 1, result: { value: 1 } },
+    expect(sourceChanges).toEqual([
+      { a: 0, b: 0 },
+      { a: 0, b: 10 },
+      { a: 1, b: 10 },
+      { a: 1, b: 11 },
+    ]);
+  });
+
+  it('should handle recursion during store updates: Intermediate compute #2, waitChanges', async () => {
+    const source = atom({ a: 0, b: 0 }, { label: 'source' });
+
+    const a = compute(() => source().a, { label: 'a' });
+    const b = compute(() => a() + 10, { label: 'b' });
+
+    const subscription = effect(
+      b,
+      (value) => {
+        source.update((state) => ({ ...state, b: value }));
+      },
+      { label: 'Update the source when "b" is changed', waitChanges: true },
+    );
+
+    const sourceChanges: any[] = [];
+    syncEffect(source, (value) => sourceChanges.push(value));
+
+    await flushMicrotasks();
+    source.update((state) => ({ ...state, a: 1 }));
+    await flushMicrotasks();
+
+    subscription?.destroy();
+
+    expect(sourceChanges).toEqual([
+      { a: 0, b: 0 },
+      { a: 1, b: 0 },
+      { a: 1, b: 11 },
     ]);
   });
 
@@ -525,6 +594,7 @@ describe('compute()', () => {
 
     expect(changes).toEqual([
       { a: 0, result: { value: 0 } },
+      { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
     ]);
   });

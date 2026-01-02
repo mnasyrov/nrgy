@@ -28,12 +28,19 @@ export type ObserverNode = {
 export type ObserverRef = { node: ObserverNode | undefined };
 
 /** @internal */
+export type ComputedNodeRef = { node: ComputedNode<any> | undefined };
+
+/** @internal */
+export type EffectNodeRef = { node: EffectNode<any> | undefined };
+
+/** @internal */
 export type BaseSourceNode = {
   id: number;
   label?: string;
   version: number;
 
-  observers: LinkedList<ObserverRef>;
+  computedRefs: LinkedList<ComputedNodeRef>;
+  effectRefs: LinkedList<EffectNodeRef>;
 };
 
 /** @internal */
@@ -57,7 +64,6 @@ export type ComputedNode<T> = BaseSourceNode &
     version: number;
 
     _ref?: ObserverRef;
-    observers: LinkedList<ObserverRef>;
     notifiedAt?: number;
 
     computation: Computation<T>;
@@ -105,4 +111,28 @@ export function isComputedNode(node: ObserverNode): node is ComputedNode<any> {
 /** @internal */
 export function isEffectNode(node: ObserverNode): node is EffectNode<any> {
   return (node as EffectNode<any>).sourceAtom !== undefined;
+}
+
+/**
+ * @internal
+ *
+ * Destroys the effect
+ */
+export function destroyEffect<T>(node: EffectNode<T>): void {
+  if (node.isDestroyed) {
+    return;
+  }
+
+  node.isDestroyed = true;
+  node.scheduler = undefined;
+  node.sourceAtom = undefined;
+  node.action = undefined;
+
+  if (node.ref) {
+    node.ref.node = undefined;
+    node.ref = undefined;
+  }
+
+  node.onDestroy?.();
+  node.onDestroy = undefined;
 }
