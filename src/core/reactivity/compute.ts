@@ -51,7 +51,6 @@ export const compute: ComputeFn = function <T>(
 
 /** @internal */
 export function destroyComputed<T>(node: ComputedNode<T>): void {
-  node.notifiedAt = undefined;
   node.status = COMPUTED_STATUS_STALE;
   node.value = undefined as any;
   node.valueState = COMPUTED_STATUS_STALE;
@@ -93,19 +92,17 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
 
 /** @internal */
 export function evaluateComputedNode(node: ComputedNode<any>): boolean {
-  // if (
-  //   node.status === COMPUTED_STATUS_UNSET
-  //   // || node.status === COMPUTED_STATUS_ERROR
-  // ) {
-  //   return true;
-  // }
-  //
-  // const prevVersion = node.version;
-  // recomputeValue(node, true);
-  // return prevVersion !== node.version;
-  //
-  node.status = COMPUTED_STATUS_STALE;
-  return true;
+  // return true;
+
+  if (node.status === COMPUTED_STATUS_STABLE) {
+    return true;
+  }
+
+  if (node.valueState === COMPUTED_VALUE_UNSET) {
+    return true;
+  }
+
+  return recomputeValue(node, true);
 }
 
 /** @internal */

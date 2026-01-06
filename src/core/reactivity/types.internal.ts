@@ -71,7 +71,6 @@ export type ComputedNode<T> = BaseSourceNode &
     version: number;
 
     _ref?: ObserverRef;
-    notifiedAt?: number;
 
     computation: Computation<T>;
     equal: ValueEqualityFn<T>;

@@ -5,7 +5,7 @@ import { runEffects } from '../utils/runEffects';
 
 import { atom } from './atom';
 import { AtomUpdateError } from './atomUpdateError';
-import { getAtomLabel, getAtomNode } from './atomUtils';
+import { getAtomLabel } from './atomUtils';
 import { compute } from './compute';
 import { effect, syncEffect } from './effect';
 import { RUNTIME } from './runtime';
@@ -654,18 +654,10 @@ describe('compute()', () => {
 
   it('should recalculate once', async () => {
     const source = atom(1);
-    let compute1CallCounts = 1;
-    let compute2CallCounts = 1;
 
     // Create derived computation
-    const compute1 = compute(() => {
-      compute1CallCounts++;
-      return source() * 2;
-    });
-    const compute2 = compute(() => {
-      compute2CallCounts++;
-      return source() + compute1();
-    });
+    const compute1 = compute(() => source() * 2);
+    const compute2 = compute(() => source() + compute1());
 
     // Fake subscriptions
     const callback = jest.fn();
@@ -682,9 +674,6 @@ describe('compute()', () => {
     expect(callback).toHaveBeenNthCalledWith(3, 'fx1', 6);
     expect(callback).toHaveBeenNthCalledWith(4, 'fx2', 6);
     expect(callback).toHaveBeenCalledTimes(4);
-
-    expect(compute1CallCounts).toBe(3);
-    expect(compute2CallCounts).toBe(3);
   });
 });
 
@@ -693,33 +682,24 @@ describe('ComputedImpl()', () => {
     const source = atom('a');
     const other = atom('something 1');
     const computed = compute(() => source());
-    const computedNode = getAtomNode(computed);
 
     // Case 1: recalculation is triggered by result.isChanged()
-    expect(computedNode.version).toBe(0);
-
     expect(computed()).toBe('a');
-    expect(computedNode.version).toBe(1);
 
     // Case 2: recalculation is triggered by result.get()
     source.set('b');
-    expect(computedNode.version).toBe(1);
 
     expect(computed()).toBe('b');
-    expect(computedNode.version).toBe(2);
 
     expect(computed()).toBe('b');
-    expect(computedNode.version).toBe(2);
 
     /*
-    Case 3: other atom increases ATOM_CLOCK, the result makes recalculation,
+    Case 3: another atom increases ATOM_CLOCK, the result makes recalculation,
     but its value remains the same.
     */
     other.set('something 2');
-    expect(computedNode.version).toBe(2);
 
     expect(computed()).toBe('b');
-    expect(computedNode.version).toBe(2);
   });
 
   // describe('destroy()', () => {

@@ -1,7 +1,6 @@
 import { defaultEquals } from '../common/defaultEquals';
 import {
   appendListToEnd,
-  appendListToHead,
   forEachInList,
   LinkedList,
   popListHead,
@@ -9,7 +8,7 @@ import {
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import { AtomUpdateError } from './atomUpdateError';
-import { destroyComputed } from './compute';
+import { destroyComputed, evaluateComputedNode } from './compute';
 import { notifyEffect } from './effect';
 import { RUNTIME } from './runtime';
 import { ATOM_SYMBOL } from './symbols';
@@ -109,18 +108,26 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
 
   if (node.state === ATOM_STATE_ALIVE) {
     // RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
-    notifyAtomDepsAboutChange(node);
+    propagateAtomChanges(node);
   }
 }
 
+function markComputedNodesAsStale(computedRefs: LinkedList<ComputedNodeRef>) {
+  forEachInList(computedRefs, ({ node }) => {
+    if (node) node.status = COMPUTED_STATUS_STALE;
+  });
+}
+
 // Notify all observers of this producer that its value is changed
-function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
+function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   if (sourceNode.state !== ATOM_STATE_ALIVE || hasNoObservers(sourceNode)) {
     return;
   }
 
   const computedRefsQueue: LinkedList<ComputedNodeRef> = {};
   const effectRefQueue: LinkedList<EffectNodeRef> = {};
+
+  markComputedNodesAsStale(sourceNode.computedRefs);
   appendListToEnd(computedRefsQueue, sourceNode.computedRefs);
   appendListToEnd(effectRefQueue, sourceNode.effectRefs);
   sourceNode.computedRefs = {};
@@ -131,11 +138,10 @@ function notifyAtomDepsAboutChange(sourceNode: AtomNode<any>): void {
     const computedNode = computedRef?.node;
     if (!computedNode) continue;
 
-    if (computedNode.notifiedAt !== RUNTIME.clock) {
-      appendListToHead(computedRefsQueue, computedNode.computedRefs);
+    if (evaluateComputedNode(computedNode)) {
+      markComputedNodesAsStale(computedNode.computedRefs);
+      appendListToEnd(computedRefsQueue, computedNode.computedRefs);
       appendListToEnd(effectRefQueue, computedNode.effectRefs);
-      computedNode.notifiedAt = RUNTIME.clock;
-      computedNode.status = COMPUTED_STATUS_STALE;
       computedNode.computedRefs = {};
       computedNode.effectRefs = {};
     }
