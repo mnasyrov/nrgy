@@ -52,11 +52,18 @@ export type AtomNode<T> = BaseSourceNode & {
 };
 
 /** @internal */
-export const COMPUTED_STATUS_OK = 0;
-export const COMPUTED_STATUS_UNSET = 1;
+export const COMPUTED_STATUS_STABLE = 0;
+/** @internal */
+export const COMPUTED_STATUS_STALE = 1;
+/** @internal */
 export const COMPUTED_STATUS_COMPUTING = 2;
-export const COMPUTED_STATUS_ERROR = 3;
-export const COMPUTED_STATUS_STALE = 4;
+
+/** @internal */
+export const COMPUTED_VALUE_UNSET = 0;
+/** @internal */
+export const COMPUTED_VALUE_SET = 1;
+/** @internal */
+export const COMPUTED_VALUE_ERROR = 2;
 
 /** @internal */
 export type ComputedNode<T> = BaseSourceNode &
@@ -69,24 +76,16 @@ export type ComputedNode<T> = BaseSourceNode &
     computation: Computation<T>;
     equal: ValueEqualityFn<T>;
 
-    /**
-     * Current value of the computation.
-     *
-     * This can also be one of the special values `UNSET`, `COMPUTING`, or `ERRORED`.
-     */
-    value: T;
-    status:
-      | typeof COMPUTED_STATUS_OK
-      | typeof COMPUTED_STATUS_UNSET
-      | typeof COMPUTED_STATUS_COMPUTING
-      | typeof COMPUTED_STATUS_ERROR
-      | typeof COMPUTED_STATUS_STALE;
+    value: any;
+    valueState:
+      | typeof COMPUTED_VALUE_UNSET
+      | typeof COMPUTED_VALUE_SET
+      | typeof COMPUTED_VALUE_ERROR;
 
-    /**
-     * If `value` is `ERRORED`, the error caught from the last computation attempt which will
-     * be re-thrown.
-     */
-    error?: unknown;
+    status:
+      | typeof COMPUTED_STATUS_STABLE
+      | typeof COMPUTED_STATUS_COMPUTING
+      | typeof COMPUTED_STATUS_STALE;
   };
 
 /** @internal */

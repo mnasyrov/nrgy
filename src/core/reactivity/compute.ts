@@ -7,14 +7,15 @@ import { ATOM_SYMBOL } from './symbols';
 import { Atom, Computation, ComputeFn, ComputeOptions } from './types';
 import {
   COMPUTED_STATUS_COMPUTING,
-  COMPUTED_STATUS_ERROR,
-  COMPUTED_STATUS_OK,
+  COMPUTED_STATUS_STABLE,
   COMPUTED_STATUS_STALE,
-  COMPUTED_STATUS_UNSET,
+  COMPUTED_VALUE_ERROR,
+  COMPUTED_VALUE_SET,
+  COMPUTED_VALUE_UNSET,
   ComputedNode,
   destroyEffect,
 } from './types.internal';
-import { appendObserverToNode, hasNoObservers } from './utils';
+import { appendObserverToNode } from './utils';
 
 /**
  * Create a computed `Atom` which derives a reactive value from an expression.
@@ -34,8 +35,9 @@ export const compute: ComputeFn = function <T>(
     equal: options?.equal ?? defaultEquals,
 
     version: 0,
+    status: COMPUTED_STATUS_STALE,
     value: undefined as any,
-    status: COMPUTED_STATUS_UNSET,
+    valueState: COMPUTED_VALUE_UNSET,
 
     computedRefs: {},
     effectRefs: {},
@@ -49,9 +51,10 @@ export const compute: ComputeFn = function <T>(
 
 /** @internal */
 export function destroyComputed<T>(node: ComputedNode<T>): void {
-  node.value = undefined as any;
-  node.status = COMPUTED_STATUS_UNSET;
   node.notifiedAt = undefined;
+  node.status = COMPUTED_STATUS_STALE;
+  node.value = undefined as any;
+  node.valueState = COMPUTED_STATUS_STALE;
 
   forEachInList(node.effectRefs, ({ node }) => node && destroyEffect(node));
   forEachInList(node.computedRefs, ({ node }) => node && destroyComputed(node));
@@ -70,24 +73,39 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
     throw new Error('Detected cycle in computations');
   }
 
-  const isStale =
-    node.status === COMPUTED_STATUS_STALE ||
-    node.status === COMPUTED_STATUS_UNSET;
-  const mustRenewSource = RUNTIME.activeObserver && hasNoObservers(node);
-
   if (RUNTIME.activeObserver) {
     appendObserverToNode(node, RUNTIME.activeObserver);
   }
 
-  if (isStale || mustRenewSource) {
+  if (
+    node.status === COMPUTED_STATUS_STALE ||
+    node.valueState === COMPUTED_VALUE_ERROR
+  ) {
     recomputeValue(node, true);
   }
 
-  if (node.status === COMPUTED_STATUS_ERROR) {
-    throw node.error;
+  if (node.valueState === COMPUTED_VALUE_ERROR) {
+    throw node.value;
   }
 
   return node.value;
+}
+
+/** @internal */
+export function evaluateComputedNode(node: ComputedNode<any>): boolean {
+  // if (
+  //   node.status === COMPUTED_STATUS_UNSET
+  //   // || node.status === COMPUTED_STATUS_ERROR
+  // ) {
+  //   return true;
+  // }
+  //
+  // const prevVersion = node.version;
+  // recomputeValue(node, true);
+  // return prevVersion !== node.version;
+  //
+  node.status = COMPUTED_STATUS_STALE;
+  return true;
 }
 
 /** @internal */
@@ -98,27 +116,28 @@ function recomputeValue<T>(node: ComputedNode<T>, tracking: boolean): boolean {
     RUNTIME.activeObserver = node;
   }
 
-  const noOldValue =
-    node.status === COMPUTED_STATUS_UNSET ||
-    node.status === COMPUTED_STATUS_ERROR;
   node.status = COMPUTED_STATUS_COMPUTING;
 
   try {
     const newValue: T = node.computation();
 
-    node.status = COMPUTED_STATUS_OK;
+    node.status = COMPUTED_STATUS_STABLE;
 
-    if (noOldValue || !node.equal(node.value, newValue)) {
+    if (
+      node.valueState !== COMPUTED_VALUE_SET ||
+      !node.equal(node.value, newValue)
+    ) {
       node.value = newValue;
+      node.valueState = COMPUTED_VALUE_SET;
       node.version = nextSafeInteger(node.version);
-      node.error = undefined;
       return true;
     }
   } catch (err) {
-    node.value = undefined as any;
-    node.status = COMPUTED_STATUS_ERROR;
+    node.status = COMPUTED_STATUS_STABLE;
+    node.value = err;
+    node.valueState = COMPUTED_VALUE_ERROR;
     node.version = nextSafeInteger(node.version);
-    node.error = err;
+    return true;
   } finally {
     if (tracking) {
       RUNTIME.activeObserver = prevObserver;
