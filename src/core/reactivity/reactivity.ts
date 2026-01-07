@@ -441,8 +441,8 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   }
 }
 
-function markComputedNodesAsStale(computedRefs: LinkedList<ComputedNodeRef>) {
-  forEachInList(computedRefs, ({ node }) => {
+function markComputedNodesAsStale(list: LinkedList<ComputedNodeRef>) {
+  forEachInList(list, ({ node }) => {
     if (node) node.status = COMPUTED_STATUS_STALE;
   });
 }
