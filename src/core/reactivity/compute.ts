@@ -80,7 +80,7 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
     node.status === COMPUTED_STATUS_STALE ||
     node.valueState === COMPUTED_VALUE_ERROR
   ) {
-    recomputeValue(node, true);
+    recomputeValue(node);
   }
 
   if (node.valueState === COMPUTED_VALUE_ERROR) {
@@ -94,6 +94,10 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
 export function evaluateComputedNode(node: ComputedNode<any>): boolean {
   // return true;
 
+  if (!node.computedRefs.head) {
+    return true;
+  }
+
   if (node.status === COMPUTED_STATUS_STABLE) {
     return true;
   }
@@ -102,16 +106,13 @@ export function evaluateComputedNode(node: ComputedNode<any>): boolean {
     return true;
   }
 
-  return recomputeValue(node, true);
+  return recomputeValue(node);
 }
 
 /** @internal */
-function recomputeValue<T>(node: ComputedNode<T>, tracking: boolean): boolean {
-  let prevObserver;
-  if (tracking) {
-    prevObserver = RUNTIME.activeObserver;
-    RUNTIME.activeObserver = node;
-  }
+function recomputeValue<T>(node: ComputedNode<T>): boolean {
+  const prevObserver = RUNTIME.activeObserver;
+  RUNTIME.activeObserver = node;
 
   node.status = COMPUTED_STATUS_COMPUTING;
 
@@ -136,9 +137,7 @@ function recomputeValue<T>(node: ComputedNode<T>, tracking: boolean): boolean {
     node.version = nextSafeInteger(node.version);
     return true;
   } finally {
-    if (tracking) {
-      RUNTIME.activeObserver = prevObserver;
-    }
+    RUNTIME.activeObserver = prevObserver;
   }
 
   return false;
