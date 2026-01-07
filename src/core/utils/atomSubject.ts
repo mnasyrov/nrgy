@@ -1,5 +1,4 @@
-import { atom } from '../reactivity/atom';
-import { compute } from '../reactivity/compute';
+import { atom, compute } from '../reactivity/reactivity';
 import { AtomOptions, DestroyableAtom } from '../reactivity/types';
 
 const enum StateType {

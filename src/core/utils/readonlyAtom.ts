@@ -1,5 +1,4 @@
-import { getAtomLabel } from '../reactivity/atomUtils';
-import { compute } from '../reactivity/compute';
+import { compute, getAtomLabel } from '../reactivity/reactivity';
 import { Atom } from '../reactivity/types';
 
 /**

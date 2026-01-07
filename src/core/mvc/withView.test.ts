@@ -1,4 +1,4 @@
-import { compute } from '../reactivity/compute';
+import { compute } from '../reactivity/reactivity';
 
 import { ControllerConstructorError, declareController } from './controller';
 import { createViewProxy } from './viewProxy';

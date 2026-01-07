@@ -1,4 +1,4 @@
-import { RUNTIME } from '../reactivity/runtime';
+import { RUNTIME } from '../reactivity/reactivity';
 
 /**
  * Runs all effects that are scheduled for the next microtask

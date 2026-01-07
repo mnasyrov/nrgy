@@ -1,5 +1,5 @@
 import { objectEquals } from '../common/objectEquals';
-import { atom } from '../reactivity/atom';
+import { atom } from '../reactivity/reactivity';
 
 import { mergeAtoms } from './mergeAtoms';
 

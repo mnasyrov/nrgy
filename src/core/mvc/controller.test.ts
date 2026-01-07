@@ -1,7 +1,7 @@
 import { createContainer, token } from 'ditox';
 
 import { provideDependencyContainer, withInjections } from '../../ditox';
-import { compute } from '../reactivity/compute';
+import { compute } from '../reactivity/reactivity';
 import { readonlyAtom } from '../utils/readonlyAtom';
 import { runEffects } from '../utils/runEffects';
 

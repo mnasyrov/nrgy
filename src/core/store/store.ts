@@ -1,4 +1,4 @@
-import { atom } from '../reactivity/atom';
+import { atom } from '../reactivity/reactivity';
 import { AtomOptions, SourceAtom } from '../reactivity/types';
 
 /**

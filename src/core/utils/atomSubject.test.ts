@@ -1,4 +1,4 @@
-import { syncEffect } from '../reactivity/effect';
+import { syncEffect } from '../reactivity/reactivity';
 
 import { createAtomSubject } from './atomSubject';
 

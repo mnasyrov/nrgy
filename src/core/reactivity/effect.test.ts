@@ -1,10 +1,13 @@
 import { runEffects } from '../utils/runEffects';
 
-import { atom } from './atom';
-import { AtomUpdateError } from './atomUpdateError';
-import { compute } from './compute';
-import { effect, syncEffect } from './effect';
-import { RUNTIME } from './runtime';
+import {
+  atom,
+  AtomUpdateError,
+  compute,
+  effect,
+  RUNTIME,
+  syncEffect,
+} from './reactivity';
 
 describe('effect()', () => {
   it('should subscribe to an atom', async () => {

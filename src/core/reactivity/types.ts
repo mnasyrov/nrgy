@@ -1,16 +1,10 @@
-// istanbul ignore next
-import { ATOM_SYMBOL } from './symbols';
-
 /**
- * A reactive value which notifies observers for any changes.
+ * A reactive value which notifies observers of any changes.
  *
  * Atoms are functions that return their current value. To access the current value of an atom,
  * call it.
  */
-export type Atom<T> = (() => T) & {
-  /** @internal */
-  readonly [ATOM_SYMBOL]: unknown;
-};
+export type Atom<T> = () => T;
 
 /**
  * An Atom that can be destroyed

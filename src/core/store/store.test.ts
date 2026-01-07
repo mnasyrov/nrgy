@@ -1,8 +1,6 @@
 import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { objectEquals } from '../common/objectEquals';
-import { atom } from '../reactivity/atom';
-import { compute } from '../reactivity/compute';
-import { effect } from '../reactivity/effect';
+import { atom, compute, effect } from '../reactivity/reactivity';
 import { runEffects } from '../utils/runEffects';
 
 import {

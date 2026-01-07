@@ -1,5 +1,5 @@
 import { nrgyReportError } from '../internals/reportError';
-import { RUNTIME } from '../reactivity/runtime';
+import { RUNTIME } from '../reactivity/reactivity';
 import { createScope } from '../scope/createScope';
 import { Scope } from '../scope/types';
 

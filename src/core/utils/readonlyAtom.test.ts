@@ -1,6 +1,9 @@
-import { atom } from '../reactivity/atom';
-import { getAtomLabel, isAtom } from '../reactivity/atomUtils';
-import { syncEffect } from '../reactivity/effect';
+import {
+  atom,
+  getAtomLabel,
+  isAtom,
+  syncEffect,
+} from '../reactivity/reactivity';
 
 import { readonlyAtom } from './readonlyAtom';
 

@@ -1,6 +1,4 @@
-import { atom } from './atom';
-import { compute } from './compute';
-import { syncEffect } from './effect';
+import { atom, compute, syncEffect } from './reactivity';
 
 describe('Reactivity tests', () => {
   test('Computed expression: y = x+1', () => {

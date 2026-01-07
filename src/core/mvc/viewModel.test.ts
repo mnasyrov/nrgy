@@ -1,4 +1,4 @@
-import { compute } from '../reactivity/compute';
+import { compute } from '../reactivity/reactivity';
 import { Atom } from '../reactivity/types';
 
 import { declareController } from './controller';

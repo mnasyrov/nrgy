@@ -1,8 +1,6 @@
 import { runEffects } from '../utils/runEffects';
 
-import { atom } from './atom';
-import { compute } from './compute';
-import { effect, syncEffect } from './effect';
+import { atom, compute, effect, syncEffect } from './reactivity';
 
 // describe('EffectNode', () => {
 //   describe('destroy()', () => {

@@ -1,4 +1,4 @@
-import { Runtime, RUNTIME } from './runtime';
+import { Runtime, RUNTIME } from './reactivity';
 
 describe('ENERGY_RUNTIME', () => {
   it('should be defined', () => {

@@ -1,4 +1,4 @@
-import { AtomUpdateError } from './atomUpdateError';
+import { AtomUpdateError } from './reactivity';
 
 describe('AtomUpdateError', () => {
   it("should has correct message for empty atom's name", () => {

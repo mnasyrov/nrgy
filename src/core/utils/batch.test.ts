@@ -1,7 +1,10 @@
-import { atom } from '../reactivity/atom';
-import { compute } from '../reactivity/compute';
-import { effect, syncEffect } from '../reactivity/effect';
-import { RUNTIME } from '../reactivity/runtime';
+import {
+  atom,
+  compute,
+  effect,
+  RUNTIME,
+  syncEffect,
+} from '../reactivity/reactivity';
 
 import { batch } from './batch';
 import { runEffects } from './runEffects';

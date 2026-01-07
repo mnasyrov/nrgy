@@ -1,6 +1,4 @@
-import { atom } from './atom';
-import { getAtomLabel, getAtomNode, isAtom } from './atomUtils';
-import { compute } from './compute';
+import { atom, compute, getAtomLabel, getAtomNode, isAtom } from './reactivity';
 
 describe('isAtom()', () => {
   it('should return "true" in case a value is Atom', () => {

@@ -1,4 +1,4 @@
-import { atom } from '../reactivity/atom';
+import { atom } from '../reactivity/reactivity';
 import { runEffects } from '../utils/runEffects';
 
 import { createScope } from './createScope';

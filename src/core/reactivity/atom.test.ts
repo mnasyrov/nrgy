@@ -1,8 +1,7 @@
 import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { runEffects } from '../utils/runEffects';
 
-import { atom } from './atom';
-import { effect, syncEffect } from './effect';
+import { atom, effect, syncEffect } from './reactivity';
 import { SourceAtom } from './types';
 
 describe('atom()', () => {

@@ -1,4 +1,4 @@
-import { RUNTIME } from '../reactivity/runtime';
+import { RUNTIME } from '../reactivity/reactivity';
 
 import { runEffects } from './runEffects';
 

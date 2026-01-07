@@ -23,11 +23,6 @@ export type {
   SourceAtom,
 } from './reactivity/types';
 
-export { atom } from './reactivity/atom';
-export { AtomUpdateError } from './reactivity/atomUpdateError';
-export { compute } from './reactivity/compute';
-export { effect, syncEffect } from './reactivity/effect';
-
 //
 // Scope
 //
@@ -72,7 +67,6 @@ export type { AtomSubject } from './utils/atomSubject';
 export { createAtomSubject } from './utils/atomSubject';
 
 export { batch } from './utils/batch';
-export { combineAtoms } from './utils/combineAtoms';
 export { mapAtom } from './utils/mapAtom';
 export { mergeAtoms } from './utils/mergeAtoms';
 export { runEffects } from './utils/runEffects';
@@ -83,3 +77,9 @@ export { readonlyAtom } from './utils/readonlyAtom';
 //
 
 export * from './mvc';
+export { atom } from './reactivity/reactivity';
+export { compute } from './reactivity/reactivity';
+export { effect } from './reactivity/reactivity';
+export { syncEffect } from './reactivity/reactivity';
+export { AtomUpdateError } from './reactivity/reactivity';
+export { combineAtoms } from './reactivity/reactivity';

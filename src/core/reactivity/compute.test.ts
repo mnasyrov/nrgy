@@ -3,12 +3,15 @@ import { flushMicrotasks } from '../../test/flushMicrotasks';
 import { createScope } from '../scope/createScope';
 import { runEffects } from '../utils/runEffects';
 
-import { atom } from './atom';
-import { AtomUpdateError } from './atomUpdateError';
-import { getAtomLabel } from './atomUtils';
-import { compute } from './compute';
-import { effect, syncEffect } from './effect';
-import { RUNTIME } from './runtime';
+import {
+  atom,
+  AtomUpdateError,
+  compute,
+  effect,
+  getAtomLabel,
+  RUNTIME,
+  syncEffect,
+} from './reactivity';
 import { Atom } from './types';
 
 describe('compute()', () => {

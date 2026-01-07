@@ -1,6 +1,4 @@
-import { atom } from '../reactivity/atom';
-
-import { combineAtoms } from './combineAtoms';
+import { atom, combineAtoms } from './reactivity';
 
 describe('combineAtoms()', () => {
   it('should return a list of source values', () => {

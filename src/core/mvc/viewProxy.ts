@@ -1,5 +1,5 @@
 import { Emitter } from '../internals/emitter';
-import { atom } from '../reactivity/atom';
+import { atom } from '../reactivity/reactivity';
 import { Atom, SourceAtom } from '../reactivity/types';
 import { createScope } from '../scope/createScope';
 import { readonlyAtom } from '../utils/readonlyAtom';

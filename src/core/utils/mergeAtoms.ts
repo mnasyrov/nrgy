@@ -1,4 +1,4 @@
-import { compute } from '../reactivity/compute';
+import { compute } from '../reactivity/reactivity';
 import { Atom, ComputeOptions } from '../reactivity/types';
 
 /**
