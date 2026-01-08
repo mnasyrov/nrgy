@@ -6,20 +6,7 @@ describe('ENERGY_RUNTIME', () => {
   });
 });
 
-describe('EnergyRuntime', () => {
-  describe('updateAtomClock()', () => {
-    it('should update the clock of the next atom', () => {
-      const runtime = new Runtime();
-      expect(runtime.clock).toBe(0);
-
-      runtime.updateAtomClock();
-      expect(runtime.clock).toBe(1);
-
-      runtime.updateAtomClock();
-      expect(runtime.clock).toBe(2);
-    });
-  });
-
+describe('Runtime', () => {
   describe('runAsUntracked()', () => {
     it('should run an action as not tracked', () => {
       const runtime = new Runtime();

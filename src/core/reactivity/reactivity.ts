@@ -155,19 +155,6 @@ export class Runtime {
   batchLock: number = 0;
 
   /**
-   * @readonly
-   * The current global clock of changed atoms.
-   */
-  clock = 0;
-
-  /**
-   * Updates the global clock of changed atoms
-   */
-  updateAtomClock(): void {
-    this.clock = nextSafeInteger(this.clock);
-  }
-
-  /**
    * Run a function in a tracked context
    */
   runAsTracked<T>(node: ObserverNode, fn: () => T): T {
@@ -369,25 +356,19 @@ export const atom: AtomFn = function <T>(
 };
 
 /** @internal */
-function destroyAtom<T>(sourceNode: AtomNode<T>): void {
-  if (sourceNode.state !== ATOM_STATE_ALIVE) {
+function destroyAtom<T>(node: AtomNode<T>): void {
+  if (node.state !== ATOM_STATE_ALIVE) {
     return;
   }
-  sourceNode.state = ATOM_STATE_PREDESTROY;
+  node.state = ATOM_STATE_PREDESTROY;
 
-  forEachInList(
-    sourceNode.effectRefs,
-    ({ node }) => node && destroyEffect(node),
-  );
-  forEachInList(
-    sourceNode.computedRefs,
-    ({ node }) => node && destroyComputed(node),
-  );
-  sourceNode.effectRefs = {};
-  sourceNode.computedRefs = {};
+  forEachInList(node.effectRefs, ({ node }) => node && destroyEffect(node));
+  forEachInList(node.computedRefs, ({ node }) => node && destroyComputed(node));
+  node.effectRefs = {};
+  node.computedRefs = {};
 
-  sourceNode.onDestroy?.();
-  sourceNode.state = ATOM_STATE_DESTROYED;
+  node.onDestroy?.();
+  node.state = ATOM_STATE_DESTROYED;
 }
 
 function getAtomValue<T>(node: AtomNode<T>): T {
@@ -433,30 +414,19 @@ function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
 
 function commitAtomValue<T>(node: AtomNode<T>): void {
   node.version = nextSafeInteger(node.version);
-  RUNTIME.updateAtomClock();
 
-  if (node.state === ATOM_STATE_ALIVE) {
-    // RUNTIME.syncScheduler.schedule(() => notifyAtomDepsAboutChange(node));
-    propagateAtomChanges(node);
+  if (node.state !== ATOM_STATE_ALIVE || hasNoObservers(node)) {
+    return;
   }
-}
 
-function markComputedNodesAsStale(list: LinkedList<ComputedNodeRef>) {
-  forEachInList(list, ({ node }) => {
-    if (node) node.status = COMPUTED_STATUS_STALE;
-  });
+  propagateAtomChanges(node);
 }
 
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
-  if (sourceNode.state !== ATOM_STATE_ALIVE || hasNoObservers(sourceNode)) {
-    return;
-  }
-
   const computedRefsQueue: LinkedList<ComputedNodeRef> = {};
   const effectRefQueue: LinkedList<EffectNodeRef> = {};
 
-  markComputedNodesAsStale(sourceNode.computedRefs);
   appendListToEnd(computedRefsQueue, sourceNode.computedRefs);
   appendListToEnd(effectRefQueue, sourceNode.effectRefs);
   sourceNode.computedRefs = {};
@@ -464,16 +434,16 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
 
   let computedRef: ComputedNodeRef | undefined;
   while ((computedRef = popListHead(computedRefsQueue))) {
-    const computedNode = computedRef?.node;
-    if (!computedNode) continue;
+    const node = computedRef?.node;
+    if (!node) continue;
 
-    if (evaluateComputedNode(computedNode)) {
-      markComputedNodesAsStale(computedNode.computedRefs);
-      appendListToEnd(computedRefsQueue, computedNode.computedRefs);
-      appendListToEnd(effectRefQueue, computedNode.effectRefs);
-      computedNode.computedRefs = {};
-      computedNode.effectRefs = {};
-    }
+    if (node.status === COMPUTED_STATUS_STALE) continue;
+    node.status = COMPUTED_STATUS_STALE;
+
+    appendListToEnd(computedRefsQueue, node.computedRefs);
+    appendListToEnd(effectRefQueue, node.effectRefs);
+    node.computedRefs = {};
+    node.effectRefs = {};
   }
 
   let effectNodeRef: EffectNodeRef | undefined;
@@ -558,25 +528,6 @@ function getComputedValue<T>(node: ComputedNode<T>): T {
   }
 
   return node.value;
-}
-
-/** @internal */
-export function evaluateComputedNode(node: ComputedNode<any>): boolean {
-  // return true;
-
-  if (!node.computedRefs.head) {
-    return true;
-  }
-
-  if (node.status === COMPUTED_STATUS_STABLE) {
-    return true;
-  }
-
-  if (node.valueState === COMPUTED_VALUE_UNSET) {
-    return true;
-  }
-
-  return recomputeValue(node);
 }
 
 /** @internal */
