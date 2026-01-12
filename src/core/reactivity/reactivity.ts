@@ -1,5 +1,6 @@
 import { defaultEquals } from '../common/defaultEquals';
 import {
+  appendListToEnd,
   appendToList,
   forEachInList,
   LinkedList,
@@ -60,7 +61,6 @@ export type ObserverNode = {
 /** @internal */
 export type ObserverRef = {
   node: ObserverNode | undefined;
-  propagationEpoch?: number;
 };
 
 /** @internal */
@@ -76,9 +76,7 @@ export type BaseSourceNode = {
   id: number;
   label?: string;
   version: number;
-
-  computedRefs: LinkedList<ComputedNodeRef>;
-  effectRefs: LinkedList<EffectNodeRef>;
+  observerRefs: LinkedList<ComputedNodeRef>;
 };
 
 /** @internal */
@@ -155,14 +153,6 @@ export class Runtime {
 
   /** @readonly */
   batchLock: number = 0;
-
-  /** @readonly */
-  propagationEpoch = 0;
-
-  nextPropagationEpoch(): number {
-    this.propagationEpoch = nextSafeInteger(this.propagationEpoch);
-    return this.propagationEpoch;
-  }
 
   /**
    * Run a function in a tracked context
@@ -269,19 +259,11 @@ function destroyObserverRef(node: ObserverNode): void {
 }
 
 /** @internal */
-export function hasNoObservers(node: BaseSourceNode): boolean {
-  return !node.computedRefs.head && !node.effectRefs.head;
-}
-
-/** @internal */
 export function appendObserverToNode(
   node: BaseSourceNode,
   observer: ObserverNode,
 ): void {
-  const observerList = isComputedNode(observer)
-    ? node.computedRefs
-    : node.effectRefs;
-  appendToList(observerList, getObserverRef(observer));
+  appendToList(node.observerRefs, getObserverRef(observer));
 }
 
 /**
@@ -358,8 +340,7 @@ export const atom: AtomFn = function <T>(
     value: initialValue,
     state: ATOM_STATE_ALIVE,
 
-    computedRefs: {},
-    effectRefs: {},
+    observerRefs: {},
   };
 
   const getter = () => getAtomValue(node);
@@ -380,10 +361,16 @@ function destroyAtom<T>(node: AtomNode<T>): void {
   }
   node.state = ATOM_STATE_PREDESTROY;
 
-  forEachInList(node.effectRefs, ({ node }) => node && destroyEffect(node));
-  forEachInList(node.computedRefs, ({ node }) => node && destroyComputed(node));
-  node.effectRefs = {};
-  node.computedRefs = {};
+  forEachInList(node.observerRefs, ({ node }) => {
+    if (!node) return;
+
+    if (isComputedNode(node)) {
+      destroyComputed(node);
+    } else {
+      destroyEffect(node);
+    }
+  });
+  node.observerRefs = {};
 
   node.onDestroy?.();
   node.state = ATOM_STATE_DESTROYED;
@@ -433,60 +420,39 @@ function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
 function commitAtomValue<T>(node: AtomNode<T>): void {
   node.version = nextSafeInteger(node.version);
 
-  if (node.state !== ATOM_STATE_ALIVE || hasNoObservers(node)) {
+  if (node.state !== ATOM_STATE_ALIVE || !node.observerRefs.head) {
     return;
   }
 
   propagateAtomChanges(node);
 }
 
-/** @internal */
-function enqueueNodeRefs(
-  queue: LinkedList<ObserverRef>,
-  source: LinkedList<ObserverRef>,
-  currentEpoch: number,
-): void {
-  let p = source.head;
-  while (p) {
-    const ref = p.value;
-    if (ref.node !== undefined && ref.propagationEpoch !== currentEpoch) {
-      ref.propagationEpoch = currentEpoch;
-      appendToList(queue, ref);
-    }
-    p = p.next;
-  }
-}
-
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
-  const currentEpoch = RUNTIME.nextPropagationEpoch();
+  const effectQueue: LinkedList<EffectNode<any>> = {};
 
-  const computedRefsQueue: LinkedList<ComputedNodeRef> = {};
-  const effectRefQueue: LinkedList<EffectNodeRef> = {};
+  const observerRefsQueue = sourceNode.observerRefs;
+  sourceNode.observerRefs = {};
 
-  enqueueNodeRefs(computedRefsQueue, sourceNode.computedRefs, currentEpoch);
-  enqueueNodeRefs(effectRefQueue, sourceNode.effectRefs, currentEpoch);
-  sourceNode.computedRefs = {};
-  sourceNode.effectRefs = {};
-
-  let computedRef: ComputedNodeRef | undefined;
-  while ((computedRef = popListHead(computedRefsQueue))) {
-    const node = computedRef?.node;
+  let observerRef: ObserverRef | undefined;
+  while ((observerRef = popListHead(observerRefsQueue))) {
+    const node = observerRef?.node;
     if (!node) continue;
 
-    if (node.status === COMPUTED_STATUS_STALE) continue;
-    node.status = COMPUTED_STATUS_STALE;
+    if (isComputedNode(node)) {
+      if (node.status === COMPUTED_STATUS_STALE) continue;
 
-    enqueueNodeRefs(computedRefsQueue, node.computedRefs, currentEpoch);
-    enqueueNodeRefs(effectRefQueue, node.effectRefs, currentEpoch);
-    node.computedRefs = {};
-    node.effectRefs = {};
+      appendListToEnd(observerRefsQueue, node.observerRefs);
+      node.status = COMPUTED_STATUS_STALE;
+      node.observerRefs = {};
+    } else {
+      appendToList(effectQueue, node);
+    }
   }
 
-  let effectNodeRef: EffectNodeRef | undefined;
-  while ((effectNodeRef = popListHead(effectRefQueue))) {
-    const effectNode = effectNodeRef?.node;
-    if (effectNode) notifyEffect(effectNode);
+  let effectNode: EffectNode<any> | undefined;
+  while ((effectNode = popListHead(effectQueue))) {
+    notifyEffect(effectNode);
   }
 }
 
@@ -516,8 +482,7 @@ export const compute: ComputeFn = function <T>(
     value: undefined as any,
     valueState: COMPUTED_VALUE_UNSET,
 
-    computedRefs: {},
-    effectRefs: {},
+    observerRefs: {},
   };
 
   const getter = () => getComputedValue(node);
@@ -532,10 +497,16 @@ export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = undefined as any;
   node.valueState = COMPUTED_STATUS_STALE;
 
-  forEachInList(node.effectRefs, ({ node }) => node && destroyEffect(node));
-  forEachInList(node.computedRefs, ({ node }) => node && destroyComputed(node));
-  node.effectRefs = {};
-  node.computedRefs = {};
+  forEachInList(node.observerRefs, ({ node }) => {
+    if (!node) return;
+
+    if (isComputedNode(node)) {
+      destroyComputed(node);
+    } else {
+      destroyEffect(node);
+    }
+  });
+  node.observerRefs = {};
 
   destroyObserverRef(node);
 }
