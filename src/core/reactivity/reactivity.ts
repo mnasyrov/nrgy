@@ -501,7 +501,7 @@ export const compute: ComputeFn = function <T>(
 export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.status = COMPUTED_STATUS_STALE;
   node.value = undefined as any;
-  node.valueState = COMPUTED_STATUS_STALE;
+  node.valueState = COMPUTED_VALUE_UNSET;
 
   destroyObserverRefs(node);
   destroySelfObserverRef(node);
