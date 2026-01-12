@@ -2,7 +2,6 @@ import { defaultEquals } from '../common/defaultEquals';
 import {
   appendListToEnd,
   appendToList,
-  forEachInList,
   LinkedList,
   popListHead,
 } from '../internals/list';
@@ -251,7 +250,7 @@ export function getObserverRef(node: ObserverNode): ObserverRef {
 }
 
 /** @internal */
-function destroyObserverRef(node: ObserverNode): void {
+function destroySelfObserverRef(node: ObserverNode): void {
   if (node.ref) {
     node.ref.node = undefined;
     node.ref = undefined;
@@ -354,14 +353,11 @@ export const atom: AtomFn = function <T>(
   return getter;
 };
 
-/** @internal */
-function destroyAtom<T>(node: AtomNode<T>): void {
-  if (node.state !== ATOM_STATE_ALIVE) {
-    return;
-  }
-  node.state = ATOM_STATE_PREDESTROY;
+function destroyObserverRefs(sourceNode: BaseSourceNode): void {
+  let p = sourceNode.observerRefs.head;
+  while (p) {
+    const node = p.value.node;
 
-  forEachInList(node.observerRefs, ({ node }) => {
     if (!node) return;
 
     if (isComputedNode(node)) {
@@ -369,9 +365,19 @@ function destroyAtom<T>(node: AtomNode<T>): void {
     } else {
       destroyEffect(node);
     }
-  });
-  node.observerRefs = {};
 
+    p = p.next;
+  }
+}
+
+/** @internal */
+function destroyAtom<T>(node: AtomNode<T>): void {
+  if (node.state !== ATOM_STATE_ALIVE) {
+    return;
+  }
+  node.state = ATOM_STATE_PREDESTROY;
+
+  destroyObserverRefs(node);
   node.onDestroy?.();
   node.state = ATOM_STATE_DESTROYED;
 }
@@ -497,18 +503,8 @@ export function destroyComputed<T>(node: ComputedNode<T>): void {
   node.value = undefined as any;
   node.valueState = COMPUTED_STATUS_STALE;
 
-  forEachInList(node.observerRefs, ({ node }) => {
-    if (!node) return;
-
-    if (isComputedNode(node)) {
-      destroyComputed(node);
-    } else {
-      destroyEffect(node);
-    }
-  });
-  node.observerRefs = {};
-
-  destroyObserverRef(node);
+  destroyObserverRefs(node);
+  destroySelfObserverRef(node);
 }
 
 function getComputedValue<T>(node: ComputedNode<T>): T {
@@ -651,7 +647,7 @@ export function destroyEffect<T>(node: EffectNode<T>): void {
   node.sourceAtom = undefined;
   node.action = undefined;
 
-  destroyObserverRef(node);
+  destroySelfObserverRef(node);
 
   node.onDestroy?.();
   node.onDestroy = undefined;

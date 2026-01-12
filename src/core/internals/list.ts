@@ -10,34 +10,6 @@ export type LinkedList<T> = {
 };
 
 /** @internal */
-export function cloneListPointer<T>(list: LinkedList<T>): LinkedList<T> {
-  return {
-    head: list.head,
-    tail: list.tail,
-  };
-}
-
-/** @internal */
-export function isEmptyList<T>(list: LinkedList<T>): boolean {
-  return !list.head;
-}
-
-/** @internal */
-export function clearList<T>(list: LinkedList<T>): void {
-  list.head = undefined;
-  list.tail = undefined;
-}
-
-/** @internal */
-export function addToListHead<T>(list: LinkedList<T>, value: T): void {
-  const node = { value, next: list.head };
-  list.head = node;
-  if (!list.tail) {
-    list.tail = node;
-  }
-}
-
-/** @internal */
 export function appendToList<T>(list: LinkedList<T>, value: T): void {
   const node = { value };
   if (list.tail) list.tail.next = node;
@@ -56,22 +28,6 @@ export function appendListToEnd<T>(
 }
 
 /** @internal */
-export function appendListToHead<T>(
-  list1: LinkedList<T>,
-  list2: LinkedList<T>,
-): void {
-  if (!list2.head) return;
-  if (!list1.head) {
-    list1.head = list2.head;
-    list1.tail = list2.tail;
-  } else {
-    list2.tail!.next = list1.head;
-    list1.head = list2.head;
-    list1.tail = list2.tail;
-  }
-}
-
-/** @internal */
 export function forEachInList<T>(
   list: LinkedList<T>,
   fn: (value: T) => void,
@@ -79,24 +35,6 @@ export function forEachInList<T>(
   let node = list.head;
   while (node) {
     fn(node.value);
-    node = node.next;
-  }
-}
-
-/** @internal */
-export function copyToList<T>(
-  source: LinkedList<T>,
-  target: LinkedList<T>,
-): void {
-  let node = source.head;
-  while (node) {
-    // appendToListEnd(target, node.value);
-
-    const copy = { value: node.value };
-    if (target.tail) target.tail.next = copy;
-    target.tail = copy;
-    if (!target.head) target.head = copy;
-
     node = node.next;
   }
 }
