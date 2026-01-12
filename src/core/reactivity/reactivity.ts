@@ -368,6 +368,7 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
 
     p = p.next;
   }
+  sourceNode.observerRefs = {};
 }
 
 /** @internal */
