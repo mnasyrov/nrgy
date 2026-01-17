@@ -2,6 +2,13 @@ import { defaultEquals } from '../common/defaultEquals';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import {
+  disposeFastArray,
+  fastArray,
+  FastArray,
+  pushFastArray,
+  resetFastArray,
+} from './fastArray';
+import {
   createMicrotaskScheduler,
   createSyncTaskScheduler,
   TaskScheduler,
@@ -69,7 +76,7 @@ export type BaseSourceNode = {
   id: number;
   label?: string;
   version: number;
-  observerRefs: ObserverRef[];
+  observerRefs: FastArray<ObserverRef>;
 };
 
 /** @internal */
@@ -256,7 +263,7 @@ export function appendObserverToNode(
   node: BaseSourceNode,
   observer: ObserverNode,
 ): void {
-  node.observerRefs.push(getObserverRef(observer));
+  pushFastArray(node.observerRefs, getObserverRef(observer));
 }
 
 /**
@@ -333,7 +340,7 @@ export const atom: AtomFn = function <T>(
     value: initialValue,
     state: ATOM_STATE_ALIVE,
 
-    observerRefs: [],
+    observerRefs: fastArray(4),
   };
 
   const getter = () => getAtomValue(node);
@@ -349,8 +356,9 @@ export const atom: AtomFn = function <T>(
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
   const list = sourceNode.observerRefs;
-  for (let i = 0; i < list.length; i++) {
-    const node = list[i]?.node;
+  for (let i = 1; i <= list[0]; i++) {
+    const node = (list[i] as ObserverRef)?.node;
+    list[i] = undefined as any;
 
     if (!node) return;
 
@@ -360,7 +368,7 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
       destroyEffect(node as any);
     }
   }
-  sourceNode.observerRefs = [];
+  disposeFastArray(sourceNode.observerRefs);
 }
 
 /** @internal */
@@ -419,7 +427,7 @@ function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
 function commitAtomValue<T>(node: AtomNode<T>): void {
   node.version = nextSafeInteger(node.version);
 
-  if (node.state !== ATOM_STATE_ALIVE || node.observerRefs.length === 0) {
+  if (node.state !== ATOM_STATE_ALIVE || node.observerRefs[0] === 0) {
     return;
   }
 
@@ -433,7 +441,7 @@ const GLOBAL_PROPAGATION_QUEUE: BaseSourceNode[] = [];
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
-  if (sourceNode.observerRefs.length === 0) return;
+  if (sourceNode.observerRefs[0] === 0) return;
 
   const effectQueue = GLOBAL_EFFECT_QUEUE;
   const queue = GLOBAL_PROPAGATION_QUEUE;
@@ -451,8 +459,8 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
     // Steal current observers list from the source to avoid re-processing
     const observerRefs = src.observerRefs;
 
-    for (let j = 0; j < observerRefs.length; j++) {
-      const node = observerRefs[j]?.node;
+    for (let j = 1; j <= observerRefs[0]; j++) {
+      const node = (observerRefs[j] as ObserverRef)?.node;
       if (!node) continue;
 
       if (isComputedNode(node)) {
@@ -466,7 +474,7 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
       }
     }
 
-    src.observerRefs.length = 0;
+    resetFastArray(src.observerRefs);
   }
 
   // Notify effects
@@ -505,7 +513,7 @@ export const compute: ComputeFn = function <T>(
     value: undefined as any,
     valueState: COMPUTED_VALUE_UNSET,
 
-    observerRefs: [],
+    observerRefs: fastArray(0),
   };
 
   const getter = () => getComputedValue(node);
