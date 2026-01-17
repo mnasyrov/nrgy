@@ -1,10 +1,5 @@
 import { defaultEquals } from '../common/defaultEquals';
-import {
-  appendListToEnd,
-  appendToList,
-  LinkedList,
-  popListHead,
-} from '../internals/list';
+import { appendToList, LinkedList, popListHead } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import {
@@ -434,33 +429,57 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   propagateAtomChanges(node);
 }
 
+// Global queues for propagation to avoid allocations
+const GLOBAL_EFFECT_QUEUE: EffectNode<any>[] = [];
+const GLOBAL_PROPAGATION_QUEUE: BaseSourceNode[] = [];
+
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
-  const effectQueue: LinkedList<EffectNode<any>> = {};
+  // Fast path: nothing depends on this source
+  if (!sourceNode.observerRefs.head) return;
 
-  const observerRefsQueue = sourceNode.observerRefs;
-  sourceNode.observerRefs = {};
+  const effectQueue = GLOBAL_EFFECT_QUEUE;
+  const queue = GLOBAL_PROPAGATION_QUEUE;
 
-  let observerRef: ObserverRef | undefined;
-  while ((observerRef = popListHead(observerRefsQueue))) {
-    const node = observerRef?.node;
-    if (!node) continue;
+  // Clear queues for reuse
+  effectQueue.length = 0;
+  queue.length = 0;
 
-    if (isComputedNode(node)) {
-      if (node.status === COMPUTED_STATUS_STALE) continue;
+  // Start BFS from the source node
+  queue.push(sourceNode);
 
-      appendListToEnd(observerRefsQueue, node.observerRefs);
-      node.status = COMPUTED_STATUS_STALE;
-      node.observerRefs = {};
-    } else {
-      appendToList(effectQueue, node);
+  // Breadth-first invalidation: traverse through computed nodes to reach effects
+  for (let i = 0; i < queue.length; i++) {
+    const src = queue[i]!;
+    // Steal current observers list from the source to avoid re-processing
+    const observerRefsQueue = src.observerRefs;
+    src.observerRefs = {};
+
+    let observerRef: ObserverRef | undefined;
+    while ((observerRef = popListHead(observerRefsQueue))) {
+      const node = observerRef?.node;
+      if (!node) continue;
+
+      if (isComputedNode(node)) {
+        if (node.status !== COMPUTED_STATUS_STALE) {
+          node.status = COMPUTED_STATUS_STALE;
+          // Enqueue computed node to propagate further to its own dependents
+          queue.push(node);
+        }
+      } else {
+        effectQueue.push(node as EffectNode<any>);
+      }
     }
   }
 
-  let effectNode: EffectNode<any> | undefined;
-  while ((effectNode = popListHead(effectQueue))) {
-    notifyEffect(effectNode);
+  // Notify effects
+  for (let i = 0; i < effectQueue.length; i++) {
+    notifyEffect(effectQueue[i]!);
   }
+
+  // Clear arrays to release references
+  effectQueue.length = 0;
+  queue.length = 0;
 }
 
 //
