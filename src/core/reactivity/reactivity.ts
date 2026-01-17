@@ -1,5 +1,4 @@
 import { defaultEquals } from '../common/defaultEquals';
-import { appendToList, LinkedList, popListHead } from '../internals/list';
 import { nextSafeInteger } from '../internals/nextSafeInteger';
 
 import {
@@ -70,7 +69,7 @@ export type BaseSourceNode = {
   id: number;
   label?: string;
   version: number;
-  observerRefs: LinkedList<ComputedNodeRef>;
+  observerRefs: ObserverRef[];
 };
 
 /** @internal */
@@ -257,7 +256,7 @@ export function appendObserverToNode(
   node: BaseSourceNode,
   observer: ObserverNode,
 ): void {
-  appendToList(node.observerRefs, getObserverRef(observer));
+  node.observerRefs.push(getObserverRef(observer));
 }
 
 /**
@@ -334,7 +333,7 @@ export const atom: AtomFn = function <T>(
     value: initialValue,
     state: ATOM_STATE_ALIVE,
 
-    observerRefs: {},
+    observerRefs: [],
   };
 
   const getter = () => getAtomValue(node);
@@ -349,21 +348,19 @@ export const atom: AtomFn = function <T>(
 };
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
-  let p = sourceNode.observerRefs.head;
-  while (p) {
-    const node = p.value.node;
+  const list = sourceNode.observerRefs;
+  for (let i = 0; i < list.length; i++) {
+    const node = list[i]?.node;
 
     if (!node) return;
 
     if (isComputedNode(node)) {
       destroyComputed(node);
     } else {
-      destroyEffect(node);
+      destroyEffect(node as any);
     }
-
-    p = p.next;
   }
-  sourceNode.observerRefs = {};
+  sourceNode.observerRefs = [];
 }
 
 /** @internal */
@@ -422,7 +419,7 @@ function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
 function commitAtomValue<T>(node: AtomNode<T>): void {
   node.version = nextSafeInteger(node.version);
 
-  if (node.state !== ATOM_STATE_ALIVE || !node.observerRefs.head) {
+  if (node.state !== ATOM_STATE_ALIVE || node.observerRefs.length === 0) {
     return;
   }
 
@@ -436,7 +433,7 @@ const GLOBAL_PROPAGATION_QUEUE: BaseSourceNode[] = [];
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
-  if (!sourceNode.observerRefs.head) return;
+  if (sourceNode.observerRefs.length === 0) return;
 
   const effectQueue = GLOBAL_EFFECT_QUEUE;
   const queue = GLOBAL_PROPAGATION_QUEUE;
@@ -452,12 +449,10 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   for (let i = 0; i < queue.length; i++) {
     const src = queue[i]!;
     // Steal current observers list from the source to avoid re-processing
-    const observerRefsQueue = src.observerRefs;
-    src.observerRefs = {};
+    const observerRefs = src.observerRefs;
 
-    let observerRef: ObserverRef | undefined;
-    while ((observerRef = popListHead(observerRefsQueue))) {
-      const node = observerRef?.node;
+    for (let j = 0; j < observerRefs.length; j++) {
+      const node = observerRefs[j]?.node;
       if (!node) continue;
 
       if (isComputedNode(node)) {
@@ -470,6 +465,8 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
         effectQueue.push(node as EffectNode<any>);
       }
     }
+
+    src.observerRefs.length = 0;
   }
 
   // Notify effects
@@ -508,7 +505,7 @@ export const compute: ComputeFn = function <T>(
     value: undefined as any,
     valueState: COMPUTED_VALUE_UNSET,
 
-    observerRefs: {},
+    observerRefs: [],
   };
 
   const getter = () => getComputedValue(node);
