@@ -1,4 +1,11 @@
-import { appendToList, LinkedList, popListHead } from '../internals/list';
+import {
+  fastRingBuffer,
+  isEmptyFastRingBuffer,
+  pushFastRingBuffer,
+  shiftFastRingBuffer,
+} from './fastArray';
+
+type ScheduledCallback = () => void;
 
 /**
  * Task scheduler interface
@@ -8,7 +15,7 @@ export type TaskScheduler = Readonly<{
   isEmpty(): boolean;
 
   /** Schedule a task */
-  schedule(action: () => void): void;
+  schedule(action: ScheduledCallback): void;
 
   /** Execute the queue */
   execute(): void;
@@ -24,7 +31,7 @@ export type TaskScheduler = Readonly<{
  * Creates a microtask scheduler
  */
 export function createMicrotaskScheduler(): TaskScheduler {
-  const queue: LinkedList<() => void> = {};
+  const queue = fastRingBuffer<ScheduledCallback>();
   let isPlanned = false;
   let isActive = false;
   let isPaused = false;
@@ -36,7 +43,7 @@ export function createMicrotaskScheduler(): TaskScheduler {
     isActive = true;
 
     let action;
-    while (!isPaused && (action = popListHead(queue))) {
+    while (!isPaused && (action = shiftFastRingBuffer(queue))) {
       action();
     }
 
@@ -44,10 +51,10 @@ export function createMicrotaskScheduler(): TaskScheduler {
   };
 
   return {
-    isEmpty: () => !queue.head,
+    isEmpty: () => isEmptyFastRingBuffer(queue),
     schedule: (entry) => {
-      const prevEmpty = !queue.head;
-      appendToList(queue, entry);
+      const prevEmpty = isEmptyFastRingBuffer(queue);
+      pushFastRingBuffer(queue, entry);
 
       if (prevEmpty && !isActive && !isPlanned) {
         isPlanned = true;
@@ -63,7 +70,7 @@ export function createMicrotaskScheduler(): TaskScheduler {
     resume: () => {
       isPaused = false;
 
-      if (!isPlanned && queue.head) {
+      if (!isPlanned && !isEmptyFastRingBuffer(queue)) {
         isPaused = true;
         queueMicrotask(execute);
       }
@@ -75,7 +82,7 @@ export function createMicrotaskScheduler(): TaskScheduler {
  * Creates a synchronous task scheduler
  */
 export function createSyncTaskScheduler(): TaskScheduler {
-  const queue: LinkedList<() => void> = {};
+  const queue = fastRingBuffer<ScheduledCallback>();
   let isActive = false;
   let isPaused = false;
 
@@ -85,16 +92,16 @@ export function createSyncTaskScheduler(): TaskScheduler {
     isActive = true;
 
     let action;
-    while (!isPaused && (action = popListHead(queue))) {
+    while (!isPaused && (action = shiftFastRingBuffer(queue))) {
       action();
     }
     isActive = false;
   };
 
   return {
-    isEmpty: () => !queue.head,
+    isEmpty: () => isEmptyFastRingBuffer(queue),
     schedule: (entry) => {
-      appendToList(queue, entry);
+      pushFastRingBuffer(queue, entry);
       if (!isActive) execute();
     },
     execute,
@@ -105,7 +112,7 @@ export function createSyncTaskScheduler(): TaskScheduler {
     resume: () => {
       isPaused = false;
 
-      if (queue.head) {
+      if (!isEmptyFastRingBuffer(queue)) {
         execute();
       }
     },
