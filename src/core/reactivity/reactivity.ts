@@ -340,7 +340,7 @@ export const atom: AtomFn = function <T>(
     value: initialValue,
     state: ATOM_STATE_ALIVE,
 
-    observerRefs: fastArray(4),
+    observerRefs: fastArray(),
   };
 
   const getter = () => getAtomValue(node);
@@ -435,27 +435,24 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
 }
 
 // Global queues for propagation to avoid allocations
-const GLOBAL_EFFECT_QUEUE: EffectNode<any>[] = [];
-const GLOBAL_PROPAGATION_QUEUE: BaseSourceNode[] = [];
+const GLOBAL_EFFECT_QUEUE = fastArray<EffectNode<any>>();
+const GLOBAL_PROPAGATION_QUEUE = fastArray<BaseSourceNode>();
 
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
   if (sourceNode.observerRefs[0] === 0) return;
 
-  const effectQueue = GLOBAL_EFFECT_QUEUE;
-  const queue = GLOBAL_PROPAGATION_QUEUE;
-
   // Clear queues for reuse
-  effectQueue.length = 0;
-  queue.length = 0;
+  resetFastArray(GLOBAL_EFFECT_QUEUE);
+  resetFastArray(GLOBAL_PROPAGATION_QUEUE);
 
   // Start BFS from the source node
-  queue.push(sourceNode);
+  pushFastArray(GLOBAL_PROPAGATION_QUEUE, sourceNode);
 
   // Breadth-first invalidation: traverse through computed nodes to reach effects
-  for (let i = 0; i < queue.length; i++) {
-    const src = queue[i]!;
+  for (let i = 1; i <= GLOBAL_PROPAGATION_QUEUE[0]; i++) {
+    const src = GLOBAL_PROPAGATION_QUEUE[i] as BaseSourceNode;
     // Steal current observers list from the source to avoid re-processing
     const observerRefs = src.observerRefs;
 
@@ -467,10 +464,10 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
         if (node.status !== COMPUTED_STATUS_STALE) {
           node.status = COMPUTED_STATUS_STALE;
           // Enqueue computed node to propagate further to its own dependents
-          queue.push(node);
+          pushFastArray(GLOBAL_PROPAGATION_QUEUE, node);
         }
       } else {
-        effectQueue.push(node as EffectNode<any>);
+        pushFastArray(GLOBAL_EFFECT_QUEUE, node);
       }
     }
 
@@ -478,13 +475,13 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   }
 
   // Notify effects
-  for (let i = 0; i < effectQueue.length; i++) {
-    notifyEffect(effectQueue[i]!);
+  for (let i = 1; i <= GLOBAL_EFFECT_QUEUE[0]; i++) {
+    notifyEffect(GLOBAL_EFFECT_QUEUE[i] as EffectNode<any>);
   }
 
   // Clear arrays to release references
-  effectQueue.length = 0;
-  queue.length = 0;
+  resetFastArray(GLOBAL_EFFECT_QUEUE);
+  resetFastArray(GLOBAL_PROPAGATION_QUEUE);
 }
 
 //
@@ -513,7 +510,7 @@ export const compute: ComputeFn = function <T>(
     value: undefined as any,
     valueState: COMPUTED_VALUE_UNSET,
 
-    observerRefs: fastArray(0),
+    observerRefs: fastArray(),
   };
 
   const getter = () => getComputedValue(node);

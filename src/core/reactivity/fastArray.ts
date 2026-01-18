@@ -1,9 +1,7 @@
 export type FastArray<T> = [size: number, ...T[]];
 
-export function fastArray<T>(initialSize: number): FastArray<T> {
-  const array: FastArray<T> = new Array<T>(1 + initialSize) as any;
-  array[0] = 0;
-  return array;
+export function fastArray<T>(): FastArray<T> {
+  return Array.of(0) as any;
 }
 
 export function disposeFastArray<T>(array: FastArray<T>): void {
