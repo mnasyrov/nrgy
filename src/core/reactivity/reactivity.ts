@@ -131,7 +131,7 @@ export type EffectNode<T> = ObserverNode & {
   lastValueVersion: number | undefined;
   onDestroy: (() => void) | undefined;
   onError: ((error: unknown) => void) | undefined;
-  scheduler: TaskScheduler | undefined;
+  scheduler: TaskScheduler<EffectNode<any>> | undefined;
   sourceAtom: Atom<T> | undefined;
 };
 
@@ -143,8 +143,12 @@ export type EffectNode<T> = ObserverNode & {
  * @internal
  */
 export class Runtime {
-  readonly asyncScheduler = createMicrotaskScheduler();
-  readonly syncScheduler = createSyncTaskScheduler();
+  readonly asyncScheduler =
+    createMicrotaskScheduler<EffectNode<any>>(runEffect);
+  readonly syncScheduler = createSyncTaskScheduler<EffectNode<any>>(runEffect);
+  readonly microtaskScheduler = createMicrotaskScheduler<() => void>(
+    (callback) => callback(),
+  );
 
   nextId = 1;
 
@@ -189,6 +193,7 @@ export class Runtime {
       if (this.batchLock === 1) {
         this.syncScheduler.pause();
         this.asyncScheduler.pause();
+        this.microtaskScheduler.pause();
       }
 
       return fn();
@@ -198,6 +203,7 @@ export class Runtime {
       if (this.batchLock === 0) {
         this.syncScheduler.resume();
         this.asyncScheduler.resume();
+        this.microtaskScheduler.resume();
       }
     }
   }
@@ -205,6 +211,7 @@ export class Runtime {
   runEffects() {
     this.syncScheduler.execute();
     this.asyncScheduler.execute();
+    this.microtaskScheduler.execute();
   }
 }
 
@@ -647,7 +654,7 @@ export const effect: EffectFn = function <T>(
     type: NODE_TYPE_EFFECT,
   };
 
-  scheduler.schedule(() => runEffect(node));
+  scheduler.schedule(node);
 
   return {
     destroy: () => destroyEffect(node),
@@ -689,7 +696,7 @@ export function notifyEffect<T>(node: EffectNode<T>): void {
   node.dirty = true;
 
   if (needsSchedule && node.scheduler) {
-    node.scheduler.schedule(() => runEffect(node));
+    node.scheduler.schedule(node);
   }
 }
 

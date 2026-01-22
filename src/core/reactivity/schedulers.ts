@@ -5,17 +5,15 @@ import {
   shiftFastRingBuffer,
 } from './fastArray';
 
-type ScheduledCallback = () => void;
-
 /**
  * Task scheduler interface
  */
-export type TaskScheduler = Readonly<{
+export type TaskScheduler<Task> = Readonly<{
   /** Check if the execution queue is empty */
   isEmpty(): boolean;
 
   /** Schedule a task */
-  schedule(action: ScheduledCallback): void;
+  schedule(task: Task): void;
 
   /** Execute the queue */
   execute(): void;
@@ -30,8 +28,10 @@ export type TaskScheduler = Readonly<{
 /**
  * Creates a microtask scheduler
  */
-export function createMicrotaskScheduler(): TaskScheduler {
-  const queue = fastRingBuffer<ScheduledCallback>();
+export function createMicrotaskScheduler<Task>(
+  taskExecutor: (task: Task) => void,
+): TaskScheduler<Task> {
+  const queue = fastRingBuffer<Task>();
   let isPlanned = false;
   let isActive = false;
   let isPaused = false;
@@ -42,9 +42,9 @@ export function createMicrotaskScheduler(): TaskScheduler {
     isPlanned = false;
     isActive = true;
 
-    let action;
-    while (!isPaused && (action = shiftFastRingBuffer(queue))) {
-      action();
+    let task;
+    while (!isPaused && (task = shiftFastRingBuffer(queue))) {
+      taskExecutor(task);
     }
 
     isActive = false;
@@ -52,9 +52,9 @@ export function createMicrotaskScheduler(): TaskScheduler {
 
   return {
     isEmpty: () => isEmptyFastRingBuffer(queue),
-    schedule: (entry) => {
+    schedule: (task) => {
       const prevEmpty = isEmptyFastRingBuffer(queue);
-      pushFastRingBuffer(queue, entry);
+      pushFastRingBuffer(queue, task);
 
       if (prevEmpty && !isActive && !isPlanned) {
         isPlanned = true;
@@ -81,8 +81,10 @@ export function createMicrotaskScheduler(): TaskScheduler {
 /**
  * Creates a synchronous task scheduler
  */
-export function createSyncTaskScheduler(): TaskScheduler {
-  const queue = fastRingBuffer<ScheduledCallback>();
+export function createSyncTaskScheduler<Task>(
+  taskExecutor: (task: Task) => void,
+): TaskScheduler<Task> {
+  const queue = fastRingBuffer<Task>();
   let isActive = false;
   let isPaused = false;
 
@@ -91,9 +93,9 @@ export function createSyncTaskScheduler(): TaskScheduler {
 
     isActive = true;
 
-    let action;
-    while (!isPaused && (action = shiftFastRingBuffer(queue))) {
-      action();
+    let task;
+    while (!isPaused && (task = shiftFastRingBuffer(queue))) {
+      taskExecutor(task);
     }
     isActive = false;
   };

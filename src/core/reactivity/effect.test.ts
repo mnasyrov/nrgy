@@ -5,7 +5,6 @@ import {
   AtomUpdateError,
   compute,
   effect,
-  RUNTIME,
   syncEffect,
 } from './reactivity';
 
@@ -277,51 +276,6 @@ describe('@regression Cycled effect on reading and updating the same atom', () =
       });
 
       store.set(nextState);
-    });
-
-    runEffects();
-    expect(store()).toEqual({});
-
-    inputs.set(['a']);
-    runEffects();
-    expect(store()).toEqual({ a: 1 });
-
-    inputs.set(['a', 'b']);
-    runEffects();
-    expect(store()).toEqual({ a: 2, b: 1 });
-
-    inputs.set(['b', 'c']);
-    runEffects();
-    expect(store()).toEqual({ b: 2, c: 1 });
-  });
-
-  it('should not trigger an infinite loop with ASYNC scheduler', async () => {
-    type State = { [key: string]: number };
-
-    const inputs = atom<string[]>([]);
-    const store = atom<State>({});
-
-    const updateStore = (state: State) => {
-      RUNTIME.asyncScheduler.schedule(() => store.set(state));
-    };
-
-    effect(inputs, (items) => {
-      const prevState = store();
-
-      const nextState = { ...prevState };
-
-      items.forEach((item) => {
-        nextState[item] = (nextState[item] || 0) + 1;
-      });
-
-      const set = new Set(items);
-      Object.keys(nextState).forEach((key) => {
-        if (!set.has(key)) {
-          delete nextState[key];
-        }
-      });
-
-      updateStore(nextState);
     });
 
     runEffects();

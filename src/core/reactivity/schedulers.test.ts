@@ -18,10 +18,14 @@ jest.mock('../internals/reportError', () => {
   };
 });
 
+type ScheduledCallback = () => void;
+const callbackExecutor = (callback: ScheduledCallback) => callback();
+
 describe('MicrotaskScheduler', () => {
   describe('runnableAction argument', () => {
     it('should be used to for execution of tasks', async () => {
-      const scheduler = createMicrotaskScheduler();
+      const scheduler =
+        createMicrotaskScheduler<ScheduledCallback>(callbackExecutor);
       const task = jest.fn();
 
       scheduler.schedule(task);
@@ -33,7 +37,8 @@ describe('MicrotaskScheduler', () => {
 
   describe('isEmpty()', () => {
     it('should return true if execution queue is empty', async () => {
-      const scheduler = createMicrotaskScheduler();
+      const scheduler =
+        createMicrotaskScheduler<ScheduledCallback>(callbackExecutor);
       expect(scheduler.isEmpty()).toBe(true);
 
       scheduler.schedule(jest.fn());
@@ -52,7 +57,8 @@ describe('MicrotaskScheduler', () => {
       const task3 = jest.fn();
       const tasks = [task1, task2, task3];
 
-      const scheduler = createMicrotaskScheduler();
+      const scheduler =
+        createMicrotaskScheduler<ScheduledCallback>(callbackExecutor);
 
       tasks.forEach(scheduler.schedule);
       tasks.forEach((task) => expect(task).toBeCalledTimes(0));
@@ -65,7 +71,8 @@ describe('MicrotaskScheduler', () => {
 
   describe('execute()', () => {
     it('should execute the queue', async () => {
-      const scheduler = createMicrotaskScheduler();
+      const scheduler =
+        createMicrotaskScheduler<ScheduledCallback>(callbackExecutor);
 
       scheduler.schedule(jest.fn());
       scheduler.schedule(jest.fn());
@@ -76,7 +83,8 @@ describe('MicrotaskScheduler', () => {
     });
 
     it('should do nothing if execute() is called multiple times by the scheduled task', async () => {
-      const scheduler = createMicrotaskScheduler();
+      const scheduler =
+        createMicrotaskScheduler<ScheduledCallback>(callbackExecutor);
 
       const task2 = jest.fn();
 
@@ -102,7 +110,8 @@ describe('MicrotaskScheduler', () => {
 describe('SyncTaskScheduler', () => {
   describe('runnableAction argument', () => {
     it('should be used to for execution of tasks', async () => {
-      const scheduler = createSyncTaskScheduler();
+      const scheduler =
+        createSyncTaskScheduler<ScheduledCallback>(callbackExecutor);
       const task = jest.fn();
 
       scheduler.schedule(task);
@@ -113,7 +122,8 @@ describe('SyncTaskScheduler', () => {
 
   describe('isEmpty()', () => {
     it('should return true if execution queue is empty', async () => {
-      const scheduler = createSyncTaskScheduler();
+      const scheduler =
+        createSyncTaskScheduler<ScheduledCallback>(callbackExecutor);
       expect(scheduler.isEmpty()).toBe(true);
 
       // Task is executed during scheduling
@@ -135,7 +145,8 @@ describe('SyncTaskScheduler', () => {
     it('should schedule tasks', async () => {
       const task = jest.fn();
 
-      const scheduler = createSyncTaskScheduler();
+      const scheduler =
+        createSyncTaskScheduler<ScheduledCallback>(callbackExecutor);
       scheduler.schedule(task);
       scheduler.schedule(task);
       scheduler.schedule(task);
@@ -146,7 +157,8 @@ describe('SyncTaskScheduler', () => {
 
   describe('execute()', () => {
     it('should execute the queue', async () => {
-      const scheduler = createSyncTaskScheduler();
+      const scheduler =
+        createSyncTaskScheduler<ScheduledCallback>(callbackExecutor);
 
       scheduler.schedule(jest.fn());
       scheduler.schedule(jest.fn());
@@ -154,7 +166,8 @@ describe('SyncTaskScheduler', () => {
     });
 
     it('should do nothing if execute() is called multiple times by the scheduled task', () => {
-      const scheduler = createSyncTaskScheduler();
+      const scheduler =
+        createSyncTaskScheduler<ScheduledCallback>(callbackExecutor);
 
       const task2 = jest.fn();
 

@@ -165,7 +165,7 @@ export abstract class BaseController<TContext extends BaseControllerContext> {
     this.scope = this.context.scope;
     this.params = this.context.params;
 
-    RUNTIME.asyncScheduler.schedule(() => {
+    RUNTIME.microtaskScheduler.schedule(() => {
       try {
         this.onCreated();
       } catch (error) {

@@ -1,4 +1,4 @@
-import { RUNTIME } from '../reactivity/reactivity';
+import { atom, effect } from '../reactivity/reactivity';
 
 import { runEffects } from './runEffects';
 
@@ -6,7 +6,9 @@ describe('runEffects()', () => {
   it('should runs all effects which are scheduled for the next microtask', () => {
     const spy = jest.fn();
 
-    RUNTIME.asyncScheduler.schedule(() => spy());
+    const source = atom(1);
+    effect(source, spy);
+
     expect(spy).toHaveBeenCalledTimes(0);
 
     runEffects();
