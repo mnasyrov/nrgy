@@ -86,7 +86,7 @@ export type BaseSourceNode = {
 
 /** @internal */
 export type AtomNode<T> = BaseSourceNode & {
-  equal: ValueEqualityFn<T>;
+  equal: ValueEqualityFn<T> | undefined;
   onDestroy: (() => void) | undefined;
   state: AtomState;
   value: T;
@@ -110,7 +110,7 @@ export const COMPUTED_VALUE_ERROR = 2;
 export type ComputedNode<T> = BaseSourceNode &
   ObserverNode & {
     computation: Computation<T>;
-    equal: ValueEqualityFn<T>;
+    equal: ValueEqualityFn<T> | undefined;
     value: any;
     valueState:
       | typeof COMPUTED_VALUE_UNSET
@@ -329,7 +329,7 @@ export const atom: AtomFn = function <T>(
   options?: AtomOptions<T>,
 ): SourceAtom<T> {
   const node: AtomNode<T> = {
-    equal: options?.equal ?? defaultEquals,
+    equal: options?.equal,
     id: RUNTIME.nextId++,
     label: options?.label,
     observerRefs: fastArray(),
@@ -398,7 +398,8 @@ function setAtomValue<T>(node: AtomNode<T>, newValue: T | undefined): void {
   }
 
   if (node.state !== ATOM_STATE_DESTROYED) {
-    const isChanged = !node.equal(node.value, newValue!);
+    const equal = node.equal ?? defaultEquals;
+    const isChanged = !equal(node.value, newValue!);
     if (isChanged) {
       node.value = newValue!;
       commitAtomValue(node);
@@ -501,7 +502,7 @@ export const compute: ComputeFn = function <T>(
 ): Atom<T> {
   const node: ComputedNode<T> = {
     computation: computation,
-    equal: options?.equal ?? defaultEquals,
+    equal: options?.equal,
     id: RUNTIME.nextId++,
     label: options?.label,
     observerRefs: fastArray(),
@@ -565,9 +566,10 @@ function recomputeValue<T>(node: ComputedNode<T>): boolean {
 
     node.status = COMPUTED_STATUS_STABLE;
 
+    const equal = node.equal ?? defaultEquals;
     if (
       node.valueState !== COMPUTED_VALUE_SET ||
-      !node.equal(node.value, newValue)
+      !equal(node.value, newValue)
     ) {
       node.value = newValue;
       node.valueState = COMPUTED_VALUE_SET;
