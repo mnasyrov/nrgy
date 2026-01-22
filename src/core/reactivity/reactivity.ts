@@ -352,17 +352,15 @@ export const atom: AtomFn = function <T>(
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
   const list = sourceNode.observerRefs;
-  for (let i = 1; i <= list[0]; i++) {
+  const len = list[0];
+  for (let i = 1; i <= len; i++) {
     const node = (list[i] as ObserverRef)?.node;
     list[i] = undefined as any;
 
-    if (!node) return;
+    if (!node) {
+      continue;
+    }
 
-    // if (isComputedNode(node)) {
-    //   destroyComputed(node );
-    // } else {
-    //   destroyEffect(node as any);
-    // }
     if (node.type === NODE_TYPE_COMPUTED) {
       destroyComputed(node as ComputedNode<any>);
     } else {
