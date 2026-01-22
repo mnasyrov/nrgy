@@ -51,11 +51,16 @@ export type AtomState =
   | typeof ATOM_STATE_DESTROYED;
 
 /** @internal */
+export const NODE_TYPE_COMPUTED = 1;
+/** @internal */
+export const NODE_TYPE_EFFECT = 2;
+
+/** @internal */
 export type ObserverNode = {
   id: number;
-  label?: string;
-
-  ref?: ObserverRef;
+  label: string | undefined;
+  ref: ObserverRef | undefined;
+  type: number;
 };
 
 /** @internal */
@@ -74,17 +79,17 @@ export type EffectNodeRef = ObserverRef & { node: EffectNode<any> | undefined };
 /** @internal */
 export type BaseSourceNode = {
   id: number;
-  label?: string;
-  version: number;
+  label: string | undefined;
   observerRefs: FastArray<ObserverRef>;
+  version: number;
 };
 
 /** @internal */
 export type AtomNode<T> = BaseSourceNode & {
   equal: ValueEqualityFn<T>;
-  onDestroy?: () => void;
-  value: T;
+  onDestroy: (() => void) | undefined;
   state: AtomState;
+  value: T;
 };
 
 /** @internal */
@@ -104,17 +109,14 @@ export const COMPUTED_VALUE_ERROR = 2;
 /** @internal */
 export type ComputedNode<T> = BaseSourceNode &
   ObserverNode & {
-    version: number;
-
     computation: Computation<T>;
     equal: ValueEqualityFn<T>;
-
     value: any;
     valueState:
       | typeof COMPUTED_VALUE_UNSET
       | typeof COMPUTED_VALUE_SET
       | typeof COMPUTED_VALUE_ERROR;
-
+    version: number;
     status:
       | typeof COMPUTED_STATUS_STABLE
       | typeof COMPUTED_STATUS_COMPUTING
@@ -123,16 +125,14 @@ export type ComputedNode<T> = BaseSourceNode &
 
 /** @internal */
 export type EffectNode<T> = ObserverNode & {
-  lastValueVersion?: number;
+  action: EffectCallback<T> | undefined;
   dirty: boolean;
   isDestroyed: boolean;
-
-  scheduler?: TaskScheduler;
-  sourceAtom?: Atom<T>;
-  action?: EffectCallback<T>;
-
-  onError?: (error: unknown) => void;
-  onDestroy?: () => void;
+  lastValueVersion: number | undefined;
+  onDestroy: (() => void) | undefined;
+  onError: ((error: unknown) => void) | undefined;
+  scheduler: TaskScheduler | undefined;
+  sourceAtom: Atom<T> | undefined;
 };
 
 //
@@ -221,12 +221,12 @@ export const RUNTIME = new Runtime();
 
 /** @internal */
 export function isComputedNode(node: ObserverNode): node is ComputedNode<any> {
-  return (node as ComputedNode<any>).computation !== undefined;
+  return node.type === NODE_TYPE_COMPUTED;
 }
 
 /** @internal */
 export function isEffectNode(node: ObserverNode): node is EffectNode<any> {
-  return (node as EffectNode<any>).sourceAtom !== undefined;
+  return node.type === NODE_TYPE_EFFECT;
 }
 
 /** @internal */
@@ -301,9 +301,7 @@ export class AtomUpdateError extends Error {
  */
 export function isAtom<T>(value: unknown): value is Atom<T> {
   return (
-    typeof value === 'function' &&
-    ATOM_SYMBOL in value &&
-    value[ATOM_SYMBOL] !== undefined
+    typeof value === 'function' && (value as any)[ATOM_SYMBOL] !== undefined
   );
 }
 
@@ -331,16 +329,14 @@ export const atom: AtomFn = function <T>(
   options?: AtomOptions<T>,
 ): SourceAtom<T> {
   const node: AtomNode<T> = {
+    equal: options?.equal ?? defaultEquals,
     id: RUNTIME.nextId++,
     label: options?.label,
-
-    version: 0,
-    equal: options?.equal ?? defaultEquals,
-    onDestroy: options?.onDestroy,
-    value: initialValue,
-    state: ATOM_STATE_ALIVE,
-
     observerRefs: fastArray(),
+    onDestroy: options?.onDestroy,
+    state: ATOM_STATE_ALIVE,
+    value: initialValue,
+    version: 0,
   };
 
   const getter = () => getAtomValue(node);
@@ -362,8 +358,13 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
 
     if (!node) return;
 
-    if (isComputedNode(node)) {
-      destroyComputed(node);
+    // if (isComputedNode(node)) {
+    //   destroyComputed(node );
+    // } else {
+    //   destroyEffect(node as any);
+    // }
+    if (node.type === NODE_TYPE_COMPUTED) {
+      destroyComputed(node as ComputedNode<any>);
     } else {
       destroyEffect(node as any);
     }
@@ -499,18 +500,17 @@ export const compute: ComputeFn = function <T>(
   options?: ComputeOptions<T>,
 ): Atom<T> {
   const node: ComputedNode<T> = {
-    id: RUNTIME.nextId++,
-    label: options?.label,
-
     computation: computation,
     equal: options?.equal ?? defaultEquals,
-
-    version: 0,
+    id: RUNTIME.nextId++,
+    label: options?.label,
+    observerRefs: fastArray(),
+    ref: undefined,
     status: COMPUTED_STATUS_STALE,
+    type: NODE_TYPE_COMPUTED,
     value: undefined as any,
     valueState: COMPUTED_VALUE_UNSET,
-
-    observerRefs: fastArray(),
+    version: 0,
   };
 
   const getter = () => getComputedValue(node);
@@ -633,18 +633,18 @@ export const effect: EffectFn = function <T>(
   }
 
   const node: EffectNode<T> = {
-    id: RUNTIME.nextId++,
-    label: options?.label,
-    isDestroyed: false,
-
-    // Effect starts dirty.
-    dirty: true,
-
-    scheduler,
     action: fxCallback,
-    sourceAtom,
-    onError: options?.onError,
+    dirty: true,
+    id: RUNTIME.nextId++,
+    isDestroyed: false,
+    label: options?.label,
+    lastValueVersion: undefined,
     onDestroy: options?.onDestroy,
+    onError: options?.onError,
+    ref: undefined,
+    scheduler,
+    sourceAtom,
+    type: NODE_TYPE_EFFECT,
   };
 
   scheduler.schedule(() => runEffect(node));
