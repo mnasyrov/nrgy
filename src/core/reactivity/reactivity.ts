@@ -80,7 +80,7 @@ export type EffectNodeRef = ObserverRef & { node: EffectNode<any> | undefined };
 export type BaseSourceNode = {
   id: number;
   label: string | undefined;
-  observerRefs: FastArray<ObserverRef>;
+  observerRefs: FastArray<ObserverRef> | undefined;
   version: number;
 };
 
@@ -270,6 +270,9 @@ export function appendObserverToNode(
   node: BaseSourceNode,
   observer: ObserverNode,
 ): void {
+  if (!node.observerRefs) {
+    node.observerRefs = fastArray();
+  }
   pushFastArray(node.observerRefs, getObserverRef(observer));
 }
 
@@ -339,7 +342,7 @@ export const atom: AtomFn = function <T>(
     equal: options?.equal,
     id: RUNTIME.nextId++,
     label: options?.label,
-    observerRefs: fastArray(),
+    observerRefs: undefined,
     onDestroy: options?.onDestroy,
     state: ATOM_STATE_ALIVE,
     value: initialValue,
@@ -359,6 +362,10 @@ export const atom: AtomFn = function <T>(
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
   const list = sourceNode.observerRefs;
+  if (!list) {
+    return;
+  }
+
   const len = list[0];
   for (let i = 1; i <= len; i++) {
     const node = (list[i] as ObserverRef)?.node;
@@ -374,7 +381,7 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
       destroyEffect(node as any);
     }
   }
-  disposeFastArray(sourceNode.observerRefs);
+  disposeFastArray(list);
 }
 
 /** @internal */
@@ -434,7 +441,11 @@ function updateAtomValue<T>(node: AtomNode<T>, updater: (value: T) => T): void {
 function commitAtomValue<T>(node: AtomNode<T>): void {
   node.version = nextSafeInteger(node.version);
 
-  if (node.state !== ATOM_STATE_ALIVE || node.observerRefs[0] === 0) {
+  if (
+    node.state !== ATOM_STATE_ALIVE ||
+    node.observerRefs === undefined ||
+    node.observerRefs[0] === 0
+  ) {
     return;
   }
 
@@ -448,7 +459,8 @@ const GLOBAL_PROPAGATION_QUEUE = fastArray<BaseSourceNode>();
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
-  if (sourceNode.observerRefs[0] === 0) return;
+  if (sourceNode.observerRefs === undefined || sourceNode.observerRefs[0] === 0)
+    return;
 
   // Clear queues for reuse
   resetFastArray(GLOBAL_EFFECT_QUEUE);
@@ -462,6 +474,9 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
     const src = GLOBAL_PROPAGATION_QUEUE[i] as BaseSourceNode;
     // Steal current observers list from the source to avoid re-processing
     const observerRefs = src.observerRefs;
+    if (!observerRefs) {
+      continue;
+    }
 
     for (let j = 1; j <= observerRefs[0]; j++) {
       const node = (observerRefs[j] as ObserverRef)?.node;
@@ -478,7 +493,7 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
       }
     }
 
-    resetFastArray(src.observerRefs);
+    resetFastArray(observerRefs);
   }
 
   // Notify effects
