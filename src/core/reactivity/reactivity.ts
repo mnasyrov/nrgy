@@ -60,7 +60,7 @@ export type ObserverNode = {
   id: number;
   label: string | undefined;
   ref: ObserverRef | undefined;
-  type: number;
+  type: typeof NODE_TYPE_COMPUTED | typeof NODE_TYPE_EFFECT;
 };
 
 /** @internal */
