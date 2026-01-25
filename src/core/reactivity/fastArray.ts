@@ -1,21 +1,22 @@
-export type FastArray<T> = [size: number, ...T[]];
+export type FastArray<T> = T[] & { size: number };
 
 export function fastArray<T>(): FastArray<T> {
-  return Array.of(0) as any;
+  const array = [] as any as FastArray<T>;
+  array.size = 0;
+  return array;
 }
 
 export function disposeFastArray<T>(array: FastArray<T>): void {
-  array[0] = 0;
-  array.length = 1;
+  array.size = 0;
+  array.length = 0;
 }
 
 export function resetFastArray<T>(array: FastArray<T>): void {
-  array[0] = 0;
+  array.size = 0;
 }
 
 export function pushFastArray<T>(array: FastArray<T>, value: T): void {
-  array[0]++;
-  array[array[0]] = value;
+  array[array.size++] = value;
 }
 
 /**

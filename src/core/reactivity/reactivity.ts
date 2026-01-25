@@ -366,8 +366,8 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
     return;
   }
 
-  const len = list[0];
-  for (let i = 1; i <= len; i++) {
+  const size = list.size;
+  for (let i = 0; i < size; i++) {
     const node = (list[i] as ObserverRef)?.node;
     list[i] = undefined as any;
 
@@ -381,6 +381,7 @@ function destroyObserverRefs(sourceNode: BaseSourceNode): void {
       destroyEffect(node as any);
     }
   }
+
   disposeFastArray(list);
 }
 
@@ -444,7 +445,7 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   if (
     node.state !== ATOM_STATE_ALIVE ||
     node.observerRefs === undefined ||
-    node.observerRefs[0] === 0
+    node.observerRefs.size === 0
   ) {
     return;
   }
@@ -459,8 +460,12 @@ const GLOBAL_PROPAGATION_QUEUE = fastArray<BaseSourceNode>();
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
-  if (sourceNode.observerRefs === undefined || sourceNode.observerRefs[0] === 0)
+  if (
+    sourceNode.observerRefs === undefined ||
+    sourceNode.observerRefs.size === 0
+  ) {
     return;
+  }
 
   // Clear queues for reuse
   resetFastArray(GLOBAL_EFFECT_QUEUE);
@@ -470,7 +475,7 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   pushFastArray(GLOBAL_PROPAGATION_QUEUE, sourceNode);
 
   // Breadth-first invalidation: traverse through computed nodes to reach effects
-  for (let i = 1; i <= GLOBAL_PROPAGATION_QUEUE[0]; i++) {
+  for (let i = 0; i < GLOBAL_PROPAGATION_QUEUE.size; i++) {
     const src = GLOBAL_PROPAGATION_QUEUE[i] as BaseSourceNode;
     // Steal current observers list from the source to avoid re-processing
     const observerRefs = src.observerRefs;
@@ -478,7 +483,7 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
       continue;
     }
 
-    for (let j = 1; j <= observerRefs[0]; j++) {
+    for (let j = 0; j < observerRefs.size; j++) {
       const node = (observerRefs[j] as ObserverRef)?.node;
       if (!node) continue;
 
@@ -497,7 +502,7 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   }
 
   // Notify effects
-  for (let i = 1; i <= GLOBAL_EFFECT_QUEUE[0]; i++) {
+  for (let i = 0; i < GLOBAL_EFFECT_QUEUE.size; i++) {
     notifyEffect(GLOBAL_EFFECT_QUEUE[i] as EffectNode<any>);
   }
 
