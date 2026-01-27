@@ -349,15 +349,15 @@ export const atom: AtomFn = function <T>(
     version: 0,
   };
 
-  const getter = () => getAtomValue(node);
-  getter[ATOM_SYMBOL] = node;
-  getter.destroy = () => destroyAtom(node);
-  getter.set = (value: T) => setAtomValue(node, value);
-  getter.update = (updater: (value: T) => T) => updateAtomValue(node, updater);
-  getter.mutate = (mutator: (value: T) => void) =>
+  const source = () => getAtomValue(node);
+  source[ATOM_SYMBOL] = node;
+  source.destroy = () => destroyAtom(node);
+  source.set = (value: T) => setAtomValue(node, value);
+  source.update = (updater: (value: T) => T) => updateAtomValue(node, updater);
+  source.mutate = (mutator: (value: T) => void) =>
     mutateAtomValue(node, mutator);
 
-  return getter;
+  return source;
 };
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
@@ -539,10 +539,10 @@ export const compute: ComputeFn = function <T>(
     version: 0,
   };
 
-  const getter = () => getComputedValue(node);
-  getter[ATOM_SYMBOL] = node;
+  const computed = () => getComputedValue(node);
+  computed[ATOM_SYMBOL] = node;
 
-  return getter;
+  return computed;
 };
 
 /** @internal */
