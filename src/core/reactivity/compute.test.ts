@@ -1,4 +1,3 @@
-import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { flushMicrotasks } from '../../test/flushMicrotasks';
 import { createScope } from '../scope/createScope';
 import { runEffects } from '../utils/runEffects';
@@ -199,14 +198,17 @@ describe('compute()', () => {
     const source = atom(1);
 
     const a = compute(() => source() * 10);
+    expect(a()).toBe(10);
 
-    const changes = await collectAtomChanges(a, async () => {
-      source.set(2);
+    const changes: number[] = [];
+    effect(a, (value) => changes.push(value));
+    runEffects();
 
-      runEffects();
+    source.set(2);
+    runEffects();
 
-      source.set(3);
-    });
+    source.set(3);
+    runEffects();
 
     expect(changes).toEqual([10, 20, 30]);
   });
@@ -247,22 +249,28 @@ describe('compute()', () => {
 
     expect(b()).toEqual({ a: 1, b: 0 });
 
-    const changes = await collectAtomChanges(b, () => {
-      s1.set(1);
-      // expect(b()).toEqual({ a: 2, b: 0 });
-      expect(b()).toEqual({ a: 1, b: 0 });
+    const changes: any[] = [];
+    effect(b, (value) => changes.push(value));
+    runEffects();
 
-      s1.set(2);
-      // expect(b()).toEqual({ a: 3, b: 0 });
-      expect(b()).toEqual({ a: 1, b: 0 });
+    s1.set(1);
+    // expect(b()).toEqual({ a: 2, b: 0 });
+    expect(b()).toEqual({ a: 1, b: 0 });
+    runEffects();
 
-      s1.set(3);
-      // expect(b()).toEqual({ a: 4, b: 0 });
-      expect(b()).toEqual({ a: 1, b: 0 });
+    s1.set(2);
+    // expect(b()).toEqual({ a: 3, b: 0 });
+    expect(b()).toEqual({ a: 1, b: 0 });
+    runEffects();
 
-      s2.set(2);
-      expect(b()).toEqual({ a: 4, b: 2 });
-    });
+    s1.set(3);
+    // expect(b()).toEqual({ a: 4, b: 0 });
+    expect(b()).toEqual({ a: 1, b: 0 });
+    runEffects();
+
+    s2.set(2);
+    expect(b()).toEqual({ a: 4, b: 2 });
+    runEffects();
 
     expect(changes).toEqual([
       { a: 1, b: 0 },
@@ -280,15 +288,17 @@ describe('compute()', () => {
 
     expect(d()).toEqual(5);
 
-    const changes = await collectAtomChanges(d, async () => {
-      entry.set(1);
-      expect(d()).toEqual(7);
+    const changes: number[] = [];
+    effect(d, (value) => changes.push(value));
+    runEffects();
 
-      runEffects();
+    entry.set(1);
+    expect(d()).toEqual(7);
+    runEffects();
 
-      entry.set(2);
-      expect(d()).toEqual(9);
-    });
+    entry.set(2);
+    expect(d()).toEqual(9);
+    runEffects();
 
     expect(changes).toEqual([5, 7, 9]);
   });
@@ -405,9 +415,12 @@ describe('compute()', () => {
 
     onSumChanged.mockClear();
 
-    const storeChanges = await collectAtomChanges(store, () => {
-      effect(sum, (sum) => store.update((state) => ({ ...state, sum })));
-    });
+    const storeChanges: any[] = [];
+    effect(store, (state) => storeChanges.push(state));
+    runEffects();
+
+    effect(sum, (sum) => store.update((state) => ({ ...state, sum })));
+    runEffects();
 
     expect(storeChanges).toEqual([
       { sum: undefined, v1: 'a', v2: 'b' },
@@ -431,19 +444,20 @@ describe('compute()', () => {
       { waitChanges: true },
     );
 
-    const changes = await collectAtomChanges(store, async () => {
-      expect(nextResult()).toEqual({ value: 0 });
+    const storeChanges: any[] = [];
+    effect(store, (state) => storeChanges.push(state));
+    runEffects();
 
-      store.update((state) => ({ ...state, a: 1 }));
+    expect(nextResult()).toEqual({ value: 0 });
 
-      expect(nextResult()).toEqual({ value: 1 });
+    store.update((state) => ({ ...state, a: 1 }));
+    expect(nextResult()).toEqual({ value: 1 });
 
-      runEffects();
-    });
+    runEffects();
 
     subscription?.destroy();
 
-    expect(changes).toEqual([
+    expect(storeChanges).toEqual([
       { a: 0, result: { value: 0 } },
       { a: 1, result: { value: 0 } },
       { a: 1, result: { value: 1 } },
@@ -560,9 +574,14 @@ describe('compute()', () => {
       store1.update((state) => ({ ...state, result }));
     });
 
-    await collectAtomChanges(store1, async () => {
+    {
+      const store1Changes: any[] = [];
+      effect(store1, (state) => store1Changes.push(state));
+      runEffects();
+
       store1.update((state) => ({ ...state, a: 1 }));
-    });
+      runEffects();
+    }
 
     subscription1?.destroy();
 
@@ -588,10 +607,13 @@ describe('compute()', () => {
       { waitChanges: true },
     );
 
-    const changes = await collectAtomChanges(store, async () => {
-      runEffects();
-      store.update((state) => ({ ...state, a: 1 }));
-    });
+    const changes: any[] = [];
+    effect(store, (state) => changes.push(state));
+    runEffects();
+
+    runEffects();
+    store.update((state) => ({ ...state, a: 1 }));
+    runEffects();
 
     subscription?.destroy();
 
@@ -609,11 +631,14 @@ describe('compute()', () => {
       equal: (a, b) => a.key === b.key,
     });
 
-    const changes = await collectAtomChanges(query, () => {
-      source.set({ key: 1, val: 'a' });
-      source.set({ key: 1, val: 'b' });
-      source.set({ key: 2, val: 'c' });
-    });
+    const changes: any[] = [];
+    effect(query, (value) => changes.push(value));
+    runEffects();
+
+    source.set({ key: 1, val: 'a' });
+    source.set({ key: 1, val: 'b' });
+    source.set({ key: 2, val: 'c' });
+    runEffects();
 
     expect(changes).toEqual([
       { key: 1, val: 'a' },
@@ -704,27 +729,6 @@ describe('ComputedImpl()', () => {
 
     expect(computed()).toBe('b');
   });
-
-  // describe('destroy()', () => {
-  //   it('should reset a cached value and recalculate it on access', () => {
-  //     const source = atom('a');
-  //     const computed = compute(() => source());
-  //     const computedNode = getAtomNode(computed);
-  //
-  //     expect((computedNode as any).value).not.toBe('a');
-  //     expect(computed()).toBe('a');
-  //     expect((computedNode as any).value).toBe('a');
-  //
-  //     const prevVersion = computedNode.version;
-  //     getAtomNode(computed).destroy();
-  //
-  //     expect((computedNode as any).value).not.toBe('a');
-  //     expect(computed()).toBe('a');
-  //     expect((computedNode as any).value).toBe('a');
-  //
-  //     expect(computedNode.version).toBeGreaterThan(prevVersion);
-  //   });
-  // });
 });
 
 describe('getAtomLabel() with the computed atom', () => {

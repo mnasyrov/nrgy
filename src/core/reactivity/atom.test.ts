@@ -1,4 +1,3 @@
-import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { runEffects } from '../utils/runEffects';
 
 import { atom, effect, syncEffect } from './reactivity';
@@ -49,13 +48,17 @@ describe('WritableAtom', () => {
         { equal: (s1, s2) => s1.value === s2.value },
       );
 
-      const changes = await collectAtomChanges(store, () => {
-        store.set({ value: 1, data: 'b' });
-        expect(store()).toEqual({ value: 1, data: 'a' });
+      const changes: any[] = [];
+      effect(store, (state) => changes.push(state));
+      runEffects();
 
-        store.set({ value: 2, data: 'c' });
-        expect(store()).toEqual({ value: 2, data: 'c' });
-      });
+      store.set({ value: 1, data: 'b' });
+      expect(store()).toEqual({ value: 1, data: 'a' });
+
+      store.set({ value: 2, data: 'c' });
+      expect(store()).toEqual({ value: 2, data: 'c' });
+
+      runEffects();
 
       expect(changes).toEqual([
         { value: 1, data: 'a' },
@@ -91,11 +94,13 @@ describe('WritableAtom', () => {
     it('should not apply a mutation if the new state is the same', async () => {
       const store = atom({ value: 1 });
 
-      const statePromise = collectAtomChanges(store, () => {
-        store.update((state) => state);
-      });
+      const changes: any[] = [];
+      effect(store, (state) => changes.push(state));
 
-      expect(await statePromise).toEqual([{ value: 1 }]);
+      store.update((state) => state);
+      runEffects();
+
+      expect(changes).toEqual([{ value: 1 }]);
     });
   });
 

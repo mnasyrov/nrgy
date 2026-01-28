@@ -1,4 +1,3 @@
-import { collectAtomChanges } from '../../test/collectAtomChanges';
 import { objectEquals } from '../common/objectEquals';
 import { atom, compute, effect } from '../reactivity/reactivity';
 import { runEffects } from '../utils/runEffects';
@@ -71,15 +70,18 @@ describe('Concurrent Store updates', () => {
       foo: number;
     }>({ bar: 0, foo: 0 }, { equal: objectEquals });
 
-    const history = await collectAtomChanges(store, () => {
-      store.update((state) => ({ ...state, foo: 1 }));
-      store.update((state) => ({ ...state, foo: 2 }));
-      store.update((state) => ({ ...state, bar: 42 }));
-      store.update((state) => ({ ...state, foo: 2 }));
-      store.update((state) => ({ ...state, foo: 3 }));
-    });
+    const changes: any[] = [];
+    effect(store, (state) => changes.push(state));
+    runEffects();
 
-    expect(history).toEqual([
+    store.update((state) => ({ ...state, foo: 1 }));
+    store.update((state) => ({ ...state, foo: 2 }));
+    store.update((state) => ({ ...state, bar: 42 }));
+    store.update((state) => ({ ...state, foo: 2 }));
+    store.update((state) => ({ ...state, foo: 3 }));
+    runEffects();
+
+    expect(changes).toEqual([
       { bar: 0, foo: 0 },
       { bar: 42, foo: 3 },
     ]);
@@ -95,13 +97,16 @@ describe('Concurrent Store updates', () => {
     effect(store, ({ x }) => store.update((state) => ({ ...state, y: x })));
     effect(store, ({ y }) => store.update((state) => ({ ...state, z: y })));
 
-    const history = await collectAtomChanges(store, () => {
-      store.update((state) => ({ ...state, x: 1 }));
-      store.update((state) => ({ ...state, x: 2 }));
-      store.update((state) => ({ ...state, x: 3 }));
-    });
+    const changes: any[] = [];
+    effect(store, (state) => changes.push(state));
+    runEffects();
 
-    expect(history).toEqual([
+    store.update((state) => ({ ...state, x: 1 }));
+    store.update((state) => ({ ...state, x: 2 }));
+    store.update((state) => ({ ...state, x: 3 }));
+    runEffects();
+
+    expect(changes).toEqual([
       { x: 0, y: 0, z: 0 },
       { x: 3, y: 3, z: 3 },
     ]);
@@ -116,12 +121,13 @@ describe('Concurrent Store updates', () => {
       }
     });
 
-    const changes = await collectAtomChanges(store, () => {
-      store.set(1);
-      store.set(2);
-      store.set(3);
-    });
+    const changes: any[] = [];
+    effect(store, (x) => changes.push(x));
+    runEffects();
 
+    store.set(1);
+    store.set(2);
+    store.set(3);
     runEffects();
 
     expect(changes).toEqual([0, 30, 300]);
