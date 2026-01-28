@@ -16,7 +16,13 @@ export function resetFastArray<T>(array: FastArray<T>): void {
 }
 
 export function pushFastArray<T>(array: FastArray<T>, value: T): void {
-  array[array.size++] = value;
+  if (array.size > 0 && array[array.size - 1] === value) {
+    return;
+  } else if (array.size > 0 && array[array.size] === value) {
+    array.size++;
+  } else {
+    array[array.size++] = value;
+  }
 }
 
 /**

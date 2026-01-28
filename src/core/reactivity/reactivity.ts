@@ -530,7 +530,7 @@ export const compute: ComputeFn = function <T>(
     equal: options?.equal,
     id: RUNTIME.nextId++,
     label: options?.label,
-    observerRefs: fastArray(),
+    observerRefs: undefined,
     ref: undefined,
     status: COMPUTED_STATUS_STALE,
     type: NODE_TYPE_COMPUTED,
