@@ -1,5 +1,5 @@
 /**
- * Returns a next safe integer value.
+ * Returns the next safe integer value.
  *
  * It can overflow Number.MAX_SAFE_INTEGER and starts from Number.MIN_SAFE_INTEGER.
  */

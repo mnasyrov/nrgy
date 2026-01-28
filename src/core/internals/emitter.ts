@@ -11,6 +11,7 @@ export type EmitterSubscription = { destroy: () => void };
 /**
  * @internal
  */
+
 export class Emitter<T> {
   private readonly listeners: Set<Listener<T>> = new Set();
 

@@ -1,3 +1,5 @@
+import { nrgyQueueMicrotask } from '../internals/queueMicrotask';
+
 import {
   fastRingBuffer,
   isEmptyFastRingBuffer,
@@ -58,7 +60,7 @@ export function createMicrotaskScheduler<Task>(
 
       if (prevEmpty && !isActive && !isPlanned) {
         isPlanned = true;
-        queueMicrotask(execute);
+        nrgyQueueMicrotask(execute);
       }
     },
     execute,
@@ -72,7 +74,7 @@ export function createMicrotaskScheduler<Task>(
 
       if (!isPlanned && !isEmptyFastRingBuffer(queue)) {
         isPaused = true;
-        queueMicrotask(execute);
+        nrgyQueueMicrotask(execute);
       }
     },
   };
