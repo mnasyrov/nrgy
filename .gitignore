@@ -2,7 +2,7 @@
 /.vscode
 /coverage
 /dist
-.eslintcache
+/packages/*/dist
 .DS_Store
 .turbo
 node_modules

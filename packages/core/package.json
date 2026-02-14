@@ -1,0 +1,23 @@
+{
+  "name": "@nrgyjs/core",
+  "version": "1.0.0",
+  "description": "The library for reactive programming with MVC/MVVM patterns",
+  "license": "MIT",
+  "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
+  "homepage": "https://github.com/mnasyrov/nrgy",
+  "bugs": "https://github.com/mnasyrov/nrgy/issues",
+  "repository": "github:mnasyrov/nrgy",
+  "type": "module",
+  "files": ["dist", "docs", "src", "LICENSE", "README.md"],
+  "types": "./dist/index.d.cts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  }
+}

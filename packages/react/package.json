@@ -1,0 +1,19 @@
+{
+  "name": "@nrgyjs/react",
+  "version": "1.0.0",
+  "description": "The library for reactive programming with MVC/MVVM patterns",
+  "license": "MIT",
+  "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
+  "homepage": "https://github.com/mnasyrov/nrgy",
+  "bugs": "https://github.com/mnasyrov/nrgy/issues",
+  "repository": "github:mnasyrov/nrgy",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "files": ["dist", "docs", "src", "LICENSE", "README.md"],
+  "peerDependencies": {
+    "@nrgyjs/core": ">=1",
+    "react": ">=17 || >=18 || >= 19"
+  }
+}

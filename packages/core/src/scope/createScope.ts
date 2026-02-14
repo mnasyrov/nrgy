@@ -1,0 +1,34 @@
+import type { AnyFunction } from '../common/types';
+import { atom, effect, syncEffect } from '../reactivity/reactivity';
+
+import { BaseScope } from './baseScope';
+import type { Scope } from './types';
+
+/**
+ * Creates `Scope` instance.
+ */
+export function createScope(): Scope {
+  const scope = new BaseScope();
+
+  return {
+    onDestroy: scope.onDestroy.bind(scope),
+    add: scope.add.bind(scope),
+    destroy: scope.destroy.bind(scope),
+
+    createScope: () => {
+      return scope.add(createScope());
+    },
+
+    atom: (...args: any[]) => {
+      return scope.add((atom as AnyFunction)(...args));
+    },
+
+    effect: (...args: any[]) => {
+      return scope.add((effect as AnyFunction)(...args));
+    },
+
+    syncEffect: (...args: any[]) => {
+      return scope.add((syncEffect as AnyFunction)(...args));
+    },
+  };
+}

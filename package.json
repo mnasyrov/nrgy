@@ -1,111 +1,51 @@
 {
   "private": true,
-  "name": "nrgy",
-  "version": "0.0.46",
-  "description": "The library for reactive programming using efficient computing and MVC/MVVM patterns",
+  "name": "@nrgyjs/root",
+  "version": "0.0.1",
+  "description": "The library for reactive programming with MVC/MVVM patterns",
   "license": "MIT",
   "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
   "homepage": "https://github.com/mnasyrov/nrgy",
   "bugs": "https://github.com/mnasyrov/nrgy/issues",
   "repository": "github:mnasyrov/nrgy",
-  "workspaces": [
-    ".",
-    "benchmarks"
-  ],
+  "workspaces": ["packages/*"],
   "type": "module",
-  "main": "index.cjs",
-  "module": "index.js",
-  "types": "index.d.ts",
-  "files": [
-    "dist",
-    "docs",
-    "src",
-    "LICENSE",
-    "README.md"
-  ],
-  "exports": {
-    ".": {
-      "require": "./index.cjs",
-      "default": "./index.js"
-    },
-    "./ditox": {
-      "require": "./ditox.cjs",
-      "default": "./ditox.js"
-    },
-    "./ditox-react": {
-      "require": "./ditox-react.cjs",
-      "default": "./ditox-react.js"
-    },
-    "./react": {
-      "require": "./react.cjs",
-      "default": "./react.js"
-    },
-    "./rx-effects": {
-      "require": "./rx-effects.cjs",
-      "default": "./rx-effects.js"
-    },
-    "./rxjs": {
-      "require": "./rxjs.cjs",
-      "default": "./rxjs.js"
-    }
-  },
   "scripts": {
     "prepare": "test -d .git && husky || true",
-    "clean": "rm -rf build coverage dist .eslintcache",
-    "lint": "npm run eslint && npm run tsc",
-    "eslint": "eslint --max-warnings 0 \"src/**\"",
-    "eslint-fix": "npm run eslint -- --fix",
-    "tsc": "tsc --noEmit --jsx react-jsx",
-    "test": "jest",
-    "build": "node build.mjs",
-    "pack": "npm run build && cd dist && npm --silent pack",
-    "preversion": "npm run build && npm run lint && npm run test && git add --all",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "postversion": "npm run changelog && git add .",
-    "publish": "npm run build && cd dist && npm publish",
+    "husky-precommit": "biome check --staged --write",
     "deps-check": "npx -y npm-check-updates --format 'group,repo,time'",
+    "deps-upgrade": "npm run deps-check -- --upgrade",
+    "clean": "rm -rf build coverage dist packages/{core,ditox,ditox-react,react,rx-effects,rxjs}/dist",
+    "build": "tsdown",
+    "format": "biome check --write",
+    "check": "npm run check-sources && npm run check-types",
+    "check-sources": "biome check",
+    "check-types": "tsc --noEmit --jsx react-jsx",
+    "test": "vitest --run",
+    "test-watch": "vitest --watch",
+    "test-coverage": "vitest --run --coverage",
+    "pack": "npm run build && mkdir -p dist && cd dist && npm pack --workspaces",
+    "preversion": "npm run check && npm run build && npm run test && git add --all",
+    "publish": "npm run build && cd dist && npm publish",
     "benchmark": "npm run -w nrgy-benchmarks start"
   },
-  "optionalDependencies": {
-    "ditox": ">=2.2 || >=3",
-    "ditox-react": ">=2.2 || >=3",
-    "react": ">=17 || >=18 || >= 19",
-    "rx-effects": ">=1",
-    "rxjs": ">=7"
-  },
   "devDependencies": {
-    "@eslint/compat": "1.2.9",
-    "@eslint/eslintrc": "3.3.1",
-    "@eslint/js": "9.25.1",
-    "@testing-library/dom": "10.4.0",
-    "@testing-library/jest-dom": "6.6.3",
-    "@testing-library/react": "16.3.0",
+    "@biomejs/biome": "2.3.15",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
-    "@types/jest": "29.5.14",
-    "@types/react": "19.1.2",
-    "@typescript-eslint/eslint-plugin": "8.31.1",
-    "@typescript-eslint/parser": "8.31.1",
-    "conventional-changelog-cli": "5.0.0",
-    "ditox": "3.0.0",
-    "ditox-react": "3.0.1",
-    "eslint": "9.25.1",
-    "eslint-config-prettier": "10.1.2",
-    "eslint-plugin-eslint-comments": "3.2.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-jest": "28.11.0",
-    "eslint-plugin-react-hooks": "5.2.0",
+    "@types/react": "19.2.14",
+    "ditox": "3.1.0",
+    "ditox-react": "3.1.0",
+    "happy-dom": "20.6.1",
     "husky": "9.1.7",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "lint-staged": "15.5.1",
-    "prettier": "3.5.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-test-renderer": "19.1.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-test-renderer": "19.2.4",
     "rxjs": "7.8.2",
-    "ts-jest": "29.3.2",
-    "tsup": "8.4.0",
-    "typescript": "5.8.3"
+    "tsdown": "0.20.3",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
   },
   "attributions": [
     {

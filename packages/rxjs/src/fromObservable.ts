@@ -1,0 +1,49 @@
+import { type Atom, createAtomSubject } from '@nrgyjs/core';
+import { Observable, type Subscribable, type Unsubscribable } from 'rxjs';
+
+/**
+ * Get the current value of an `Observable` as a reactive `Atom`.
+ *
+ * `fromObservable` returns a `Atom` which provides synchronous reactive access to values produced
+ * by the given `Observable`, by subscribing to that `Observable`. The returned `Atom` will always
+ * have the most recent value emitted by the subscription, and will throw an error if the
+ * `Observable` errors.
+ */
+export function fromObservable<T>(
+  source: Observable<T> | Subscribable<T>,
+): Atom<T | undefined>;
+
+/**
+ * Get the current value of an `Observable` as a reactive `Atom`.
+ *
+ * `fromObservable` returns a `Atom` which provides synchronous reactive access to values produced
+ * by the given `Observable`, by subscribing to that `Observable`. The returned `Atom` will always
+ * have the most recent value emitted by the subscription, and will throw an error if the
+ * `Observable` errors.
+ */
+export function fromObservable<T>(
+  source: Observable<T> | Subscribable<T>,
+  initialValue: T,
+): Atom<T>;
+
+export function fromObservable<T, U = undefined>(
+  source: Observable<T> | Subscribable<T>,
+  initialValue?: T | U,
+): Atom<T | U> {
+  let subscription: Unsubscribable | undefined = undefined;
+
+  // Note: T is the Observable value type, and U is the initial value type. They don't have to be
+  // the same - the returned atom gives values of type `T`.
+  //
+  // If an initial value was passed, use it. Otherwise, use `undefined` as the initial value.
+  const atomSubject = createAtomSubject<T | U>(initialValue as U, {
+    onDestroy: () => subscription?.unsubscribe(),
+  });
+
+  subscription = source.subscribe({
+    next: atomSubject.next,
+    error: atomSubject.error,
+  });
+
+  return atomSubject;
+}
