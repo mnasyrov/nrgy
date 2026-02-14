@@ -16,6 +16,10 @@ export default defineConfig({
     alias: {
       ...getNrgyPackageAliases(nrgyPackages),
     },
+    coverage: {
+      reporter: ['text', 'html', 'lcov'],
+      exclude: ['index.ts', 'index.tsx'],
+    },
   },
 });
 
