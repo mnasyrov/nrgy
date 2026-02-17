@@ -56,7 +56,28 @@ export interface SourceAtom<T> extends Atom<T> {
    * Destroys the atom, notifies any dependents and calls `onDestroy` callback.
    */
   destroy(): void;
+
+  /**
+   * Returns a new atom with predefined updates.
+   */
+  withUpdates<TUpdates extends Record<string, (value: T, ...args: any[]) => T>>(
+    updates: TUpdates,
+  ): this & {
+    readonly updates: SourceAtomUpdates<T, TUpdates>;
+  };
 }
+
+export type SourceAtomUpdates<
+  TValue,
+  TUpdates extends Record<string, (value: TValue, ...args: any[]) => TValue>,
+> = {
+  [K in keyof TUpdates]: TUpdates[K] extends (
+    x: any,
+    ...args: infer P
+  ) => TValue
+    ? (...args: P) => void
+    : never;
+};
 
 /**
  * Options passed to the `atom` creation function.

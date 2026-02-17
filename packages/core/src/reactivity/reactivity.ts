@@ -349,6 +349,10 @@ export const atom: AtomFn = function <T>(
     version: 0,
   };
 
+  return createSourceAtom<T>(node);
+};
+
+function createSourceAtom<T>(node: AtomNode<T>): SourceAtom<T> {
   const source = (() => getAtomValue(node)) as SourceAtom<T>;
   source[ATOM_SYMBOL] = node;
   source.destroy = () => destroyAtom(node);
@@ -357,8 +361,20 @@ export const atom: AtomFn = function <T>(
   source.mutate = (mutator: (value: T) => void) =>
     mutateAtomValue(node, mutator);
 
+  source.withUpdates = (updates: any) => {
+    const clone = createSourceAtom(node);
+
+    const actions: any = {};
+    for (const key in updates) {
+      actions[key] = (...args: any[]) =>
+        clone.update((value) => updates[key](value, ...args));
+    }
+    (clone as any).updates = actions;
+    return clone as any;
+  };
+
   return source;
-};
+}
 
 function destroyObserverRefs(sourceNode: BaseSourceNode): void {
   const list = sourceNode.observerRefs;
@@ -539,11 +555,15 @@ export const compute: ComputeFn = function <T>(
     version: 0,
   };
 
+  return createComputedAtom(node);
+};
+
+function createComputedAtom<T>(node: ComputedNode<T>): Atom<T> {
   const computed = (() => getComputedValue(node)) as Atom<T>;
   computed[ATOM_SYMBOL] = node;
 
   return computed;
-};
+}
 
 /** @internal */
 export function destroyComputed<T>(node: ComputedNode<T>): void {
