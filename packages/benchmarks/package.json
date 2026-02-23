@@ -11,10 +11,10 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf build coverage dist",
-    "start": "npm run -w nrgy build -- --silent && node index.mjs"
+    "start": "npm run --include-workspace-root -w nrgy-root build -- --silent && node index.mjs"
   },
   "devDependencies": {
-    "nrgy-reference": "npm:nrgy@0.0.45",
-    "tinybench": "2.8.0"
+    "tinybench": "6.0.0",
+    "@nrgyjs/core": "*"
   }
 }

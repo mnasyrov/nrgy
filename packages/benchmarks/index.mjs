@@ -1,6 +1,5 @@
+import * as DEV_CORE from '@nrgyjs/core';
 import { Bench } from 'tinybench';
-
-import * as DEV_CORE from '../dist/index.js';
 
 const ITERATION_COUNT = 200;
 
@@ -14,23 +13,13 @@ async function main() {
     avoidablePropagation(DEV_CORE),
   );
 
-  // bench.add('REF: avoidablePropagation', avoidablePropagation(REF_CORE));
-
   bench.add('compute (syncEffect)', () => {
     return createDevComputeTest(DEV_CORE, { sync: true });
   });
 
-  // bench.add('REF: compute + syncEffect', () => {
-  //   return createReferenceComputeTest(REF_CORE, { sync: true });
-  // });
-
   bench.add('compute (async effect)    ', () => {
     return createDevComputeTest(DEV_CORE, { sync: false });
   });
-
-  // bench.add('REF: compute + effect    ', () => {
-  //   return createReferenceComputeTest(REF_CORE, { sync: false });
-  // });
 
   await bench.run();
 
