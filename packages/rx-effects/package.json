@@ -26,8 +26,8 @@
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "@nrgyjs/core": ">=1",
-    "@nrgyjs/rxjs": ">=1",
+    "@nrgyjs/core": "1.0.0",
+    "@nrgyjs/rxjs": "1.0.0",
     "rx-effects": ">=1",
     "rxjs": ">=7"
   }
