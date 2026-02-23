@@ -28,12 +28,16 @@
     "test-coverage": "vitest --run --coverage",
     "pack": "npm run build && mkdir -p dist && npm pack --workspaces --pack-destination ./dist",
     "preversion": "npm run check && npm run build && npm run test && git add --all",
-    "publish": "npm run build && cd dist && npm publish",
+    "preview:new-version": "lerna version --dry-run",
+    "new-version": "lerna version",
+    "new-publish": "lerna publish from-package",
     "benchmark": "cd ./benchmarks && npm start"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.2",
     "@biomejs/biome": "2.3.15",
+    "@lerna-lite/cli": "4.11.3",
+    "@lerna-lite/publish": "4.11.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
