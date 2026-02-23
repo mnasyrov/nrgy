@@ -182,11 +182,11 @@ describe('declareController() with classes', () => {
 
       readonly counter = readonlyAtom(this.store);
 
-      protected onCreated() {
+      protected override onCreated() {
         onCreatedCallback();
       }
 
-      protected onDestroy() {
+      protected override onDestroy() {
         onDestroyCallback();
       }
 
