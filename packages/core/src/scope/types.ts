@@ -1,21 +1,21 @@
 import type { AtomFn, EffectFn } from '../reactivity/types';
 
 /**
- * An object which can be unsubscribed from
+ * An object, which can be unsubscribed from
  */
 export interface Unsubscribable {
   unsubscribe(): void;
 }
 
 /**
- * An object which can be destroyed
+ * An object, which can be destroyed
  */
 export interface Destroyable {
   destroy(): void;
 }
 
 /**
- * A resource which can be unsubscribed from or destroyed
+ * A resource, which can be unsubscribed from or destroyed
  */
 export type ScopeTeardown = Unsubscribable | Destroyable | (() => unknown);
 
@@ -23,7 +23,7 @@ export type ScopeTeardown = Unsubscribable | Destroyable | (() => unknown);
  * A boundary for effects and business logic.
  *
  * `Scope` collects all subscriptions which are made by child entities and provides
- * `destroy()` method to unsubscribe from them.
+ *  the `destroy()` method to unsubscribe from them.
  */
 export interface Scope extends Destroyable {
   /**
@@ -63,6 +63,6 @@ export interface Scope extends Destroyable {
 }
 
 /**
- * `SharedScope` and `Scope` types allow to distinct which third-party code can invoke `destroy()` method.
+ * `SharedScope` and `Scope` types allow distinct which third-party code can invoke the `destroy()` method.
  */
 export type SharedScope = Omit<Scope, 'destroy'>;

@@ -49,25 +49,6 @@ export type {
 } from './scope/types';
 
 //
-// Store
-//
-
-export type { DeclareStoreOptions, StoreFactory } from './store/declareStore';
-export { declareStore } from './store/declareStore';
-export type {
-  StateMutation,
-  StateUpdates,
-  Store,
-  StoreUpdate,
-  StoreUpdates,
-} from './store/store';
-export {
-  createStore,
-  createStoreUpdates,
-  declareStateUpdates,
-} from './store/store';
-
-//
 // Utilities
 //
 

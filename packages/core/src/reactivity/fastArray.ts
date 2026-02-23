@@ -49,35 +49,10 @@ export function fastRingBuffer<T>(initialCapacity = 32): FastRingBuffer<T> {
 }
 
 /**
- * Number of queued items.
- */
-export function sizeOfFastRingBuffer<T>(ring: FastRingBuffer<T>): number {
-  return ring[0] | 0;
-}
-
-/**
  * Whether the buffer is empty.
  */
 export function isEmptyFastRingBuffer<T>(ring: FastRingBuffer<T>): boolean {
   return (ring[0] | 0) === 0;
-}
-
-/**
- * Reset buffer content but keep capacity.
- */
-export function resetFastRingBuffer<T>(ring: FastRingBuffer<T>): void {
-  ring[0] = 0; // size
-  ring[2] = 0; // head
-}
-
-/**
- * Dispose buffer content and shrink underlying array.
- */
-export function disposeFastRingBuffer<T>(ring: FastRingBuffer<T>): void {
-  ring[0] = 0;
-  ring[1] = 0;
-  ring[2] = 0;
-  (ring as any).length = 3;
 }
 
 /**

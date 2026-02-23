@@ -1,6 +1,6 @@
 import {
   type Atom,
-  declareStore,
+  atom,
   declareViewModel,
   readonlyAtom,
   type ViewModel,
@@ -8,12 +8,12 @@ import {
 import { withInjections } from '@nrgyjs/ditox';
 import { DitoxNrgyExtension } from '@nrgyjs/ditox-react';
 import { render, screen } from '@testing-library/react';
-import React, { type FC, type PropsWithChildren } from 'react';
-import { describe, expect, it } from 'vitest';
-import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { createContainer, token } from 'ditox';
 import { CustomDependencyContainer } from 'ditox-react';
+import React, { type FC, type PropsWithChildren } from 'react';
+import { describe, expect, it } from 'vitest';
+import '@testing-library/jest-dom';
 
 import { useAtoms } from './useAtoms';
 import { withViewModel } from './withViewModel';
@@ -50,19 +50,18 @@ describe('withViewModel()', () => {
     );
   };
 
-  const CounterStore = declareStore<number>({
-    initialState: 0,
-    updates: {
-      increase: () => (state) => state + 1,
-      decrease: () => (state) => state - 1,
-    },
-  });
+  const createCounterStore = (initialValue: number) => {
+    return atom<number>(initialValue).withUpdates({
+      increase: (state) => state + 1,
+      decrease: (state) => state - 1,
+    });
+  };
 
   const CounterViewModel = declareViewModel<CounterViewModelType>(
     ({ scope, view }) => {
       const { initialValue } = view.props;
 
-      const store = scope.add(new CounterStore(initialValue()));
+      const store = scope.add(createCounterStore(initialValue()));
 
       return {
         state: { value: readonlyAtom(store) },
@@ -107,7 +106,9 @@ describe('withViewModel()', () => {
         const { initialValue } = view.props;
         const { extraValue } = deps;
 
-        const store = scope.add(new CounterStore(initialValue() + extraValue));
+        const store = scope.add(
+          createCounterStore(initialValue() + extraValue),
+        );
 
         return {
           state: { value: readonlyAtom(store) },
@@ -157,7 +158,7 @@ describe('withViewModel()', () => {
 
     class CounterViewModel extends BaseCounterViewModel {
       private store = this.scope.add(
-        new CounterStore(
+        createCounterStore(
           this.view.props.initialValue() + this.context.deps.extraValue,
         ),
       );
