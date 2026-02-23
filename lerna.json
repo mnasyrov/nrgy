@@ -1,12 +1,13 @@
 {
   "$schema": "node_modules/@lerna-lite/cli/schemas/lerna-schema.json",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.0",
   "packages": [
     "packages/*"
   ],
   "command": {
     "version": {
-      "conventionalCommits": true
+      "conventionalCommits": true,
+      "exact": true
     }
   }
 }
