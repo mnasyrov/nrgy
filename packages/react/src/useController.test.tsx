@@ -138,6 +138,34 @@ describe('useController() and withView() extension', () => {
     expect(unmountCallback).toHaveBeenCalledTimes(1);
   });
 
+  it('should emit an empty update `{}` on props change when using no explicit props', async () => {
+    const updateCallback = vi.fn();
+
+    const ViewController = declareController()
+      .extend(withView<Record<string, never>>())
+      .apply(({ view }) => {
+        view.onUpdate(updateCallback);
+      });
+
+    const { rerender, unmount } = renderHook(
+      ({ p }) => useController(ViewController, p),
+      { initialProps: { p: {} as Record<string, never> } },
+    );
+
+    // First render schedules mount; update before mount is ignored
+    await timeout();
+    expect(updateCallback).toHaveBeenCalledTimes(0);
+
+    // Change props identity to trigger update after mount
+    rerender({ p: {} });
+    await timeout();
+
+    expect(updateCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenLastCalledWith({});
+
+    unmount();
+  });
+
   it('should call lifecycle signals using async effect()', async () => {
     const mountCallback = vi.fn();
     const updateCallback = vi.fn();

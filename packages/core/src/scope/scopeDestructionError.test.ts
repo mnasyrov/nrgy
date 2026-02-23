@@ -21,4 +21,32 @@ describe('ScopeDestructionError', () => {
     expect(teardown1).toHaveBeenCalledTimes(1);
     expect(teardown2).toHaveBeenCalledTimes(1);
   });
+
+  it('should aggregate multiple errors from teardowns', () => {
+    const scope = createScope();
+
+    const e1 = new Error('first');
+    const e2 = new Error('second');
+    const teardown1 = vi.fn(() => {
+      throw e1;
+    });
+    const teardown2 = vi.fn(() => {
+      throw e2;
+    });
+
+    scope.onDestroy(teardown1);
+    scope.onDestroy(teardown2);
+
+    try {
+      scope.destroy();
+      expect.unreachable('should throw');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ScopeDestructionError);
+      const errors = (err as ScopeDestructionError).errors as unknown[];
+      expect(errors).toEqual([e2, e1]);
+    }
+
+    expect(teardown1).toHaveBeenCalledTimes(1);
+    expect(teardown2).toHaveBeenCalledTimes(1);
+  });
 });

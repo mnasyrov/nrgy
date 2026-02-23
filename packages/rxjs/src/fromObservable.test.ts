@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from 'rxjs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { fromObservable } from './fromObservable';
 
@@ -13,6 +13,20 @@ describe('fromObservable()', () => {
     expect(counter()).toBe(1);
     counter$.next(3);
     expect(counter()).toBe(3);
+  });
+
+  it('should unsubscribe from source when atom is destroyed', () => {
+    // Minimal observable that exposes unsubscribe
+    const unsub = { unsubscribe: vi.fn() };
+    const observable = {
+      subscribe: () => unsub,
+    } as any;
+
+    const state = fromObservable<number>(observable);
+    expect(unsub.unsubscribe).toHaveBeenCalledTimes(0);
+
+    (state as any).destroy();
+    expect(unsub.unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('should notify when the last emitted value of an Observable changes', () => {

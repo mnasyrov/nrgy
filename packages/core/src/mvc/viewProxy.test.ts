@@ -107,4 +107,38 @@ describe('ViewProxy', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('mount/destroy guards', () => {
+    it('should not emit mount twice', () => {
+      const view = createViewProxy();
+      const onMount = vi.fn();
+      view.onMount(onMount);
+
+      view.mount();
+      view.mount();
+
+      expect(onMount).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not emit unmount if not mounted', () => {
+      const view = createViewProxy();
+      const onUnmount = vi.fn();
+      view.onUnmount(onUnmount);
+
+      view.unmount();
+      expect(onUnmount).toHaveBeenCalledTimes(0);
+    });
+
+    it('should emit unmount on destroy and ignore further destroys', () => {
+      const view = createViewProxy();
+      const onUnmount = vi.fn();
+      view.onUnmount(onUnmount);
+
+      view.mount();
+      view.destroy();
+      view.destroy();
+
+      expect(onUnmount).toHaveBeenCalledTimes(1);
+    });
+  });
 });
