@@ -1,8 +1,8 @@
 {
   "private": true,
   "name": "nrgy-benchmarks",
-  "version": "0.0.34",
-  "description": "Benchmarks for Nrgy library",
+  "version": "1.0.0",
+  "description": "Benchmarks for Nrgy.js library",
   "license": "MIT",
   "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
   "homepage": "https://github.com/mnasyrov/nrgy",
@@ -10,11 +10,11 @@
   "repository": "github:mnasyrov/nrgy",
   "type": "module",
   "scripts": {
-    "clean": "rm -rf build coverage dist",
-    "start": "npm run --include-workspace-root -w nrgy-root build -- --silent && node index.mjs"
+    "prestart": "(cd .. && npm run build) && npm i",
+    "start": "node index.mjs"
   },
   "devDependencies": {
     "tinybench": "6.0.0",
-    "@nrgyjs/core": "*"
+    "@nrgyjs/core": "file://../packages/core"
   }
 }

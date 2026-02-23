@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  workspace: ['packages/*', '!packages/benchmarks'],
+  workspace: ['packages/*'],
   entry: `./src/index.ts`,
   format: ['cjs', 'esm'],
   platform: 'neutral',
