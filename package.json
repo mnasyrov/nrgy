@@ -8,11 +8,13 @@
   "homepage": "https://github.com/mnasyrov/nrgy",
   "bugs": "https://github.com/mnasyrov/nrgy/issues",
   "repository": "github:mnasyrov/nrgy",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "type": "module",
   "scripts": {
     "prepare": "test -d .git && husky || true",
-    "husky-precommit": "biome check --staged --write",
+    "husky-precommit": "biome check --staged --write --no-errors-on-unmatched",
     "deps-check": "npx -y npm-check-updates --format 'group,repo,time'",
     "deps-upgrade": "npm run deps-check -- --upgrade",
     "clean": "rm -rf build coverage dist packages/{core,ditox,ditox-react,react,rx-effects,rxjs}/dist",
@@ -30,6 +32,7 @@
     "benchmark": "npm run -w nrgy-benchmarks start"
   },
   "devDependencies": {
+    "@arethetypeswrong/core": "0.18.2",
     "@biomejs/biome": "2.3.15",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
@@ -40,6 +43,7 @@
     "ditox-react": "3.1.0",
     "happy-dom": "20.6.1",
     "husky": "9.1.7",
+    "publint": "0.3.17",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-test-renderer": "19.2.4",

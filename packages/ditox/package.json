@@ -8,15 +8,20 @@
   "bugs": "https://github.com/mnasyrov/nrgy/issues",
   "repository": "github:mnasyrov/nrgy",
   "type": "module",
-  "files": ["dist", "docs", "src", "LICENSE", "README.md"],
+  "files": [
+    "dist",
+    "docs",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
   "types": "./dist/index.d.cts",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.cts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },

@@ -124,5 +124,12 @@
       "selfCloseVoidElements": "always"
     }
   },
-  "assist": { "enabled": true }
+  "json": {
+    "formatter": {
+      "expand": "always"
+    }
+  },
+  "assist": {
+    "enabled": true
+  }
 }

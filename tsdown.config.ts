@@ -7,5 +7,7 @@ export default defineConfig({
   platform: 'neutral',
   target: 'es2020',
   dts: true,
-  // exports: true,
+  attw: true,
+  publint: true,
+  exports: true,
 });
