@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "The library for reactive programming with MVC/MVVM patterns",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "Mikhail Nasyrov (https://github.com/mnasyrov)",
   "homepage": "https://github.com/mnasyrov/nrgy",
   "bugs": "https://github.com/mnasyrov/nrgy/issues",
