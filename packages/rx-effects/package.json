@@ -1,6 +1,6 @@
 {
   "name": "@nrgyjs/rx-effects",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The library for reactive programming with MVC/MVVM patterns",
   "license": "MIT",
   "publishConfig": {
