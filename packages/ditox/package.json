@@ -29,7 +29,7 @@
     "./package.json": "./package.json"
   },
   "peerDependencies": {
-    "@nrgyjs/core": "1.0.0-alpha.0",
+    "@nrgyjs/core": "^1.0.0",
     "ditox": ">=2.2 || >=3"
   }
 }
