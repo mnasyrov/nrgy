@@ -1,4 +1,4 @@
-import { type Atom, createAtomSubject } from '@nrgyjs/core';
+import { createAtomSubject, type DestroyableAtom } from '@nrgyjs/core';
 import { Observable, type Subscribable, type Unsubscribable } from 'rxjs';
 
 /**
@@ -11,7 +11,7 @@ import { Observable, type Subscribable, type Unsubscribable } from 'rxjs';
  */
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
-): Atom<T | undefined>;
+): DestroyableAtom<T | undefined>;
 
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.
@@ -24,12 +24,12 @@ export function fromObservable<T>(
 export function fromObservable<T>(
   source: Observable<T> | Subscribable<T>,
   initialValue: T,
-): Atom<T>;
+): DestroyableAtom<T>;
 
 export function fromObservable<T, U = undefined>(
   source: Observable<T> | Subscribable<T>,
   initialValue?: T | U,
-): Atom<T | U> {
+): DestroyableAtom<T | U> {
   let subscription: Unsubscribable | undefined = undefined;
 
   // Note: T is the Observable value type, and U is the initial value type. They don't have to be
