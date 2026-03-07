@@ -16,7 +16,7 @@ export function fromObservable<T>(
 /**
  * Get the current value of an `Observable` as a reactive `Atom`.
  *
- * `fromObservable` returns a `Atom` which provides synchronous reactive access to values produced
+ * `fromObservable` returns an `Atom` which provides synchronous reactive access to values produced
  * by the given `Observable`, by subscribing to that `Observable`. The returned `Atom` will always
  * have the most recent value emitted by the subscription, and will throw an error if the
  * `Observable` errors.
