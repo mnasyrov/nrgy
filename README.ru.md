@@ -67,3 +67,7 @@ React, RxJS, `rx-effects` и `ditox`.
 - [@nrgyjs/ditox-react](./packages/ditox-react/README.ru.md)
 - [@nrgyjs/rxjs](./packages/rxjs/README.ru.md)
 - [@nrgyjs/rx-effects](./packages/rx-effects/README.ru.md)
+
+---
+
+Translation: [EN](./README.md) | RU

@@ -40,3 +40,7 @@ try {
   nrgyReportError(error);
 }
 ```
+
+---
+
+Translation: EN | [RU](./reportError.ru.md)

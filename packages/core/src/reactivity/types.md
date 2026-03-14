@@ -72,3 +72,7 @@ const options: EffectOptions = {
   sync: true,
 };
 ```
+
+---
+
+Translation: EN | [RU](./types.ru.md)

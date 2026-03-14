@@ -53,3 +53,7 @@ const controller = factory(container);
 controller.write();
 controller.destroy();
 ```
+
+---
+
+Translation: EN | [RU](./applyInjections.ru.md)

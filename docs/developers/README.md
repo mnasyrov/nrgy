@@ -34,3 +34,7 @@ documented, formatted, and maintained. They are intended for:
 - Do not create standalone documentation for `index.ts`; document package entry
   points in package-level `README.md` files.
 - Keep English and Russian documentation in sync.
+
+---
+
+Translation: EN | [RU](./README.ru.md)

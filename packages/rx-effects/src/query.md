@@ -46,3 +46,7 @@ const countQuery = toQuery(count);
 console.log(countQuery.get()); // 10
 countQuery.value$.subscribe(v => console.log(v));
 ```
+
+---
+
+Translation: EN | [RU](./query.ru.md)

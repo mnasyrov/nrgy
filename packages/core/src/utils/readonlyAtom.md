@@ -39,3 +39,7 @@ console.log(exposed()); // 1
 source.set(2);
 console.log(exposed()); // 2
 ```
+
+---
+
+Translation: EN | [RU](./readonlyAtom.ru.md)

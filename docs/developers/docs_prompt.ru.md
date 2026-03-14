@@ -47,3 +47,7 @@
 ```
 
 ---
+
+---
+
+Translation: [EN](./docs_prompt.md) | RU

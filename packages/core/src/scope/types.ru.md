@@ -57,3 +57,7 @@ const resource: Destroyable = {
 
 const teardown: ScopeTeardown = resource;
 ```
+
+---
+
+Translation: [EN](./types.md) | RU

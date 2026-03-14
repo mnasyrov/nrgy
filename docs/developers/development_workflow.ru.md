@@ -57,3 +57,7 @@ npm run build
 - Пакетные `CHANGELOG.md` фиксируют изменения конкретных пакетов.
 - Названия пакетов и команды установки должны браться из актуальных
   `package.json`.
+
+---
+
+Translation: [EN](./development_workflow.md) | RU

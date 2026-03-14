@@ -55,3 +55,7 @@ const GreetingController = declareController()
 const view = createViewProxy({ name: 'Ada' });
 const controller = new GreetingController([provideView(view)]);
 ```
+
+---
+
+Translation: [EN](./withView.md) | RU

@@ -96,3 +96,7 @@ class LoggerController extends BaseController<
   }
 }
 ```
+
+---
+
+Translation: EN | [RU](./controller.ru.md)

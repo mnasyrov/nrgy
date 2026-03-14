@@ -59,3 +59,7 @@ abstraction layers.
 - Maintain English `.md` and Russian `.ru.md` variants for source docs.
 - Keep README links aligned with the actual file layout.
 - Ensure examples compile conceptually against the current public API.
+
+---
+
+Translation: EN | [RU](./coding_style.ru.md)

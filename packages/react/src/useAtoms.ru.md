@@ -59,3 +59,7 @@ export function UserCard() {
   return <span>{first} {last}</span>;
 }
 ```
+
+---
+
+Translation: [EN](./useAtoms.md) | RU

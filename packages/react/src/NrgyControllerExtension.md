@@ -57,3 +57,7 @@ export function App() {
   );
 }
 ```
+
+---
+
+Translation: EN | [RU](./NrgyControllerExtension.ru.md)

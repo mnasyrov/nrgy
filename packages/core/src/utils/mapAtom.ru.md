@@ -36,3 +36,7 @@ const dollars = mapAtom(cents, (value) => value / 100);
 
 console.log(dollars()); // 25
 ```
+
+---
+
+Translation: [EN](./mapAtom.md) | RU

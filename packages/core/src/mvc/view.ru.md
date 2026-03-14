@@ -63,3 +63,7 @@ function bindView(view: ViewBinding<UserProps>) {
   });
 }
 ```
+
+---
+
+Translation: [EN](./view.md) | RU

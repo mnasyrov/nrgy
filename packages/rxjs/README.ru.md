@@ -53,3 +53,7 @@ const time = fromObservable(interval(1000), 0);
 count.set(1); // evenCount$ проигнорирует
 count.set(2); // evenCount$ выдаст 2
 ```
+
+---
+
+Translation: [EN](./README.md) | RU

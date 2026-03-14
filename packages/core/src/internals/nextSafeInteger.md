@@ -36,3 +36,7 @@ import { nextSafeInteger } from './nextSafeInteger';
 nextSafeInteger(1); // 2
 nextSafeInteger(Number.MAX_SAFE_INTEGER); // Number.MIN_SAFE_INTEGER
 ```
+
+---
+
+Translation: EN | [RU](./nextSafeInteger.ru.md)

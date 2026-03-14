@@ -59,3 +59,7 @@ const Controller = declareController()
     getApiUrl: () => deps.apiUrl,
   }));
 ```
+
+---
+
+Translation: [EN](./withInjections.md) | RU

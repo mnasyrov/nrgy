@@ -33,3 +33,7 @@ the Nrgy.js repository.
 - Use project commands such as `npm run check`, `npm run test`, and
   `npm run build` when the change requires validation.
 - If validation is not run, state that explicitly in the final report.
+
+---
+
+Translation: EN | [RU](./agent_guide.ru.md)

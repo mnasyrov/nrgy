@@ -50,3 +50,7 @@ scope.onDestroy(() => {
 counter.set(1);
 scope.destroy();
 ```
+
+---
+
+Translation: EN | [RU](./createScope.ru.md)

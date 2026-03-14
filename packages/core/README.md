@@ -101,3 +101,7 @@ const controller = new CounterController();
 controller.increase();
 controller.destroy();
 ```
+
+---
+
+Translation: EN | [RU](./README.ru.md)

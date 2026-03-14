@@ -35,3 +35,7 @@ The repository documentation is split into two main areas:
 - Package-level API overviews live in each package `README.md`.
 - Module-level documentation is colocated with source files inside `packages/*/src`.
 - Russian translations are available as `*.ru.md`.
+
+---
+
+Translation: EN | [RU](./README.ru.md)

@@ -42,3 +42,7 @@ batch(() => {
   b.set(20);
 });
 ```
+
+---
+
+Translation: EN | [RU](./batch.ru.md)

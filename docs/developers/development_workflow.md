@@ -55,3 +55,7 @@ npm run build
 - Package `CHANGELOG.md` files track package-level releases.
 - Package names and install commands must come from current `package.json`
   files.
+
+---
+
+Translation: EN | [RU](./development_workflow.ru.md)

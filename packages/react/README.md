@@ -110,3 +110,7 @@ const Counter = withViewModel(CounterViewModel)(({ viewModel }) => {
   return <button onClick={viewModel.increase}>{count}</button>;
 });
 ```
+
+---
+
+Translation: EN | [RU](./README.ru.md)

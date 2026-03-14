@@ -79,3 +79,7 @@ const items = fastArray<number>();
 pushFastArray(items, 1);
 pushFastArray(items, 2);
 ```
+
+---
+
+Translation: [EN](./fastArray.md) | RU

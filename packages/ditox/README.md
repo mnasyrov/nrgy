@@ -61,3 +61,7 @@ const LoggerController = declareController()
     write: (message: string) => deps.log(message),
   }));
 ```
+
+---
+
+Translation: EN | [RU](./README.ru.md)

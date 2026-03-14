@@ -46,3 +46,7 @@ import type { ValueEqualityFn } from '@nrgyjs/core';
 
 const compareNumbers: ValueEqualityFn<number> = (a, b) => a === b;
 ```
+
+---
+
+Translation: EN | [RU](./types.ru.md)

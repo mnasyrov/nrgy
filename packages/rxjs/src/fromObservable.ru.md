@@ -77,3 +77,7 @@ scope.add(timer);
 // Позже, при уничтожении scope, подписка на interval также будет закрыта.
 scope.destroy();
 ```
+
+---
+
+Translation: [EN](./fromObservable.md) | RU

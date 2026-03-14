@@ -56,3 +56,7 @@ const scheduler = createSyncTaskScheduler<number>((task) => {
 
 scheduler.schedule(1);
 ```
+
+---
+
+Translation: [EN](./schedulers.md) | RU

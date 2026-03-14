@@ -67,3 +67,7 @@ Install only the packages you need:
 - [@nrgyjs/ditox-react](./packages/ditox-react/README.md)
 - [@nrgyjs/rxjs](./packages/rxjs/README.md)
 - [@nrgyjs/rx-effects](./packages/rx-effects/README.md)
+
+---
+
+Translation: EN | [RU](./README.ru.md)

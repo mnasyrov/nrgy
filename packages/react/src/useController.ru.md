@@ -65,3 +65,7 @@ export function Greeting(props: { name: string }) {
   return <h1>{controller.title()}</h1>;
 }
 ```
+
+---
+
+Translation: [EN](./useController.md) | RU

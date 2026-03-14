@@ -52,3 +52,7 @@ console.log(countQuery.get()); // 0
 const anotherAtom = fromQuery(countQuery);
 console.log(anotherAtom()); // 0
 ```
+
+---
+
+Translation: EN | [RU](./README.ru.md)

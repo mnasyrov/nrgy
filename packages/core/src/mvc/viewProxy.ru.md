@@ -55,3 +55,7 @@ view.mount();
 view.update({ id: '43' });
 view.destroy();
 ```
+
+---
+
+Translation: [EN](./viewProxy.md) | RU

@@ -52,3 +52,7 @@ subject.error(new Error('boom'));
 subscription.destroy();
 subject.destroy();
 ```
+
+---
+
+Translation: EN | [RU](./atomSubject.ru.md)

@@ -31,3 +31,7 @@ import { flushMicrotasks } from './flushMicrotasks';
 
 await flushMicrotasks();
 ```
+
+---
+
+Translation: [EN](./flushMicrotasks.md) | RU

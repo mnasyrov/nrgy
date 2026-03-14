@@ -44,3 +44,7 @@ setTimeout(() => latch.resolve(42), 0);
 
 await latch.promise;
 ```
+
+---
+
+Translation: EN | [RU](./latch.ru.md)

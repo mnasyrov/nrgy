@@ -54,3 +54,7 @@ export function App() {
   );
 }
 ```
+
+---
+
+Translation: EN | [RU](./README.ru.md)

@@ -47,3 +47,7 @@ try {
   }
 }
 ```
+
+---
+
+Translation: [EN](./scopeDestructionError.md) | RU

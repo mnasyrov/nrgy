@@ -41,3 +41,7 @@ defaultEquals(1, 1); // true
 defaultEquals(NaN, NaN); // true
 defaultEquals({}, {}); // false
 ```
+
+---
+
+Translation: [EN](./defaultEquals.md) | RU

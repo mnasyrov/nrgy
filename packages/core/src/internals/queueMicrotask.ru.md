@@ -44,3 +44,7 @@ nrgyQueueMicrotask(() => {
   console.log('microtask');
 });
 ```
+
+---
+
+Translation: [EN](./queueMicrotask.md) | RU
