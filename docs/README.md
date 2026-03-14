@@ -20,6 +20,7 @@ The repository documentation is split into two main areas:
 - [@nrgyjs/ditox-react](../packages/ditox-react/README.md)
 - [@nrgyjs/rxjs](../packages/rxjs/README.md)
 - [@nrgyjs/rx-effects](../packages/rx-effects/README.md)
+- [Product documentation draft](./product/README.md)
 
 ## Developer Documentation
 
@@ -35,4 +36,3 @@ The repository documentation is split into two main areas:
 - Package-level API overviews live in each package `README.md`.
 - Module-level documentation is colocated with source files inside `packages/*/src`.
 - Russian translations are available as `*.ru.md`.
-

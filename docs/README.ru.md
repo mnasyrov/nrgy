@@ -20,6 +20,7 @@
 - [@nrgyjs/ditox-react](../packages/ditox-react/README.ru.md)
 - [@nrgyjs/rxjs](../packages/rxjs/README.ru.md)
 - [@nrgyjs/rx-effects](../packages/rx-effects/README.ru.md)
+- [Черновик продуктовой документации](./product/README.ru.md)
 
 ## Документация для разработчиков
 
@@ -35,4 +36,3 @@
 - Обзоры публичного API на уровне пакета живут в `README.md` каждого пакета.
 - Документация модулей colocated с исходниками внутри `packages/*/src`.
 - Русские переводы доступны в файлах `*.ru.md`.
-
