@@ -41,6 +41,3 @@ objectEquals({ a: 1 }, { a: 2 }); // false
 objectEquals({ a: { x: 1 } }, { a: { x: 1 } }); // false
 ```
 
----
-
-Translation: EN | [RU](./objectEquals.ru.md)

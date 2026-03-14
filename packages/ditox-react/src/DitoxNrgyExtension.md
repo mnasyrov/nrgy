@@ -55,6 +55,3 @@ export function Root() {
 }
 ```
 
----
-
-Translation: EN | [RU](./DitoxNrgyExtension.ru.md)

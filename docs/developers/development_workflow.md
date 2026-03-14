@@ -56,6 +56,3 @@ npm run build
 - Package names and install commands must come from current `package.json`
   files.
 
----
-
-Translation: EN | [RU](./development_workflow.ru.md)

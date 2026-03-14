@@ -73,6 +73,3 @@ const options: EffectOptions = {
 };
 ```
 
----
-
-Translation: EN | [RU](./types.ru.md)

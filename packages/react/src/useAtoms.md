@@ -58,6 +58,3 @@ export function UserCard() {
 }
 ```
 
----
-
-Translation: EN | [RU](./useAtoms.ru.md)

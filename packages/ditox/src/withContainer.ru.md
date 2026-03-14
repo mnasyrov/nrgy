@@ -54,6 +54,3 @@ const container = createContainer();
 const controller = new Controller([provideDependencyContainer(container)]);
 ```
 
----
-
-Translation: [EN](./withContainer.md) | RU

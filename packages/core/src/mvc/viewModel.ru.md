@@ -66,6 +66,3 @@ const CounterViewModel = declareViewModel(({ scope, view }) => {
 });
 ```
 
----
-
-Translation: [EN](./viewModel.md) | RU

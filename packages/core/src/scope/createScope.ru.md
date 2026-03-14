@@ -51,6 +51,3 @@ counter.set(1);
 scope.destroy();
 ```
 
----
-
-Translation: [EN](./createScope.md) | RU

@@ -26,15 +26,6 @@ all developers must follow these rules when adding or changing functionality.
 - Public package entry points such as `index.ts` must be documented in the
   package-level `README.md` or other package-level documentation instead.
 
-5. **Translation Links**: If both English and Russian versions of a Markdown
-   file exist, add translation links at the end of both files.
-
-- Use a footer in the following format for English files:
-  `Translation: EN | [RU](./file.ru.md)`
-- Use a footer in the following format for Russian files:
-  `Translation: [EN](./file.md) | RU`
-- Place the footer after a horizontal rule: `---`
-
 ## Article Structure for a File (Module)
 
 Each article should contain the following sections:
@@ -66,7 +57,3 @@ general `docs` folder, containing:
 - Use clear and concise technical language.
 - Code in examples must be functional and follow project standards.
 - Use `inline code` formatting for API function and parameter names.
-
----
-
-Translation: EN | [RU](./docs_requirements.ru.md)

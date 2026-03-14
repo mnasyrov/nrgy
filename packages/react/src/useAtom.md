@@ -47,6 +47,3 @@ export function CounterValue() {
 }
 ```
 
----
-
-Translation: EN | [RU](./useAtom.ru.md)

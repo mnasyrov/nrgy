@@ -64,6 +64,3 @@ function bindView(view: ViewBinding<UserProps>) {
 }
 ```
 
----
-
-Translation: EN | [RU](./view.ru.md)

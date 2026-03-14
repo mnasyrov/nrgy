@@ -61,6 +61,3 @@ const CounterView = withViewController(CounterController)(
 );
 ```
 
----
-
-Translation: EN | [RU](./withViewController.ru.md)

@@ -56,6 +56,3 @@ count$.subscribe((v) => console.log(v)); // (ничего сразу)
 count.set(2); // 2
 ```
 
----
-
-Translation: [EN](./observe.md) | RU

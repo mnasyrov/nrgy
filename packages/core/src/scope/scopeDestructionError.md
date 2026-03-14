@@ -48,6 +48,3 @@ try {
 }
 ```
 
----
-
-Translation: EN | [RU](./scopeDestructionError.ru.md)

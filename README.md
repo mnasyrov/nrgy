@@ -68,6 +68,3 @@ Install only the packages you need:
 - [@nrgyjs/rxjs](./packages/rxjs/README.md)
 - [@nrgyjs/rx-effects](./packages/rx-effects/README.md)
 
----
-
-Translation: EN | [RU](./README.ru.md)

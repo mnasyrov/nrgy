@@ -35,6 +35,3 @@ documented, formatted, and maintained. They are intended for:
   points in package-level `README.md` files.
 - Keep English and Russian documentation in sync.
 
----
-
-Translation: EN | [RU](./README.ru.md)

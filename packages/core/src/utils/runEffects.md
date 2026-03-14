@@ -44,6 +44,3 @@ value.set(1);
 runEffects();
 ```
 
----
-
-Translation: EN | [RU](./runEffects.ru.md)

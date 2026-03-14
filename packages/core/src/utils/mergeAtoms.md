@@ -45,6 +45,3 @@ const total = mergeAtoms([price, quantity], (p, q) => p * q);
 console.log(total()); // 30
 ```
 
----
-
-Translation: EN | [RU](./mergeAtoms.ru.md)

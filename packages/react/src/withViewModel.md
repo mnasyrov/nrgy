@@ -65,6 +65,3 @@ const Counter = withViewModel(CounterViewModel)(({ viewModel }) => {
 });
 ```
 
----
-
-Translation: EN | [RU](./withViewModel.ru.md)

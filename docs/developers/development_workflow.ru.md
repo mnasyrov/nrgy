@@ -58,6 +58,3 @@ npm run build
 - Названия пакетов и команды установки должны браться из актуальных
   `package.json`.
 
----
-
-Translation: [EN](./development_workflow.md) | RU

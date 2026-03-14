@@ -79,6 +79,3 @@ pushFastArray(items, 1);
 pushFastArray(items, 2);
 ```
 
----
-
-Translation: EN | [RU](./fastArray.ru.md)

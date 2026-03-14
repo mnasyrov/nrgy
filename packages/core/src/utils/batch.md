@@ -43,6 +43,3 @@ batch(() => {
 });
 ```
 
----
-
-Translation: EN | [RU](./batch.ru.md)

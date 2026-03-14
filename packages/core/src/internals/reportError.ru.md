@@ -42,6 +42,3 @@ try {
 }
 ```
 
----
-
-Translation: [EN](./reportError.md) | RU

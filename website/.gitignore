@@ -1,0 +1,6 @@
+docs/.vitepress/cache
+docs/.vitepress/dist
+docs/content
+docs/ru/content
+docs/public
+node_modules

@@ -62,6 +62,3 @@ const LoggerController = declareController()
   }));
 ```
 
----
-
-Translation: [EN](./README.md) | RU

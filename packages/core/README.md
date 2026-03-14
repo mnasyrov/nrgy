@@ -102,6 +102,3 @@ controller.increase();
 controller.destroy();
 ```
 
----
-
-Translation: EN | [RU](./README.ru.md)

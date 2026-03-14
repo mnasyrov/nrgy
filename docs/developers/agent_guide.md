@@ -34,6 +34,3 @@ the Nrgy.js repository.
   `npm run build` when the change requires validation.
 - If validation is not run, state that explicitly in the final report.
 
----
-
-Translation: EN | [RU](./agent_guide.ru.md)

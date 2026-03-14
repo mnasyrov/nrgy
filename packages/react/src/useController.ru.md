@@ -66,6 +66,3 @@ export function Greeting(props: { name: string }) {
 }
 ```
 
----
-
-Translation: [EN](./useController.md) | RU

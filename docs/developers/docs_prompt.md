@@ -48,6 +48,3 @@ for it in Markdown format.
 
 ---
 
----
-
-Translation: EN | [RU](./docs_prompt.ru.md)

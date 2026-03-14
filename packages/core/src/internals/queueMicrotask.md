@@ -45,6 +45,3 @@ nrgyQueueMicrotask(() => {
 });
 ```
 
----
-
-Translation: EN | [RU](./queueMicrotask.ru.md)

@@ -53,6 +53,3 @@ subscription.destroy();
 subject.destroy();
 ```
 
----
-
-Translation: [EN](./atomSubject.md) | RU

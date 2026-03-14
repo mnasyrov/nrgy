@@ -60,6 +60,3 @@ export function App() {
 }
 ```
 
----
-
-Translation: [EN](./NrgyControllerExtension.md) | RU

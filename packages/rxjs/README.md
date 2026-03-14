@@ -54,6 +54,3 @@ count.set(1); // evenCount$ will ignore
 count.set(2); // evenCount$ will emit 2
 ```
 
----
-
-Translation: EN | [RU](./README.ru.md)

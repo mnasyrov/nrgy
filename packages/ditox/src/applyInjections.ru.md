@@ -54,6 +54,3 @@ controller.write();
 controller.destroy();
 ```
 
----
-
-Translation: [EN](./applyInjections.md) | RU

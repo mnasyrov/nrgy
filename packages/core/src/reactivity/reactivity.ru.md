@@ -97,6 +97,3 @@ const both = combineAtoms([first, second]);
 console.log(both()); // ['A', 'B']
 ```
 
----
-
-Translation: [EN](./reactivity.md) | RU

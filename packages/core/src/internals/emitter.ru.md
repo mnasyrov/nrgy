@@ -54,6 +54,3 @@ subscription.destroy();
 emitter.destroy();
 ```
 
----
-
-Translation: [EN](./emitter.md) | RU

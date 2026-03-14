@@ -60,6 +60,3 @@ const Controller = declareController()
   }));
 ```
 
----
-
-Translation: [EN](./withInjections.md) | RU

@@ -78,6 +78,3 @@ scope.add(timer);
 scope.destroy();
 ```
 
----
-
-Translation: [EN](./fromObservable.md) | RU
