@@ -13,6 +13,8 @@ for it in Markdown format.
 1. **Placement**: Create a new documentation file in the same folder as the
    source file. The filename should match the source filename but with the `.md`
    extension.
+   Exception: do not create standalone documentation files for `index.ts`.
+   Document `index.ts` behavior in the package-level `README.md` instead.
 2. **Translation**: If possible, create a second file with a Russian
    translation. Filename: `${filename}.ru.md`.
 3. **Documentation Content (English for `.md`, Russian for `.ru.md`)**:
