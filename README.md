@@ -1,79 +1,69 @@
-# nrgy
+# Nrgy.js
 
 <img alt="energy" src="energy.svg" width="120" />
 
-Javascript library for reactive programming with MVVM/MVC patterns.
+Nrgy.js is a TypeScript-first toolkit for reactive state, effects, and
+MVC/MVVM-style application architecture.
 
-[![npm](https://img.shields.io/npm/v/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 [![licence](https://img.shields.io/github/license/mnasyrov/nrgy.svg)](https://github.com/mnasyrov/nrgy/blob/master/LICENSE)
 [![Coverage Status](https://coveralls.io/repos/github/mnasyrov/nrgy/badge.svg?branch=main)](https://coveralls.io/github/mnasyrov/nrgy?branch=main)
-[![types](https://img.shields.io/npm/types/nrgy.svg)](https://www.npmjs.com/package/nrgy)
-[![downloads](https://img.shields.io/npm/dt/nrgy.svg)](https://www.npmjs.com/package/nrgy)
 
-## Overview
+## Project Description
 
-The library provides components for programming with reactive state and effects
-using MVC/MVVM design patterns.
+Nrgy.js provides a set of small packages for building reactive applications
+with explicit lifecycle management and optional integrations for React, RxJS,
+`rx-effects`, and `ditox`.
 
-Core components include Atoms (stores), Signals (event emitters), Scopes and
-Effects (subscriptions), which form an efficient computation graph.
+## Project Overview
 
-Additionally, the library includes an MVC/MVVM feature, that provides building
-blocks for programming Controllers for a business layer and View Models for a
-presentation layer. Controllers and view models can be extended using other
-features in an optional way.
+The project is organized around a few core ideas:
 
-Other parts of the library include integrations with third-party tools and
-frameworks. At the moment the following are supported:
+- atoms and computed atoms for reactive state;
+- effects and schedulers for deterministic change propagation;
+- scopes for ownership and cleanup of resources;
+- controllers and view models for MVC/MVVM business logic;
+- optional integration packages for React, `ditox`, RxJS, and `rx-effects`.
 
-- [React][link:react] - a library for creating web user interfaces
-- [Ditox.js][link:ditox] - a dependency injection container and modules
-- [RxJS][link:rxjs] - a reactive programming library for composing asynchronous
-  or callback-based code
-- [RxEffects][link:rx-effects] - the predecessor of Nrgy.js, a reactive state
-  and effect management library based on RxJS
-
-All of these integrations are optional and can be used independently.
-
-The core and MVC components are framework-agnostic and can be used by web and
-server applications, libraries and CLI tools.
-
-[link:react]: https://react.dev
-[link:ditox]: https://github.com/mnasyrov/ditox
-[link:rxjs]: https://github.com/ReactiveX/rxjs
-[link:rx-effects]: https://github.com/mnasyrov/rx-effects
+The packages are designed to work independently, so consumers can adopt only
+the pieces they need.
 
 ## Main Features
 
-- Reactive state and effects
-- Fast and efficient computation graph
-- Tools for MVC/MVVM patterns
-- Framework-agnostic core components
-- Developer-friendly functional API
-- Typescript typings
+- Reactive state with `atom()`, `compute()`, and `effect()`
+- Explicit lifecycle management through `Scope`
+- MVC/MVVM primitives for controllers and view models
+- React integration through hooks and higher-order components
+- RxJS and `rx-effects` interoperability
+- Dependency injection integration with `ditox`
+- Strict TypeScript-first API surface
+
+## Changelog
+
+- [Project Changelog](./CHANGELOG.md)
 
 ## Installation
 
-Nrgy is the all-in-one package with optional dependencies for particular
-integrations.
+Install only the packages you need:
 
-```
-npm install nrgy
-```
-
-Install additional dependencies according to the following table:
-
-| Import             | Dependencies       | Command             |
-| ------------------ | ------------------ | ------------------- |
-| `nrgy`             | No dependencies    |                     |
-| `nrgy/mvc`         | No dependencies    |                     |
-| `nrgy/mvc-react`   | React.js           | `npm i react`       |
-| `nrgy/react`       | React.js           | `npm i react`       |
-| `nrgy/ditox`       | Ditox.js           | `npm i ditox`       |
-| `nrgy/ditox-react` | Ditox.js, React.js | `npm i ditox react` |
-| `nrgy/rx-effects`  | RxJS, RxEffects    | `npm i rx-effects`  |
-| `nrgy/rxjs`        | RxJS               | `npm i rxjs`        |
+| Package | Purpose | Install |
+| --- | --- | --- |
+| `@nrgyjs/core` | Reactive runtime, scope, MVC/MVVM primitives | `npm install @nrgyjs/core` |
+| `@nrgyjs/react` | React bindings for atoms, controllers, and view models | `npm install @nrgyjs/core @nrgyjs/react react` |
+| `@nrgyjs/ditox` | `ditox` dependency injection extensions | `npm install @nrgyjs/core @nrgyjs/ditox ditox` |
+| `@nrgyjs/ditox-react` | React bridge for `ditox` + Nrgy controllers | `npm install @nrgyjs/core @nrgyjs/ditox @nrgyjs/react @nrgyjs/ditox-react ditox ditox-react react` |
+| `@nrgyjs/rxjs` | RxJS interoperability | `npm install @nrgyjs/core @nrgyjs/rxjs rxjs` |
+| `@nrgyjs/rx-effects` | `rx-effects` interoperability | `npm install @nrgyjs/core @nrgyjs/rxjs @nrgyjs/rx-effects rx-effects rxjs` |
 
 ## Documentation
 
-Find more docs at https://nrgy.js.org
+- [Documentation Overview](./docs/README.md)
+- [Developer and Agent Documentation](./docs/developers/README.md)
+
+## Package List
+
+- [@nrgyjs/core](./packages/core/README.md)
+- [@nrgyjs/react](./packages/react/README.md)
+- [@nrgyjs/ditox](./packages/ditox/README.md)
+- [@nrgyjs/ditox-react](./packages/ditox-react/README.md)
+- [@nrgyjs/rxjs](./packages/rxjs/README.md)
+- [@nrgyjs/rx-effects](./packages/rx-effects/README.md)

@@ -1,61 +1,37 @@
-# Документация Nrgy.js
+# Nrgy.js Documentation
 
-## Назначение библиотеки
-Nrgy.js — это современная библиотека для управления состоянием (State Management) и построения архитектуры приложений на основе атомарной реактивности. Она вдохновлена концепциями сигналов (Signals) и предоставляет мощные инструменты для создания производительных и масштабируемых веб-приложений.
+## Purpose
 
-## Общая информация
-Библиотека построена вокруг идеи объединения реактивного программирования и классических архитектурных паттернов (MVC/MVVM). Nrgy.js состоит из набора пакетов, которые можно использовать как вместе, так и по отдельности:
-- **Core**: Ядро системы (Атомы, Эффекты, Контроллеры).
-- **React**: Интеграция с React-компонентами.
-- **RxJS/Rx-Effects**: Мощная интеграция с потоками данных.
-- **Ditox**: Декларативное внедрение зависимостей.
+This section is the entry point to the project documentation for Nrgy.js.
 
-## Установка пакета
-Для начала работы достаточно установить ядро и пакет интеграции с фреймворком:
-```bash
-npm install @nrgyjs/core @nrgyjs/react
-```
+## Overview
 
-## Концептуальная архитектура
-Архитектура Nrgy.js строится на трех столпах:
-1.  **Атомарная реактивность**: Данные хранятся в "атомах" (`atom`). Производные данные вычисляются автоматически через `compute`. Эффекты (`effect`) реагируют на изменения.
-2.  **Управление ресурсами (Scopes)**: Все реактивные связи и ресурсы группируются в области видимости (`Scope`), что гарантирует их автоматическую очистку и отсутствие утечек памяти.
-3.  **Бизнес-логика (Controllers)**: Логика выносится из UI в "контроллеры", которые имеют свой жизненный цикл и могут расширяться плагинами.
+The repository documentation is split into two main areas:
 
-## Документация по функционалу
-### Базовая реактивность
--   `atom(value)`: Создает реактивную ячейку данных.
--   `compute(() => ...)`: Создает вычисляемое значение, зависящее от других атомов.
--   `effect(source, callback)`: Выполняет побочные эффекты при изменении данных.
+- package documentation, describing the published `@nrgyjs/*` packages;
+- developer documentation, describing contribution rules, coding style, and
+  documentation standards.
 
-### Жизненный цикл
--   `createScope()`: Создает область для регистрации ресурсов.
--   `scope.destroy()`: Уничтожает все ресурсы в этой области.
+## Package Documentation
 
-### Связывание с UI (React)
--   `useAtom(atom)`: Использование данных атома в компоненте.
--   `useController(declaration)`: Жизненный цикл контроллера в компоненте.
+- [@nrgyjs/core](../packages/core/README.md)
+- [@nrgyjs/react](../packages/react/README.md)
+- [@nrgyjs/ditox](../packages/ditox/README.md)
+- [@nrgyjs/ditox-react](../packages/ditox-react/README.md)
+- [@nrgyjs/rxjs](../packages/rxjs/README.md)
+- [@nrgyjs/rx-effects](../packages/rx-effects/README.md)
 
-## Примеры использования
-```typescript
-import { atom, compute, effect } from '@nrgyjs/core';
+## Developer Documentation
 
-// 1. Описание состояния
-const price = atom(100);
-const quantity = atom(2);
-const total = compute(() => price() * quantity());
+- [Developer Overview](./developers/README.md)
+- [Documentation Requirements](./developers/docs_requirements.md)
+- [Documentation Prompt](./developers/docs_prompt.md)
+- [Coding Style](./developers/coding_style.md)
+- [Development Workflow](./developers/development_workflow.md)
+- [Agent Guide](./developers/agent_guide.md)
 
-// 2. Реакция на изменения
-effect(total, (value) => {
-  console.log(`Общая сумма: ${value}`);
-});
+## Usage Notes
 
-// 3. Изменение данных
-price.set(150); // Выведет "Общая сумма: 300"
-```
-
-## Подробная документация по пакетам
--   [Ядро (@nrgyjs/core)](packages/core/index.md)
--   [Интеграция с React (@nrgyjs/react)](packages/react/index.md)
--   [Работа с RxJS (@nrgyjs/rxjs)](../packages/rxjs/README.md)
--   [Внедрение зависимостей (@nrgyjs/ditox)](packages/ditox/index.md)
+- Package-level API overviews live in each package `README.md`.
+- Module-level documentation is colocated with source files inside `packages/*/src`.
+- Russian translations are available as `*.ru.md`.
