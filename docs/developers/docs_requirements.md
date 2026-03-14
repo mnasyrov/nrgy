@@ -11,7 +11,7 @@ all developers must follow these rules when adding or changing functionality.
 - Example: `packages/core/src/reactivity.ts` ->
   `packages/core/src/reactivity.md`.
 
-2. **Localization**: Documentation should be translated into
+2. **Localization**: Documentation must be translated into
    English and Russian. AI translation is acceptable.
 
 - The translation should be placed in a separate file with the locale as a
@@ -19,6 +19,7 @@ all developers must follow these rules when adding or changing functionality.
 - Example: `packages/core/src/reactivity.ru.md`.
 
 3. **Format**: Documentation is written in Markdown format.
+
 4. **No `index.ts` File Articles**: Do not create standalone documentation
    files for `index.ts` source files.
 
