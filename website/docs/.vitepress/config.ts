@@ -1,3 +1,4 @@
+import type MarkdownIt from 'markdown-it';
 import { defineConfig } from 'vitepress';
 
 const githubLink = 'https://github.com/mnasyrov/nrgy';
@@ -9,6 +10,9 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
+  markdown: {
+    config: configureMarkdown,
+  },
   locales: {
     root: {
       label: 'English',
@@ -245,4 +249,22 @@ function createThemeConfig(locale: 'en' | 'ru') {
 
 function withPrefix(prefix: string, route: string) {
   return `${prefix}${route}` || '/';
+}
+
+function configureMarkdown(md: MarkdownIt) {
+  const defaultFence = md.renderer.rules.fence?.bind(md.renderer.rules);
+
+  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+
+    if (token.info.trim() !== 'mermaid') {
+      return defaultFence
+        ? defaultFence(tokens, idx, options, env, self)
+        : self.renderToken(tokens, idx, options);
+    }
+
+    const source = encodeURIComponent(token.content);
+
+    return `<div class="mermaid" data-mermaid-source="${source}"></div>\n`;
+  };
 }
