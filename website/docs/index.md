@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Nrgy.js
   text: Documentation Website
-  tagline: VitePress portal for package APIs, developer guides, and source-level module docs.
+  tagline: VitePress portal for product docs, contributor guides, package APIs, and source-level module docs.
   image:
     src: /assets/logo.svg
     alt: Nrgy.js logo
@@ -21,9 +21,9 @@ hero:
 
 features:
   - title: Generated From Source
-    details: The website mirrors the markdown already maintained in the repository, so package and developer docs stay in one place.
-  - title: Package-Centric Navigation
-    details: Core, React, Ditox, RxJS, and rx-effects docs are grouped into a dedicated sidebar instead of scattered README links.
+    details: The website mirrors the markdown already maintained in the repository, so product docs, contributor guides, and package docs stay in one place.
+  - title: Product Docs First
+    details: The main docs tree now starts with Introduction, Quick Start, Core, Architecture, MVVM, Integrations, Recipes, Migration, and FAQ.
   - title: Repository Friendly
     details: Generated content and VitePress build artifacts stay out of git through a local website-level ignore file.
 ---
@@ -39,3 +39,9 @@ npm run dev
 ```
 
 `npm run prepare` regenerates `website/docs/content` from repository markdown before `dev` and `build`.
+
+The generated site exposes three main documentation groups:
+
+- product documentation from `docs/*`;
+- contributor guides from `docs/contributing/*`;
+- package and source-level documentation from `packages/*`.
