@@ -1,17 +1,15 @@
-# Developer Documentation
+# Contributing
 
 ## Purpose
 
-This section contains the development guides, documentation standards, and
-agent-facing instructions used in the Nrgy.js repository.
+This section explains how to contribute changes to the Nrgy.js repository. It
+collects the repository rules for documentation, coding style, workflow, and
+automated contributors.
 
-## Overview
+## Who Should Read This
 
-The materials in `docs/developers` define how source code should be structured,
-documented, formatted, and maintained. They are intended for:
-
+- contributors updating source code, tests, or docs;
 - package authors working inside the monorepo;
-- contributors updating source code and tests;
 - automation and AI agents generating documentation or code changes.
 
 ## Contents
@@ -27,11 +25,10 @@ documented, formatted, and maintained. They are intended for:
 - [Agent Guide](./agent_guide.md): expectations for automated contributors and
   documentation agents.
 
-## Usage Notes
+## Notes
 
 - When adding or changing source files, update colocated documentation in the
   same directory.
 - Do not create standalone documentation for `index.ts`; document package entry
   points in package-level `README.md` files.
 - Keep English and Russian documentation in sync.
-

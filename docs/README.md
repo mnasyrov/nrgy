@@ -2,15 +2,42 @@
 
 ## Purpose
 
-This section is the entry point to the project documentation for Nrgy.js.
+This directory is the main product documentation for Nrgy.js. It explains how
+to use the library, how its architectural model works, and how to contribute
+changes back to the repository.
 
-## Overview
+## Product Documentation
 
-The repository documentation is split into two main areas:
+- [Introduction](./introduction.md)
+- [Quick Start](./quick-start.md)
+- [Core](./core/README.md)
+- [Architecture](./architecture/README.md)
+- [MVVM and Controllers](./mvvm/README.md)
+- [Integrations](./integrations/README.md)
+- [Recipes](./recipes/README.md)
+- [Migration](./migration/README.md)
+- [FAQ](./faq/README.md)
+- [Russian version](./README.ru.md)
 
-- package documentation, describing the published `@nrgyjs/*` packages;
-- developer documentation, describing contribution rules, coding style, and
-  documentation standards.
+## Suggested Reading Order
+
+1. Start with [Introduction](./introduction.md).
+2. Continue with [Quick Start](./quick-start.md).
+3. Then read [Core](./core/README.md) and
+   [Architecture](./architecture/README.md).
+4. After that move to [MVVM and Controllers](./mvvm/README.md).
+5. Use [Integrations](./integrations/README.md),
+   [Recipes](./recipes/README.md), [Migration](./migration/README.md), and
+   [FAQ](./faq/README.md) during adoption.
+
+## Contributing
+
+- [Contributor Overview](./contributing/README.md)
+- [Documentation Requirements](./contributing/docs_requirements.md)
+- [Documentation Prompt](./contributing/docs_prompt.md)
+- [Coding Style](./contributing/coding_style.md)
+- [Development Workflow](./contributing/development_workflow.md)
+- [Agent Guide](./contributing/agent_guide.md)
 
 ## Package Documentation
 
@@ -20,19 +47,10 @@ The repository documentation is split into two main areas:
 - [@nrgyjs/ditox-react](../packages/ditox-react/README.md)
 - [@nrgyjs/rxjs](../packages/rxjs/README.md)
 - [@nrgyjs/rx-effects](../packages/rx-effects/README.md)
-- [Product documentation draft](./product/README.md)
 
-## Developer Documentation
-
-- [Developer Overview](./developers/README.md)
-- [Documentation Requirements](./developers/docs_requirements.md)
-- [Documentation Prompt](./developers/docs_prompt.md)
-- [Coding Style](./developers/coding_style.md)
-- [Development Workflow](./developers/development_workflow.md)
-- [Agent Guide](./developers/agent_guide.md)
-
-## Usage Notes
+## Notes
 
 - Package-level API overviews live in each package `README.md`.
-- Module-level documentation is colocated with source files inside `packages/*/src`.
-- Russian translations are available as `*.ru.md`.
+- Module-level documentation is colocated with source files inside
+  `packages/*/src`.
+- Keep English and Russian documentation in sync.
