@@ -13,8 +13,8 @@ hero:
       text: Быстрый старт
       link: /ru/content/docs/quick-start
     - theme: alt
-      text: Читать архитектуру
-      link: /ru/content/docs/architecture/README
+      text: Читать документацию
+      link: /ru/content/docs/README
 
 features:
   - title: UI-независимая логика
@@ -42,15 +42,23 @@ controllers, view models, lifecycle и dependency-aware application logic.
 
 ### Если вы впервые видите Nrgy.js
 
-Введение -> Быстрый старт -> Core -> MVVM и Controllers
+[Введение](/ru/content/docs/introduction) ->
+[Быстрый старт](/ru/content/docs/quick-start) ->
+[Core](/ru/content/docs/core/README) ->
+[MVVM и Controllers](/ru/content/docs/mvvm/README)
 
 ### Если проектируете архитектуру приложения
 
-Архитектура -> MVVM -> Интеграции -> Рецепты
+[Архитектура](/ru/content/docs/architecture/README) ->
+[MVVM и Controllers](/ru/content/docs/mvvm/README) ->
+[Интеграции](/ru/content/docs/integrations/README) ->
+[Рецепты](/ru/content/docs/recipes/README)
 
 ### Если мигрируете со старой версии
 
-Миграция -> Core -> Рецепты
+[Миграция](/ru/content/docs/migration/README) ->
+[Core](/ru/content/docs/core/README) ->
+[Рецепты](/ru/content/docs/recipes/README)
 
 ## Что можно строить
 

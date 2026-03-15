@@ -33,14 +33,12 @@ function createThemeConfig(locale: 'en' | 'ru') {
           home: 'Главная',
           docs: 'Документация',
           packages: 'Пакеты',
-          website: 'Сайт',
           overview: 'Обзор',
           project: 'Проект',
-          productDocs: 'Продуктовая документация',
+          documentation: 'Документация',
           contributing: 'Contributing',
           repositoryOverview: 'Обзор репозитория',
           changelog: 'История изменений',
-          documentationOverview: 'Обзор документации',
           introduction: 'Введение',
           quickStart: 'Быстрый старт',
           core: 'Core',
@@ -70,14 +68,12 @@ function createThemeConfig(locale: 'en' | 'ru') {
           home: 'Home',
           docs: 'Docs',
           packages: 'Packages',
-          website: 'Website',
           overview: 'Overview',
           project: 'Project',
-          productDocs: 'Product Docs',
+          documentation: 'Documentation',
           contributing: 'Contributing',
           repositoryOverview: 'Repository Overview',
           changelog: 'Changelog',
-          documentationOverview: 'Documentation Overview',
           introduction: 'Introduction',
           quickStart: 'Quick Start',
           core: 'Core',
@@ -117,31 +113,10 @@ function createThemeConfig(locale: 'en' | 'ru') {
     ],
     sidebar: [
       {
-        text: labels.website,
-        items: [{ text: labels.overview, link: withPrefix(prefix, '/') }],
-      },
-      {
-        text: labels.project,
+        text: labels.documentation,
         items: [
           {
-            text: labels.repositoryOverview,
-            link: withPrefix(prefix, '/content/project/README'),
-          },
-          {
-            text: labels.changelog,
-            link: withPrefix(prefix, '/content/project/CHANGELOG'),
-          },
-          {
-            text: labels.documentationOverview,
-            link: withPrefix(prefix, '/content/docs/README'),
-          },
-        ],
-      },
-      {
-        text: labels.productDocs,
-        items: [
-          {
-            text: labels.documentationOverview,
+            text: labels.overview,
             link: withPrefix(prefix, '/content/docs/README'),
           },
           {
@@ -183,37 +158,19 @@ function createThemeConfig(locale: 'en' | 'ru') {
         ],
       },
       {
-        text: labels.contributing,
+        text: labels.project,
         items: [
           {
-            text: labels.contributingOverview,
+            text: labels.repositoryOverview,
+            link: withPrefix(prefix, '/content/project/README'),
+          },
+          {
+            text: labels.changelog,
+            link: withPrefix(prefix, '/content/project/CHANGELOG'),
+          },
+          {
+            text: labels.contributing,
             link: withPrefix(prefix, '/content/docs/contributing/README'),
-          },
-          {
-            text: labels.documentationRequirements,
-            link: withPrefix(
-              prefix,
-              '/content/docs/contributing/docs_requirements',
-            ),
-          },
-          {
-            text: labels.documentationPrompt,
-            link: withPrefix(prefix, '/content/docs/contributing/docs_prompt'),
-          },
-          {
-            text: labels.codingStyle,
-            link: withPrefix(prefix, '/content/docs/contributing/coding_style'),
-          },
-          {
-            text: labels.developmentWorkflow,
-            link: withPrefix(
-              prefix,
-              '/content/docs/contributing/development_workflow',
-            ),
-          },
-          {
-            text: labels.agentGuide,
-            link: withPrefix(prefix, '/content/docs/contributing/agent_guide'),
           },
         ],
       },

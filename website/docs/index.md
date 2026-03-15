@@ -13,8 +13,8 @@ hero:
       text: Quick start
       link: /content/docs/quick-start
     - theme: alt
-      text: Read the Architecture
-      link: /content/docs/architecture/README
+      text: Read the Docs
+      link: /content/docs/README
 
 features:
   - title: UI-independent logic
@@ -43,15 +43,23 @@ start.
 
 ### New to Nrgy.js
 
-Introduction -> Quick Start -> Core -> MVVM and Controllers
+[Introduction](/content/docs/introduction) ->
+[Quick Start](/content/docs/quick-start) ->
+[Core](/content/docs/core/README) ->
+[MVVM and Controllers](/content/docs/mvvm/README)
 
 ### Designing an app architecture
 
-Architecture -> MVVM -> Integrations -> Recipes
+[Architecture](/content/docs/architecture/README) ->
+[MVVM and Controllers](/content/docs/mvvm/README) ->
+[Integrations](/content/docs/integrations/README) ->
+[Recipes](/content/docs/recipes/README)
 
 ### Migrating from older versions
 
-Migration -> Core -> Recipes
+[Migration](/content/docs/migration/README) ->
+[Core](/content/docs/core/README) ->
+[Recipes](/content/docs/recipes/README)
 
 ## What you can build
 
