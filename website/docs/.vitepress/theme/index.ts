@@ -1,5 +1,5 @@
-import DefaultTheme from 'vitepress/theme';
 import { inBrowser, onContentUpdated } from 'vitepress';
+import DefaultTheme from 'vitepress/theme';
 import './custom.css';
 
 let mermaidModulePromise: Promise<typeof import('mermaid')> | undefined;
