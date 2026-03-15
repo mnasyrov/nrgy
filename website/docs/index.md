@@ -35,7 +35,7 @@ Run the website from the standalone [`website/package.json`](/content/project/RE
 ```bash
 cd website
 npm install
-npm run docs:dev
+npm run dev
 ```
 
-`npm run docs:prepare` regenerates `website/docs/content` from repository markdown before `dev` and `build`.
+`npm run prepare` regenerates `website/docs/content` from repository markdown before `dev` and `build`.

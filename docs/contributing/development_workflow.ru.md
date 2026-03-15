@@ -66,17 +66,17 @@ npm run build
 
 ```bash
 cd website
-npm run docs:dev
+npm run dev
 ```
 
 ```bash
 cd website
-npm run docs:build
+npm run build
 ```
 
-- `docs:dev` заново генерирует `website/docs/content/*` и запускает локальный
+- `dev` заново генерирует `website/docs/content/*` и запускает локальный
   VitePress-сервер.
-- `docs:build` заново генерирует контент и проверяет, что сайт успешно
+- `build` заново генерирует контент и проверяет, что сайт успешно
   собирается.
 
 ### Когда нужно обновлять конфигурацию сайта

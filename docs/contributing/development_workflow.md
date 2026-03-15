@@ -65,17 +65,17 @@ Run commands from [website/package.json](../../website/package.json):
 
 ```bash
 cd website
-npm run docs:dev
+npm run dev
 ```
 
 ```bash
 cd website
-npm run docs:build
+npm run build
 ```
 
-- `docs:dev` regenerates `website/docs/content/*` and starts the local
+- `dev` regenerates `website/docs/content/*` and starts the local
   VitePress server.
-- `docs:build` regenerates content and verifies that the site builds
+- `build` regenerates content and verifies that the site builds
   successfully.
 
 ### When Website Config Must Be Updated

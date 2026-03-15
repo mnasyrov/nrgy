@@ -35,7 +35,7 @@ features:
 ```bash
 cd website
 npm install
-npm run docs:dev
+npm run dev
 ```
 
-`npm run docs:prepare` пересобирает `website/docs/content` и `website/docs/ru/content` из markdown-файлов репозитория перед `dev` и `build`.
+`npm run prepare` пересобирает `website/docs/content` и `website/docs/ru/content` из markdown-файлов репозитория перед `dev` и `build`.

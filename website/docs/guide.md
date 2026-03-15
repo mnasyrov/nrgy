@@ -9,13 +9,13 @@ links.
 ```bash
 cd website
 npm install
-npm run docs:dev
-npm run docs:build
+npm run dev
+npm run build
 ```
 
 ## Generated Inputs
 
-`npm run docs:prepare` copies these repository sources into
+`npm run prepare` copies these repository sources into
 `website/docs/content`:
 
 - top-level project markdown such as `README.md` and `CHANGELOG.md`;

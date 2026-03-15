@@ -8,13 +8,13 @@ monorepo workspaces и не добавляет workspace-level связей за
 ```bash
 cd website
 npm install
-npm run docs:dev
-npm run docs:build
+npm run dev
+npm run build
 ```
 
 ## Источники генерируемого контента
 
-`npm run docs:prepare` копирует в `website/docs/content` и
+`npm run prepare` копирует в `website/docs/content` и
 `website/docs/ru/content` следующие материалы из репозитория:
 
 - верхнеуровневые markdown-файлы проекта, например `README.md` и `CHANGELOG.md`;
