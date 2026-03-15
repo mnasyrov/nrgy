@@ -3,45 +3,87 @@ layout: home
 
 hero:
   name: Nrgy.js
-  text: Сайт документации
-  tagline: Портал на VitePress для продуктовой документации, гайдов для контрибьюторов, API пакетов и модульной документации из исходников.
+  text: Реактивная бизнес-логика вне UI
+  tagline: Стройте UI-независимое состояние, эффекты, контроллеры и view models поверх небольшого реактивного ядра.
   image:
     src: /assets/logo.svg
     alt: Логотип Nrgy.js
   actions:
     - theme: brand
-      text: Открыть документацию
-      link: /ru/content/docs/README
+      text: Быстрый старт
+      link: /ru/content/docs/quick-start
     - theme: alt
-      text: Посмотреть пакеты
-      link: /ru/content/packages/core/README
-    - theme: alt
-      text: Обзор проекта
-      link: /ru/content/project/README
+      text: Читать архитектуру
+      link: /ru/content/docs/architecture/README
 
 features:
-  - title: Генерируется из исходников
-    details: Сайт зеркалит markdown, который уже поддерживается в репозитории, поэтому продуктовая документация, гайды для контрибьюторов и пакетная документация остаются в одном источнике.
-  - title: Фокус на продуктовой документации
-    details: Основное дерево документации начинается с Введения, Быстрого старта, Core, Архитектуры, MVVM, Интеграций, Рецептов, Миграции и FAQ.
-  - title: Не засоряет git
-    details: Сгенерированный контент и build-артефакты VitePress исключены из git через локальный website-level ignore.
+  - title: UI-независимая логика
+    details: Держите бизнес-правила вне React-компонентов и переиспользуйте их в нескольких представлениях.
+  - title: Реактивное ядро
+    details: Описывайте состояние через atoms, computed values, effects, scopes и явное управление lifecycle.
+  - title: Controller и ViewModel паттерны
+    details: Отдавайте UI чистый presentation contract и держите orchestration и зависимости вне компонентов.
 ---
 
-## Как это работает
+## Начните с правильного маршрута
 
-Запускайте сайт из отдельного проекта [`website/package.json`](/ru/content/project/README):
+Nrgy.js сочетает небольшое реактивное ядро с архитектурными паттернами для
+controllers, view models, lifecycle и dependency-aware application logic.
 
-```bash
-cd website
-npm install
-npm run dev
-```
+- Core primitives
+- MVVM patterns
+- React integration
+- Migration guides
+- Recipes
 
-`npm run prepare` пересобирает `website/docs/content` и `website/docs/ru/content` из markdown-файлов репозитория перед `dev` и `build`.
+## Маршруты чтения
 
-На сайте есть три основные группы документации:
+Выберите путь под текущую задачу вместо того, чтобы угадывать, с чего начать.
 
-- продуктовая документация из `docs/*`;
-- материалы для контрибьюторов из `docs/contributing/*`;
-- пакетная и модульная документация из `packages/*`.
+### Если вы впервые видите Nrgy.js
+
+Введение -> Быстрый старт -> Core -> MVVM и Controllers
+
+### Если проектируете архитектуру приложения
+
+Архитектура -> MVVM -> Интеграции -> Рецепты
+
+### Если мигрируете со старой версии
+
+Миграция -> Core -> Рецепты
+
+## Что можно строить
+
+Документация сфокусирована на практической структуре приложения, а не только
+на изолированных вызовах API.
+
+### Screen view models
+
+Держите состояние экрана, actions и loading flows вне слоя рендера.
+
+### Shared business controllers
+
+Переиспользуйте один business flow в нескольких views и экранах.
+
+### Forms with batched updates
+
+Моделируйте несколько полей и согласованные обновления без утечки логики в UI.
+
+### React + Ditox integration
+
+Связывайте view models и общие сервисы через явные dependency boundaries.
+
+## Разделы документации
+
+Используйте продуктовую документацию как основной путь, а в contributing и
+пакетные reference-разделы уходите, когда нужна реализация и детали.
+
+- [Введение](/ru/content/docs/introduction): что такое Nrgy.js, какие задачи он решает и как читать документацию
+- [Core](/ru/content/docs/core/README): atoms, computed values, effects, batching, scopes, lifecycle и scheduler behavior
+- [Архитектура](/ru/content/docs/architecture/README): слои, границы UI, стратегия переиспользования и контракты между слоями
+- [MVVM и Controllers](/ru/content/docs/mvvm/README): роли controller и view model, публичные контракты и ожидания по lifecycle
+- [Интеграции](/ru/content/docs/integrations/README): React bindings, dependency injection на базе Ditox и advanced integrations
+- [Рецепты](/ru/content/docs/recipes/README): практические примеры для view models, shared state, форм, cleanup и DI
+- [Миграция](/ru/content/docs/migration/README): legacy concepts, replacement patterns и guidance по миграции импортов
+- [FAQ](/ru/content/docs/faq/README): короткие ответы про effects, batch, scope, destroy, MVVM и React usage
+- [Contributing](/ru/content/docs/contributing/README): workflow, кодстайл, правила документации и conventions для агентов
