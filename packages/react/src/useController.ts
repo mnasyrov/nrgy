@@ -8,7 +8,7 @@ import {
   provideView,
   type ViewProxy,
 } from '@nrgyjs/core';
-import { useEffect, useRef } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 
 import { useNrgyControllerExtensionContext } from './NrgyControllerExtension';
 
@@ -55,8 +55,9 @@ export function useController<
   const reactExtensionProviders = useNrgyControllerExtensionContext();
 
   const hookContextRef = useRef<HookContext>(undefined);
+  const [, forceUpdate] = useReducer((value: number) => value + 1, 0);
 
-  if (hookContextRef.current?.declaration !== declaration) {
+  const createHookContext = (): HookContext => {
     const view = createViewProxy<TProps>((props ?? {}) as TProps);
 
     // NOTE: React hooks of the extension will be invoked
@@ -64,11 +65,15 @@ export function useController<
     const providers = [...reactExtensionProviders, provideView(view)];
     const controller = new declaration(providers);
 
-    hookContextRef.current = {
+    return {
       declaration,
       controller,
       view,
     };
+  };
+
+  if (hookContextRef.current?.declaration !== declaration) {
+    hookContextRef.current = createHookContext();
   } else {
     // HACK: Needs to keep invoking the extension providers
     //        to keep execution of React hooks in order.
@@ -85,16 +90,19 @@ export function useController<
   }, [props]);
 
   useEffect(() => {
-    const context = hookContextRef.current;
-    if (context) {
-      context.view.mount();
+    let context = hookContextRef.current;
+
+    if (!context) {
+      context = createHookContext();
+      hookContextRef.current = context;
+      forceUpdate();
     }
 
+    context.view.mount();
+
     return () => {
-      if (context) {
-        context.view.destroy();
-        context.controller.destroy();
-      }
+      context.view.destroy();
+      context.controller.destroy();
 
       if (hookContextRef.current === context) {
         hookContextRef.current = undefined;
