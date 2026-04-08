@@ -37,6 +37,31 @@ describe('useController()', () => {
     expect(destroy).toHaveBeenCalledTimes(1);
   });
 
+  it('should keep only one live controller instance in React.StrictMode', () => {
+    let created = 0;
+    let destroyed = 0;
+
+    const TestController = declareController(() => {
+      created += 1;
+
+      return {
+        destroy: () => {
+          destroyed += 1;
+        },
+      };
+    });
+
+    const { unmount } = renderHook(() => useController(TestController), {
+      reactStrictMode: true,
+    });
+
+    expect(created - destroyed).toBe(1);
+
+    unmount();
+
+    expect(created).toBe(destroyed);
+  });
+
   it('should not recreate the controller with empty dependencies after rerendering', () => {
     const destroy = vi.fn();
 
