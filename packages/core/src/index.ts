@@ -59,6 +59,7 @@ export { batch } from './utils/batch';
 export { mapAtom } from './utils/mapAtom';
 export { mergeAtoms } from './utils/mergeAtoms';
 export { readonlyAtom } from './utils/readonlyAtom';
+export { runAsUntracked } from './utils/runAsUntracked';
 export { runEffects } from './utils/runEffects';
 
 //

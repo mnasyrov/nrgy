@@ -469,10 +469,6 @@ function commitAtomValue<T>(node: AtomNode<T>): void {
   propagateAtomChanges(node);
 }
 
-// Global queues for propagation to avoid allocations
-const GLOBAL_EFFECT_QUEUE = fastArray<EffectNode<any>>();
-const GLOBAL_PROPAGATION_QUEUE = fastArray<BaseSourceNode>();
-
 // Notify all observers of this producer that its value is changed
 function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   // Fast path: nothing depends on this source
@@ -483,16 +479,17 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
     return;
   }
 
-  // Clear queues for reuse
-  resetFastArray(GLOBAL_EFFECT_QUEUE);
-  resetFastArray(GLOBAL_PROPAGATION_QUEUE);
+  // Reentrant propagation is possible when effects update other atoms while
+  // the current notification pass is still running, so each pass needs its own queues.
+  const effectQueue = fastArray<EffectNode<any>>();
+  const propagationQueue = fastArray<BaseSourceNode>();
 
   // Start BFS from the source node
-  pushFastArray(GLOBAL_PROPAGATION_QUEUE, sourceNode);
+  pushFastArray(propagationQueue, sourceNode);
 
   // Breadth-first invalidation: traverse through computed nodes to reach effects
-  for (let i = 0; i < GLOBAL_PROPAGATION_QUEUE.size; i++) {
-    const src = GLOBAL_PROPAGATION_QUEUE[i] as BaseSourceNode;
+  for (let i = 0; i < propagationQueue.size; i++) {
+    const src = propagationQueue[i] as BaseSourceNode;
     // Steal the current observers list from the source to avoid re-processing
     const observerRefs = src.observerRefs;
     if (!observerRefs) {
@@ -507,10 +504,10 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
         if (node.status !== COMPUTED_STATUS_STALE) {
           node.status = COMPUTED_STATUS_STALE;
           // Enqueue a computed node to propagate further to its own dependents
-          pushFastArray(GLOBAL_PROPAGATION_QUEUE, node);
+          pushFastArray(propagationQueue, node);
         }
       } else {
-        pushFastArray(GLOBAL_EFFECT_QUEUE, node);
+        pushFastArray(effectQueue, node);
       }
     }
 
@@ -518,13 +515,9 @@ function propagateAtomChanges(sourceNode: AtomNode<any>): void {
   }
 
   // Notify effects
-  for (let i = 0; i < GLOBAL_EFFECT_QUEUE.size; i++) {
-    notifyEffect(GLOBAL_EFFECT_QUEUE[i] as EffectNode<any>);
+  for (let i = 0; i < effectQueue.size; i++) {
+    notifyEffect(effectQueue[i] as EffectNode<any>);
   }
-
-  // Clear arrays to release references
-  resetFastArray(GLOBAL_EFFECT_QUEUE);
-  resetFastArray(GLOBAL_PROPAGATION_QUEUE);
 }
 
 //

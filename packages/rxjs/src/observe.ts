@@ -1,5 +1,4 @@
-import { type Atom, createScope } from '@nrgyjs/core';
-// import { RUNTIME } from '@nrgyjs/core/src/reactivity/reactivity';
+import { type Atom, createScope, runAsUntracked } from '@nrgyjs/core';
 import { Observable, share, shareReplay, skip } from 'rxjs';
 
 /**
@@ -21,20 +20,44 @@ export function observe<T>(
 ): Observable<T> {
   const observable = new Observable<T>((subscriber) => {
     const scope = createScope();
-    scope.onDestroy(() => subscriber.complete());
+    let isEmitting = false;
+    let needsComplete = false;
+
+    const completeSubscriber = () => {
+      if (!subscriber.closed) {
+        subscriber.complete();
+      }
+    };
+
+    scope.onDestroy(() => {
+      if (isEmitting) {
+        needsComplete = true;
+      } else {
+        completeSubscriber();
+      }
+    });
 
     scope.effect(
       source,
       (value) => {
-        subscriber.next(value);
-        // RUNTIME.runAsUntracked(() => subscriber.next(value));
+        isEmitting = true;
+
+        try {
+          runAsUntracked(() => subscriber.next(value));
+        } finally {
+          isEmitting = false;
+
+          if (needsComplete) {
+            needsComplete = false;
+            completeSubscriber();
+          }
+        }
       },
       {
         sync: options?.sync,
 
         onError: (error) => {
-          subscriber.error(error);
-          // RUNTIME.runAsUntracked(() => subscriber.error(error));
+          runAsUntracked(() => subscriber.error(error));
         },
 
         onDestroy: () => {
