@@ -1,6 +1,6 @@
 {
   "name": "@nrgyjs/core",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "The library for reactive programming with MVC/MVVM patterns",
   "license": "MIT",
   "publishConfig": {
