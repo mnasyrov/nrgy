@@ -1,7 +1,170 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
 import { runEffects } from '../utils/runEffects';
 
-import { atom, compute, effect, syncEffect } from './reactivity';
+import {
+  ATOM_SYMBOL,
+  atom,
+  compute,
+  destroyEffect,
+  type EffectNode,
+  effect,
+  NODE_TYPE_EFFECT,
+  notifyEffect,
+  runEffect,
+  syncEffect,
+} from './reactivity';
+import type { Atom } from './types';
+
+function createScheduler() {
+  const schedule = vi.fn((task: EffectNode<any>) => task);
+
+  return {
+    isEmpty: () => true,
+    schedule,
+    execute: vi.fn(),
+    pause: vi.fn(),
+    resume: vi.fn(),
+  };
+}
+
+function createEffectNode<T>(
+  overrides: Partial<EffectNode<T>> = {},
+): EffectNode<T> {
+  return {
+    action: vi.fn(),
+    dirty: true,
+    id: 1,
+    isDestroyed: false,
+    label: undefined,
+    lastValueVersion: undefined,
+    onDestroy: undefined,
+    onError: undefined,
+    ref: undefined,
+    scheduler: createScheduler(),
+    sourceAtom: atom(undefined as T),
+    type: NODE_TYPE_EFFECT,
+    ...overrides,
+  };
+}
+
+describe('EffectNode internals', () => {
+  describe('destroyEffect()', () => {
+    it('should destroy the effect once and clear internal references', () => {
+      const onDestroy = vi.fn();
+      const node = createEffectNode({
+        onDestroy,
+        sourceAtom: atom(1),
+      });
+
+      destroyEffect(node);
+      destroyEffect(node);
+
+      expect(node.isDestroyed).toBe(true);
+      expect(node.action).toBe(undefined);
+      expect(node.onDestroy).toBe(undefined);
+      expect(node.scheduler).toBe(undefined);
+      expect(node.sourceAtom).toBe(undefined);
+      expect(onDestroy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('notifyEffect()', () => {
+    it('should mark a clean effect as dirty and schedule it', () => {
+      const scheduler = createScheduler();
+      const node = createEffectNode({
+        dirty: false,
+        scheduler,
+      });
+
+      notifyEffect(node);
+
+      expect(node.dirty).toBe(true);
+      expect(scheduler.schedule).toHaveBeenCalledTimes(1);
+      expect(scheduler.schedule).toHaveBeenCalledWith(node);
+    });
+
+    it('should do nothing for a destroyed effect', () => {
+      const scheduler = createScheduler();
+      const node = createEffectNode({
+        dirty: false,
+        isDestroyed: true,
+        scheduler,
+      });
+
+      notifyEffect(node);
+
+      expect(node.dirty).toBe(false);
+      expect(scheduler.schedule).toHaveBeenCalledTimes(0);
+    });
+
+    it('should not schedule when the scheduler is not available', () => {
+      const node = createEffectNode({
+        dirty: false,
+        scheduler: undefined,
+      });
+
+      notifyEffect(node);
+
+      expect(node.dirty).toBe(true);
+    });
+  });
+
+  describe('runEffect()', () => {
+    it('should do nothing when the effect is not dirty', () => {
+      const action = vi.fn();
+      const node = createEffectNode({
+        action,
+        dirty: false,
+        sourceAtom: atom(1),
+      });
+
+      runEffect(node);
+
+      expect(action).toHaveBeenCalledTimes(0);
+    });
+
+    it('should report callback errors via onError', () => {
+      const effectError = new Error('effect failed');
+      const action = vi.fn(() => {
+        throw effectError;
+      });
+      const onError = vi.fn();
+      const node = createEffectNode({
+        action,
+        onError,
+        sourceAtom: atom(1),
+      });
+
+      runEffect(node);
+
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledWith(1);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(effectError);
+    });
+
+    it('should stop when the effect is destroyed during source evaluation', () => {
+      let node!: EffectNode<number>;
+
+      const sourceAtom = (() => {
+        destroyEffect(node);
+        return 1;
+      }) as Atom<number>;
+      (sourceAtom as any)[ATOM_SYMBOL] = { version: 0 };
+
+      const action = vi.fn();
+      node = createEffectNode({
+        action,
+        sourceAtom,
+      });
+
+      runEffect(node);
+
+      expect(node.isDestroyed).toBe(true);
+      expect(action).toHaveBeenCalledTimes(0);
+    });
+  });
+});
 
 // describe('EffectNode', () => {
 //   describe('destroy()', () => {

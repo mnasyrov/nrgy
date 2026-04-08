@@ -3,6 +3,14 @@ import { compute } from '../reactivity/reactivity';
 import { readonlyAtom } from '../utils/readonlyAtom';
 import { runEffects } from '../utils/runEffects';
 
+const { reportErrorSpy } = vi.hoisted(() => ({
+  reportErrorSpy: vi.fn(),
+}));
+
+vi.mock('../internals/reportError', () => ({
+  nrgyReportError: reportErrorSpy,
+}));
+
 import {
   BaseController,
   type BaseControllerContext,
@@ -211,6 +219,27 @@ describe('declareController() with classes', () => {
 
     controller.destroy();
     expect(onDestroyCallback).toHaveBeenCalled();
+  });
+
+  it('should report errors thrown in onCreated()', () => {
+    reportErrorSpy.mockClear();
+
+    const creationError = new Error('onCreated failed');
+
+    class TestController extends declareController().getBaseClass() {
+      protected override onCreated() {
+        throw creationError;
+      }
+    }
+
+    new TestController();
+
+    expect(reportErrorSpy).toHaveBeenCalledTimes(0);
+
+    runEffects();
+
+    expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+    expect(reportErrorSpy).toHaveBeenCalledWith(creationError);
   });
 });
 

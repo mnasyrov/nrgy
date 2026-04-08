@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runEffects } from '../utils/runEffects';
 
-import { atom, effect, syncEffect } from './reactivity';
+import {
+  AtomUpdateError,
+  atom,
+  compute,
+  effect,
+  syncEffect,
+} from './reactivity';
 import { type SourceAtom } from './types';
 
 describe('atom()', () => {
@@ -123,6 +129,20 @@ describe('WritableAtom', () => {
       store.mutate((state) => (state.value = 4));
 
       expect(collectedValues).toEqual([1, 2, 3, 3]);
+    });
+
+    it('should not allow mutating an atom in tracked context', () => {
+      const store = atom({ value: 1 }, { label: 'store' });
+
+      const derived = compute(() => {
+        store.mutate((state) => {
+          state.value = 2;
+        });
+        return store().value;
+      });
+
+      expect(() => derived()).toThrow(new AtomUpdateError('SourceAtom store'));
+      expect(store()).toEqual({ value: 1 });
     });
   });
 
