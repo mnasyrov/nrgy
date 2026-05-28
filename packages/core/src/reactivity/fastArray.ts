@@ -75,19 +75,19 @@ export function reserveFastRingBuffer<T>(
   // Expand underlying storage
   (ring as any).length = 3 + newCap;
 
-  if (size > 0) {
-    // Reflow items into contiguous slots starting from index 3
-    for (let i = 0; i < size; i++) {
-      const from = 3 + ((oldHead + i) % currentCap);
-      const to = 3 + i;
-      if (from !== to) {
-        (ring as any)[to] = ring[from];
-        (ring as any)[from] = undefined;
-      }
+  // Single-pass unwrap. The buffer wraps when oldHead + size > currentCap;
+  // the wrapped tail lives at [0, wrappedCount-1]. Copy it to the freshly
+  // grown space at [currentCap, currentCap+wrappedCount-1] so the logical
+  // sequence becomes contiguous from `oldHead`. Source and destination do
+  // not overlap because newCap >= 2*currentCap > currentCap + wrappedCount.
+  if (oldHead > 0 && oldHead + size > currentCap) {
+    const wrappedCount = oldHead + size - currentCap;
+    for (let i = 0; i < wrappedCount; i++) {
+      (ring as any)[3 + currentCap + i] = (ring as any)[3 + i];
+      (ring as any)[3 + i] = undefined;
     }
   }
 
-  ring[2] = 0; // head
   ring[1] = newCap; // capacity
 }
 

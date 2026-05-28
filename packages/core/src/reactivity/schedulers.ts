@@ -73,7 +73,7 @@ export function createMicrotaskScheduler<Task>(
       isPaused = false;
 
       if (!isPlanned && !isEmptyFastRingBuffer(queue)) {
-        isPaused = true;
+        isPlanned = true;
         nrgyQueueMicrotask(execute);
       }
     },

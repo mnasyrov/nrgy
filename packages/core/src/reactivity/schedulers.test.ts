@@ -118,23 +118,20 @@ describe('MicrotaskScheduler', () => {
       const task = vi.fn();
       scheduler.schedule(task);
 
-      // First, let the internal planned execute() run to reset isPlanned=false while still paused
+      // Let the internal planned execute() run while paused — it
+      // resets isPlanned=false and exits without draining.
       await flushMicrotasks();
 
-      // Now resume: should hit branch (lines 76-77)
-      scheduler.resume();
-      // Task should not run immediately in the resume branch
       expect(task).toHaveBeenCalledTimes(0);
 
-      // Flush planned microtask triggered by resume
-      await flushMicrotasks();
-
-      // Resume again to allow processing and flush
+      // Resume: must re-schedule a microtask to drain the queue.
       scheduler.resume();
+      expect(task).toHaveBeenCalledTimes(0);
+
       await flushMicrotasks();
 
-      // Do not assert execution (implementation may defer), this path is for coverage only
-      expect(task).toHaveBeenCalledTimes(0);
+      expect(task).toHaveBeenCalledTimes(1);
+      expect(scheduler.isEmpty()).toBe(true);
     });
   });
 });

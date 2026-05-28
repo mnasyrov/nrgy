@@ -75,12 +75,12 @@ describe('fastRingBuffer', () => {
     // Reserve more to trigger reflow from wrapped layout
     reserveFastRingBuffer(ring, 4);
     expect(cap(ring)).toBeGreaterThanOrEqual(4);
-    expect(head(ring)).toBe(0);
+    // Head is preserved across grow; logical order is what callers observe.
+    expect(head(ring)).toBe(1);
     expect(size(ring)).toBe(2);
 
-    // Shift twice to drain without asserting order/values (goal: cover code paths)
-    shiftFastRingBuffer(ring);
-    shiftFastRingBuffer(ring);
+    expect(shiftFastRingBuffer(ring)).toBe(2);
+    expect(shiftFastRingBuffer(ring)).toBe(3);
     expect(size(ring)).toBe(0);
   });
 });
