@@ -57,7 +57,8 @@ React, RxJS, `rx-effects` и `ditox`.
 ## Документация
 
 - [Обзор документации](./docs/README.ru.md)
-- [Документация для разработчиков и агентов](./docs/developers/README.ru.md)
+- [Документация для контрибьюторов и агентов](./docs/contributing/README.ru.md)
+- [Onepager для агентов](./AGENTS.ru.md)
 
 ## Список пакетов
 

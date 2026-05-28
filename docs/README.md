@@ -32,12 +32,12 @@ changes back to the repository.
 
 ## Contributing
 
+- [Agent Onepager](../AGENTS.md) (start here if you are an automated agent)
 - [Contributor Overview](./contributing/README.md)
 - [Documentation Requirements](./contributing/docs_requirements.md)
-- [Documentation Prompt](./contributing/docs_prompt.md)
 - [Coding Style](./contributing/coding_style.md)
 - [Development Workflow](./contributing/development_workflow.md)
-- [Agent Guide](./contributing/agent_guide.md)
+- [Release Workflow](./contributing/release_workflow.md)
 
 ## Package Documentation
 

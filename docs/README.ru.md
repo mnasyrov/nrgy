@@ -32,12 +32,12 @@
 
 ## Contributing
 
+- [Onepager для агентов](../AGENTS.ru.md) (стартовая точка для AI-агентов)
 - [Обзор для контрибьюторов](./contributing/README.ru.md)
 - [Требования к документации](./contributing/docs_requirements.ru.md)
-- [Prompt для документации](./contributing/docs_prompt.ru.md)
 - [Стиль кодирования](./contributing/coding_style.ru.md)
 - [Процесс разработки](./contributing/development_workflow.ru.md)
-- [Гайд для агентов](./contributing/agent_guide.ru.md)
+- [Релизный процесс](./contributing/release_workflow.ru.md)
 
 ## Документация пакетов
 

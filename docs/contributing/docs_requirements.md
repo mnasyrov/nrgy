@@ -57,3 +57,28 @@ general `docs` folder, containing:
 - Use clear and concise technical language.
 - Code in examples must be functional and follow project standards.
 - Use `inline code` formatting for API function and parameter names.
+- Keep terminology consistent: `Atom`, `Effect`, `Scope`, `Controller`,
+  `View Model`.
+- Use level-2 (`##`) section headers.
+
+## Prompt Template for Documentation Agents
+
+When using an AI agent to generate documentation for a TypeScript source file,
+apply the following task framing. The agent already has direct file access, so
+no `{{FILE_PATH}}` / `{{FILE_CONTENT}}` placeholders are needed — point it at
+the file and rely on the rules above.
+
+> **Task**: Analyze the given TypeScript source file and produce documentation
+> for it in Markdown.
+>
+> **Rules**:
+>
+> 1. Place the new doc next to the source file with the same basename and a
+>    `.md` extension. Do not generate a standalone doc for `index.ts`;
+>    document entry points in the package `README.md` instead.
+> 2. Produce a Russian translation in a sibling `.ru.md` file.
+> 3. Include the five sections listed in [Article Structure for a File
+>    (Module)](#article-structure-for-a-file-module): Purpose, Overview,
+>    Conceptual Architecture, Public API Description, Usage Examples.
+> 4. Examples must be valid TypeScript that compiles conceptually against the
+>    current public API. Use the consistent terminology listed above.

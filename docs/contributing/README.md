@@ -14,21 +14,18 @@ automated contributors.
 
 ## Contents
 
+- [../../AGENTS.md](../../AGENTS.md): onepager and entry point for AI agents.
 - [Documentation Requirements](./docs_requirements.md): mandatory structure and
-  placement rules for source and package documentation.
-- [Documentation Prompt](./docs_prompt.md): prompt template for agents
-  generating module documentation.
-- [Coding Style](./coding_style.md): practical conventions derived from the
-  current codebase.
-- [Development Workflow](./development_workflow.md): commands, validation
-  steps, and repository workflow.
-- [Agent Guide](./agent_guide.md): expectations for automated contributors and
-  documentation agents.
+  placement rules for source and package documentation, plus the prompt
+  template for documentation-generation agents.
+- [Coding Style](./coding_style.md): project-specific patterns (Atom, Effect,
+  Scope, Controller) with code examples.
+- [Development Workflow](./development_workflow.md): daily commands, repository
+  layout, and website workflow.
+- [Release Workflow](./release_workflow.md): versioning, publishing, and
+  release-time validation.
 
 ## Notes
 
-- When adding or changing source files, update colocated documentation in the
-  same directory.
-- Do not create standalone documentation for `index.ts`; document package entry
-  points in package-level `README.md` files.
-- Keep English and Russian documentation in sync.
+See [docs_requirements.md](./docs_requirements.md) for the full rules. Keep
+`.md` and `.ru.md` documents in sync.

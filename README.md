@@ -57,7 +57,8 @@ Install only the packages you need:
 ## Documentation
 
 - [Documentation Overview](./docs/README.md)
-- [Developer and Agent Documentation](./docs/developers/README.md)
+- [Contributor and Agent Documentation](./docs/contributing/README.md)
+- [Agent Onepager](./AGENTS.md)
 
 ## Package List
 
