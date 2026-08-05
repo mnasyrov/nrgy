@@ -296,6 +296,63 @@ describe('useController() and withView() extension', () => {
   });
 });
 
+describe('useController() and a provider with React hooks', () => {
+  const hookProvider: ExtensionParamsProvider = (params) => {
+    // Emulates a provider which reads a value by a React hook,
+    // like DitoxInjectionParamsProvider in @nrgyjs/ditox-react.
+    const valueRef = React.useRef('value1');
+    return { ...params, customValue: valueRef.current };
+  };
+
+  const TestController = declareController()
+    .extend((sourceContext: BaseControllerContext, extensionParams) => ({
+      ...sourceContext,
+      customValue: extensionParams?.['customValue'],
+    }))
+    .apply(({ customValue }) => ({ customValue }));
+
+  it('should create a controller in React.StrictMode', () => {
+    // Without the fix, the remount cycle of StrictMode recreates
+    // the controller inside useEffect(), and the provider throws
+    // "Invalid hook call" because its hooks are invoked outside
+    // of rendering.
+    const { result, rerender, unmount } = renderHook(
+      () => useController(TestController),
+      {
+        reactStrictMode: true,
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+
+  it('should keep the order of React hooks on rerenders', () => {
+    const { result, rerender, unmount } = renderHook(
+      () => useController(TestController),
+      {
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+});
+
 describe('useController() and a custom extension', () => {
   function withCustomExtension<
     TSourceContext extends BaseControllerContext,
