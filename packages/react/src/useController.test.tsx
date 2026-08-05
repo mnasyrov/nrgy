@@ -296,6 +296,49 @@ describe('useController() and withView() extension', () => {
   });
 });
 
+describe('useController() and a provider with React hooks', () => {
+  it('should keep the order of React hooks when the controller creates a child controller', () => {
+    const hookProvider: ExtensionParamsProvider = (params) => {
+      // Emulates a provider which reads a value by a React hook,
+      // like DitoxInjectionParamsProvider in @nrgyjs/ditox-react.
+      const valueRef = React.useRef('value1');
+      return { ...params, customValue: valueRef.current };
+    };
+
+    const ChildController = declareController(() => ({}));
+
+    const ParentController = declareController()
+      .extend((sourceContext: BaseControllerContext, extensionParams) => ({
+        ...sourceContext,
+        customValue: extensionParams?.['customValue'],
+      }))
+      .apply(({ create, customValue }) => {
+        create(ChildController);
+        return { customValue };
+      });
+
+    const { result, rerender, unmount } = renderHook(
+      () => useController(ParentController),
+      {
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
+
+    // Without the fix, the provider is invoked twice on the first render
+    // (by the parent and the child controllers), so React throws
+    // "Rendered fewer hooks than expected" on the next render.
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+});
+
 describe('useController() and a custom extension', () => {
   function withCustomExtension<
     TSourceContext extends BaseControllerContext,

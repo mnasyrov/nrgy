@@ -389,5 +389,48 @@ describe('ControllerContext in Controller', () => {
       expect(controller.r3()).toBe(4);
       expect(controller.r4()).toBe(8);
     });
+
+    it('should not invoke the source providers again for a child controller', () => {
+      const provider = vi.fn((params: ExtensionParams) => ({
+        ...params,
+        token: 'value',
+      }));
+
+      const ChildController = declareController().apply(() => ({}));
+
+      const ParentController = declareController().apply(({ create }) => {
+        create(ChildController);
+        return {};
+      });
+
+      new ParentController([provider]);
+
+      expect(provider).toHaveBeenCalledTimes(1);
+    });
+
+    it('should pass extension params of the parent to a child controller', () => {
+      function withExtensionParams() {
+        return (context: BaseControllerContext, env?: ExtensionParams) => ({
+          ...context,
+          extParams: env,
+        });
+      }
+
+      const ChildController = declareController()
+        .extend(withExtensionParams())
+        .apply(({ extParams }) => ({ extParams }));
+
+      const ParentController = declareController().apply(({ create }) => ({
+        child: create(ChildController),
+      }));
+
+      const controller = new ParentController([
+        provideExtensionParams({ token: 'value' }),
+      ]);
+
+      expect(controller.child.extParams).toEqual(
+        expect.objectContaining({ token: 'value' }),
+      );
+    });
   });
 });
