@@ -297,26 +297,74 @@ describe('useController() and withView() extension', () => {
 });
 
 describe('useController() and a provider with React hooks', () => {
+  const hookProvider: ExtensionParamsProvider = (params) => {
+    // Emulates a provider which reads a value by a React hook,
+    // like DitoxInjectionParamsProvider in @nrgyjs/ditox-react.
+    const valueRef = React.useRef('value1');
+    return { ...params, customValue: valueRef.current };
+  };
+
+  const TestController = declareController()
+    .extend((sourceContext: BaseControllerContext, extensionParams) => ({
+      ...sourceContext,
+      customValue: extensionParams?.['customValue'],
+    }))
+    .apply(({ customValue }) => ({ customValue }));
+
+  const ChildController = declareController(() => ({}));
+
+  const ParentController = declareController()
+    .extend((sourceContext: BaseControllerContext, extensionParams) => ({
+      ...sourceContext,
+      customValue: extensionParams?.['customValue'],
+    }))
+    .apply(({ create, customValue }) => {
+      create(ChildController);
+      return { customValue };
+    });
+
+  it('should create a controller in React.StrictMode', () => {
+    // Without the fix, the remount cycle of StrictMode recreates
+    // the controller inside useEffect(), and the provider throws
+    // "Invalid hook call" because its hooks are invoked outside
+    // of rendering.
+    const { result, rerender, unmount } = renderHook(
+      () => useController(TestController),
+      {
+        reactStrictMode: true,
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+
+  it('should keep the order of React hooks on rerenders', () => {
+    const { result, rerender, unmount } = renderHook(
+      () => useController(TestController),
+      {
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+
   it('should keep the order of React hooks when the controller creates a child controller', () => {
-    const hookProvider: ExtensionParamsProvider = (params) => {
-      // Emulates a provider which reads a value by a React hook,
-      // like DitoxInjectionParamsProvider in @nrgyjs/ditox-react.
-      const valueRef = React.useRef('value1');
-      return { ...params, customValue: valueRef.current };
-    };
-
-    const ChildController = declareController(() => ({}));
-
-    const ParentController = declareController()
-      .extend((sourceContext: BaseControllerContext, extensionParams) => ({
-        ...sourceContext,
-        customValue: extensionParams?.['customValue'],
-      }))
-      .apply(({ create, customValue }) => {
-        create(ChildController);
-        return { customValue };
-      });
-
     const { result, rerender, unmount } = renderHook(
       () => useController(ParentController),
       {
@@ -330,18 +378,43 @@ describe('useController() and a provider with React hooks', () => {
 
     expect(result.current.customValue).toBe('value1');
 
-    // Without the fix, the provider is invoked twice on the first render
-    // (by the parent and the child controllers), so React throws
-    // "Rendered fewer hooks than expected" on the next render.
+    // Without the fix of create(), the provider is invoked twice on the
+    // first render (by the parent and the child controllers), so React
+    // throws "Rendered fewer hooks than expected" on the next render.
+    expect(() => rerender()).not.toThrow();
+
+    unmount();
+  });
+
+  it('should create a controller with a child controller in React.StrictMode', () => {
+    // The combination requires both fixes: create() must not invoke
+    // the source providers again for the child controller, and
+    // useController() must not invoke them on recreation of the
+    // controller inside useEffect().
+    const { result, rerender, unmount } = renderHook(
+      () => useController(ParentController),
+      {
+        reactStrictMode: true,
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={hookProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
+
+    expect(result.current.customValue).toBe('value1');
     expect(() => rerender()).not.toThrow();
 
     unmount();
   });
 
   it('should not invoke the source providers for a child controller in React.StrictMode', () => {
-    // NOTE: The provider records invocations without calling React hooks:
-    //        recreation of the controller in StrictMode invokes providers
-    //        outside of rendering, which is a separate known defect.
+    // NOTE: The provider records the order of constructions instead of
+    //        calling React hooks: useController() computes the extension
+    //        params in its own body and does not pass the providers to
+    //        the declaration, so the re-invocation defect of create() is
+    //        observable here only by the order of constructions.
     const events: Array<string> = [];
 
     const loggingProvider: ExtensionParamsProvider = (params) => {
@@ -349,32 +422,34 @@ describe('useController() and a provider with React hooks', () => {
       return params;
     };
 
-    const ChildController = declareController(() => {
+    const LoggingChildController = declareController(() => {
       events.push('child');
       return {};
     });
 
-    const ParentController = declareController().apply(({ create }) => {
+    const LoggingParentController = declareController().apply(({ create }) => {
       events.push('parent');
-      create(ChildController);
+      create(LoggingChildController);
       return {};
     });
 
-    const { unmount } = renderHook(() => useController(ParentController), {
-      reactStrictMode: true,
-      wrapper: ({ children }) => (
-        <NrgyControllerExtension provider={loggingProvider}>
-          {children}
-        </NrgyControllerExtension>
-      ),
-    });
+    const { unmount } = renderHook(
+      () => useController(LoggingParentController),
+      {
+        reactStrictMode: true,
+        wrapper: ({ children }) => (
+          <NrgyControllerExtension provider={loggingProvider}>
+            {children}
+          </NrgyControllerExtension>
+        ),
+      },
+    );
 
     unmount();
 
     // StrictMode constructs the parent controller several times.
     // The child must be created right after the parent factory has
-    // started: without the fix the source provider is invoked again
-    // in between, for the construction of the child.
+    // started: the source provider must not be invoked in between.
     expect(events.filter((event) => event === 'parent').length).toBeGreaterThan(
       0,
     );

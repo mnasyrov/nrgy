@@ -4,7 +4,9 @@ import {
   type Controller,
   type ControllerDeclaration,
   createViewProxy,
+  type ExtensionParams,
   type InferViewPropsFromControllerContext,
+  provideExtensionParams,
   provideView,
   type ViewProxy,
 } from '@nrgyjs/core';
@@ -54,15 +56,29 @@ export function useController<
 
   const reactExtensionProviders = useNrgyControllerExtensionContext();
 
+  // The providers may call React hooks, so they are invoked on every
+  // render to keep execution of React hooks in order.
+  const extensionParams: ExtensionParams = reactExtensionProviders.reduce(
+    (params, provider) => provider(params),
+    {},
+  );
+
+  const extensionParamsRef = useRef<ExtensionParams>(extensionParams);
+  extensionParamsRef.current = extensionParams;
+
   const hookContextRef = useRef<HookContext>(undefined);
   const [, forceUpdate] = useReducer((value: number) => value + 1, 0);
 
   const createHookContext = (): HookContext => {
     const view = createViewProxy<TProps>((props ?? {}) as TProps);
 
-    // NOTE: React hooks of the extension will be invoked
-    //        by calling the declaration.
-    const providers = [...reactExtensionProviders, provideView(view)];
+    // The declaration takes the extension params captured on the last
+    // render, so no React hooks are invoked here. It makes this function
+    // safe to be called outside of rendering, from the mount effect.
+    const providers = [
+      provideExtensionParams(extensionParamsRef.current),
+      provideView(view),
+    ];
     const controller = new declaration(providers);
 
     return {
@@ -74,12 +90,6 @@ export function useController<
 
   if (hookContextRef.current?.declaration !== declaration) {
     hookContextRef.current = createHookContext();
-  } else {
-    // HACK: Needs to keep invoking the extension providers
-    //        to keep execution of React hooks in order.
-    for (const provider of reactExtensionProviders) {
-      provider({});
-    }
   }
 
   useEffect(() => {
