@@ -337,6 +337,54 @@ describe('useController() and a provider with React hooks', () => {
 
     unmount();
   });
+
+  it('should not invoke the source providers for a child controller in React.StrictMode', () => {
+    // NOTE: The provider records invocations without calling React hooks:
+    //        recreation of the controller in StrictMode invokes providers
+    //        outside of rendering, which is a separate known defect.
+    const events: Array<string> = [];
+
+    const loggingProvider: ExtensionParamsProvider = (params) => {
+      events.push('provider');
+      return params;
+    };
+
+    const ChildController = declareController(() => {
+      events.push('child');
+      return {};
+    });
+
+    const ParentController = declareController().apply(({ create }) => {
+      events.push('parent');
+      create(ChildController);
+      return {};
+    });
+
+    const { unmount } = renderHook(() => useController(ParentController), {
+      reactStrictMode: true,
+      wrapper: ({ children }) => (
+        <NrgyControllerExtension provider={loggingProvider}>
+          {children}
+        </NrgyControllerExtension>
+      ),
+    });
+
+    unmount();
+
+    // StrictMode constructs the parent controller several times.
+    // The child must be created right after the parent factory has
+    // started: without the fix the source provider is invoked again
+    // in between, for the construction of the child.
+    expect(events.filter((event) => event === 'parent').length).toBeGreaterThan(
+      0,
+    );
+
+    events.forEach((event, index) => {
+      if (event === 'parent') {
+        expect(events[index + 1]).toBe('child');
+      }
+    });
+  });
 });
 
 describe('useController() and a custom extension', () => {
