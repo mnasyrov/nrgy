@@ -525,8 +525,11 @@ export function createControllerContext<TContext extends BaseControllerContext>(
       declaration: ControllerDeclaration<TContext, TService>,
       params?: InferContextParams<TContext, undefined>,
     ): Controller<TService> {
+      // Pass the already computed extension params instead of the source
+      // providers. Providers may have side effects (e.g. call React hooks)
+      // and must not be invoked again for a child controller.
       const nextProviders = [
-        ...args.providers,
+        ...(extensionParams ? [provideExtensionParams(extensionParams)] : []),
         provideControllerParams(params),
       ];
 
