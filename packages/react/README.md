@@ -31,13 +31,17 @@ yarn add @nrgyjs/core @nrgyjs/react react
 pnpm add @nrgyjs/core @nrgyjs/react react
 ```
 
+The package requires React 18 or newer.
+
 ## Conceptual Architecture
 
 The package is built around `@nrgyjs/core` declarations and React lifecycle.
 
-1. `useAtom()` subscribes a component to a single `Atom<T>`.
+1. `useAtom()` subscribes a component to a single `Atom<T>` through
+   `useSyncExternalStore()` and delivers updates synchronously.
 2. `useAtoms()` combines an object of atoms into a single computed atom and
-   keeps the resulting object stable with structural equality.
+   keeps the resulting object stable with structural equality. The object of
+   atoms may be created inline on every render.
 3. `useController()` creates a controller or view model instance once per
    declaration, connects it to a React-driven `ViewProxy`, updates view props,
    and disposes resources on unmount or declaration replacement.
