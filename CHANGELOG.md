@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0](https://github.com/mnasyrov/nrgy/compare/v1.0.5...v2.0.0) (2026-09-18)
+
+### Features
+
+* **react:** migrate useAtom() and useAtoms() to useSyncExternalStore ([f014da4](https://github.com/mnasyrov/nrgy/commit/f014da4d985b048d63a48219ccb91909d6941838))
+
+### BREAKING CHANGES
+
+* **react:** `@nrgyjs/react` requires React 18 or newer.
+
 ## [1.0.5](https://github.com/mnasyrov/nrgy/compare/v1.0.4...v1.0.5) (2026-08-07)
 
 ### Bug Fixes
