@@ -22,7 +22,7 @@
     "README.md"
   ],
   "peerDependencies": {
-    "@nrgyjs/core": "^1.0.0",
+    "@nrgyjs/core": "^2.0.0",
     "react": ">=18"
   },
   "exports": {
