@@ -23,7 +23,7 @@
   ],
   "peerDependencies": {
     "@nrgyjs/core": "^1.0.0",
-    "react": ">=17 || >=18 || >= 19"
+    "react": ">=18"
   },
   "exports": {
     ".": {

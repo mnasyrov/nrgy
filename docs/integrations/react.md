@@ -18,6 +18,11 @@ to React components.
 
 ## Subscribing to Atoms
 
+Both hooks are built on `useSyncExternalStore()` and require React 18 or
+newer. Updates are delivered synchronously: an update inside an event handler
+is rendered without waiting for a microtask, and a change of the atom passed to
+the hook is visible in the same commit.
+
 Use `useAtom()` when a component depends on one atom.
 
 ```tsx
@@ -31,7 +36,9 @@ function CounterValue({ controller }: { controller: CounterController }) {
 }
 ```
 
-Use `useAtoms()` when a component reads several atoms as one stable object.
+Use `useAtoms()` when a component reads several atoms as one object. The
+object of atoms may be created inline; the hook keeps the result stable while
+the atoms and their values are the same.
 
 ```tsx
 import React from 'react';
